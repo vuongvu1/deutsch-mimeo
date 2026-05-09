@@ -21,7 +21,7 @@ export function HomePage() {
       <div className={styles.header}>
         <div className={styles.brand}>
           <span className={styles.brandEmoji}>🇩🇪</span>
-          <h1 className={styles.brandTitle}>Deutsch Duo</h1>
+          <h1 className={styles.brandTitle}>Deutsch MiMeo</h1>
         </div>
         <p className="muted">Wer ist da?</p>
       </div>

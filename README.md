@@ -1,4 +1,4 @@
-# Deutsch Duo
+# Deutsch MiMeo
 
 Personal German-learning challenge tracker for two users (Mi 🐷 and Meo 🐱). Web app, no login.
 
