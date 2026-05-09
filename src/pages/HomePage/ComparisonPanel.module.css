@@ -1,0 +1,107 @@
+.grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+}
+
+.cat {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.catHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.catIcon {
+  font-size: 22px;
+}
+
+.catLabel {
+  font-size: 14px;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.vs {
+  font-size: 12px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.side {
+  position: relative;
+  text-align: center;
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  opacity: 0.65;
+  transition:
+    opacity 200ms ease,
+    border-color 200ms ease;
+}
+
+.side[data-winning='true'] {
+  opacity: 1;
+  border-color: var(--accent);
+  background: var(--bg-3);
+}
+
+.side[data-tie='true'] {
+  opacity: 0.85;
+}
+
+.sideEmoji {
+  position: relative;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.crown {
+  position: absolute;
+  top: -10px;
+  right: 50%;
+  transform: translateX(28px);
+  font-size: 18px;
+}
+
+.sideName {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: var(--space-1);
+}
+
+.sideValue {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: var(--space-1);
+}
+
+.side[data-variant='mi'] .sideName {
+  color: var(--mi);
+}
+
+.side[data-variant='meo'] .sideName {
+  color: var(--meo);
+}
