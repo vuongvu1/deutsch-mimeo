@@ -123,3 +123,30 @@ export function useTodaySecondsForChallenge(
     },
   })
 }
+
+export function useDailyTotalsRange(
+  userId: UserId | undefined,
+  challengeId: string | undefined,
+  fromDate: string,
+  toDate: string,
+) {
+  return useQuery({
+    queryKey: ['daily-totals', userId, challengeId, fromDate, toDate],
+    enabled: !!userId && !!challengeId,
+    queryFn: async (): Promise<Record<string, number>> => {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('seconds, local_date')
+        .eq('user_id', userId!)
+        .eq('challenge_id', challengeId!)
+        .gte('local_date', fromDate)
+        .lte('local_date', toDate)
+      if (error) throw error
+      const map: Record<string, number> = {}
+      for (const row of data ?? []) {
+        map[row.local_date] = (map[row.local_date] ?? 0) + row.seconds
+      }
+      return map
+    },
+  })
+}

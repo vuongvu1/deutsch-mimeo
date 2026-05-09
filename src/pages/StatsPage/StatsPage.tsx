@@ -1,10 +1,11 @@
 import { Navigate, useParams } from 'react-router-dom'
 
+import { Heatmap } from '@/components/Heatmap'
 import { TopBar } from '@/components/TopBar'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
-import { useUserStats } from '@/hooks/useStats'
+import { useDailyTotalsRange, useUserStats } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
-import { formatMinutes, formatSeconds } from '@/lib/dates'
+import { daysAgoLocalDate, formatMinutes, formatSeconds, todayLocalDate } from '@/lib/dates'
 import { paths } from '@/routes/paths'
 import type { UserId } from '@/types/db'
 
@@ -15,6 +16,12 @@ export function StatsPage() {
   const userQuery = useUser(userId as UserId | undefined)
   const challengeQuery = useChallengeBySlug('listen')
   const statsQuery = useUserStats(userId as UserId | undefined, challengeQuery.data ?? undefined)
+  const dailyTotalsQuery = useDailyTotalsRange(
+    userId as UserId | undefined,
+    challengeQuery.data?.id,
+    daysAgoLocalDate(95),
+    todayLocalDate(),
+  )
 
   if (userId !== 'mi' && userId !== 'meo') return <Navigate to="/" replace />
 
@@ -57,6 +64,14 @@ export function StatsPage() {
             />
             <Stat label="Aktive Tage" value={`${stats.totalDistinctActiveDays}`} />
           </div>
+
+          <h2 className={styles.h2}>🔥 Aktivität (13 Wochen)</h2>
+          {challengeQuery.data ? (
+            <Heatmap
+              totals={dailyTotalsQuery.data ?? {}}
+              goalSeconds={challengeQuery.data.daily_goal_seconds}
+            />
+          ) : null}
         </>
       )}
     </div>
