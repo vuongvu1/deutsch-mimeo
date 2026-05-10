@@ -17,3 +17,22 @@
   background: linear-gradient(160deg, var(--sky-a3), var(--color-panel-solid));
   border-color: var(--sky-a7);
 }
+
+.userAvatar {
+  width: clamp(72px, 24vw, 128px);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid var(--gray-a5);
+  background: var(--gray-a3);
+  display: block;
+  user-select: none;
+}
+
+.userCard[data-variant='mi'] .userAvatar {
+  border-color: var(--pink-a8);
+}
+
+.userCard[data-variant='meo'] .userAvatar {
+  border-color: var(--sky-a8);
+}

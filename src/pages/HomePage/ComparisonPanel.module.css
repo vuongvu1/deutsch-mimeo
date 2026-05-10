@@ -1,25 +1,22 @@
-.row {
-  border-bottom: 1px solid var(--gray-a3);
+.table {
+  --table-cell-padding: var(--space-2) var(--space-3);
 }
 
-.row[data-last='true'] {
-  border-bottom: none;
+.userCol[data-variant='mi'] {
+  background: var(--pink-a2);
+  color: var(--pink-12);
 }
 
-.icon {
-  font-size: 22px;
-  line-height: 1;
-  width: 28px;
-  text-align: center;
-  cursor: default;
-  user-select: none;
+.userCol[data-variant='meo'] {
+  background: var(--sky-a2);
+  color: var(--sky-12);
 }
 
-.side {
-  opacity: 0.55;
-  transition: opacity 150ms ease;
+.valueCell {
+  width: 35%;
+  white-space: nowrap;
 }
 
-.side[data-winning='true'] {
-  opacity: 1;
+.valueCell[data-winning='true'] {
+  background: var(--amber-a2);
 }

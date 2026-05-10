@@ -1,4 +1,4 @@
-import { Box, Card, Flex, Text, Tooltip } from '@radix-ui/themes'
+import { Box, Card, Flex, Table, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 
 import { useComparisonStats } from '@/hooks/useStats'
@@ -68,82 +68,83 @@ export function ComparisonPanel({ challenge }: Props) {
   ]
 
   return (
-    <Card>
-      <Flex direction="column">
-        {categories.map((cat, idx) => (
-          <CategoryRow key={cat.id} category={cat} isLast={idx === categories.length - 1} />
+    <Table.Root variant="surface" size="2" className={styles.table}>
+      <Table.Header>
+        <Table.Row>
+          <Table.ColumnHeaderCell />
+          <Table.ColumnHeaderCell align="center" className={styles.userCol} data-variant="mi">
+            <Flex align="center" gap="1" justify="center">
+              <Text size="4" aria-hidden>
+                🐷
+              </Text>
+              <Text size="2" weight="bold">
+                Mi
+              </Text>
+            </Flex>
+          </Table.ColumnHeaderCell>
+          <Table.ColumnHeaderCell align="center" className={styles.userCol} data-variant="meo">
+            <Flex align="center" gap="1" justify="center">
+              <Text size="4" aria-hidden>
+                🐱
+              </Text>
+              <Text size="2" weight="bold">
+                Meo
+              </Text>
+            </Flex>
+          </Table.ColumnHeaderCell>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {categories.map((cat) => (
+          <CategoryRow key={cat.id} category={cat} />
         ))}
-      </Flex>
-    </Card>
+      </Table.Body>
+    </Table.Root>
   )
 }
 
-function CategoryRow({ category, isLast }: { category: Category; isLast: boolean }) {
+function CategoryRow({ category }: { category: Category }) {
   const { miValue, meoValue, format, icon, label } = category
   const miWins = miValue > meoValue
   const meoWins = meoValue > miValue
   return (
-    <Flex
-      align="center"
-      gap="3"
-      py="3"
-      className={styles.row}
-      data-last={isLast}
-    >
-      <Tooltip content={label}>
-        <Box className={styles.icon} aria-label={label}>
-          {icon}
-        </Box>
-      </Tooltip>
-      <Flex flexGrow="1" align="center" justify="between" gap="3">
-        <UserSide emoji="🐷" value={format(miValue)} winning={miWins} />
-        <UserSide emoji="🐱" value={format(meoValue)} winning={meoWins} align="right" />
-      </Flex>
-    </Flex>
+    <Table.Row>
+      <Table.RowHeaderCell>
+        <Flex align="center" gap="2">
+          <Text size="4" aria-hidden style={{ lineHeight: 1 }}>
+            {icon}
+          </Text>
+          <Text size="2" color="gray" weight="medium">
+            {label}
+          </Text>
+        </Flex>
+      </Table.RowHeaderCell>
+      <Table.Cell align="center" className={styles.valueCell} data-winning={miWins}>
+        <ValueWithCrown value={format(miValue)} winning={miWins} />
+      </Table.Cell>
+      <Table.Cell align="center" className={styles.valueCell} data-winning={meoWins}>
+        <ValueWithCrown value={format(meoValue)} winning={meoWins} />
+      </Table.Cell>
+    </Table.Row>
   )
 }
 
-function UserSide({
-  emoji,
-  value,
-  winning,
-  align = 'left',
-}: {
-  emoji: string
-  value: string
-  winning: boolean
-  align?: 'left' | 'right'
-}) {
+function ValueWithCrown({ value, winning }: { value: string; winning: boolean }) {
   return (
-    <Flex
-      align="center"
-      gap="2"
-      justify={align === 'right' ? 'end' : 'start'}
-      flexGrow="1"
-      className={styles.side}
-      data-winning={winning}
-    >
-      {align === 'left' ? (
-        <>
-          <Text size="4" aria-hidden>
-            {emoji}
-          </Text>
-          <Text size="3" weight="bold" style={{ fontVariantNumeric: 'tabular-nums' }}>
-            {value}
-          </Text>
-          {winning ? <span aria-hidden>👑</span> : null}
-        </>
-      ) : (
-        <>
-          {winning ? <span aria-hidden>👑</span> : null}
-          <Text size="3" weight="bold" style={{ fontVariantNumeric: 'tabular-nums' }}>
-            {value}
-          </Text>
-          <Text size="4" aria-hidden>
-            {emoji}
-          </Text>
-        </>
-      )}
+    <Flex align="center" justify="center" gap="1">
+      <Text
+        size="3"
+        weight={winning ? 'bold' : 'regular'}
+        color={winning ? 'amber' : undefined}
+        style={{ fontVariantNumeric: 'tabular-nums' }}
+      >
+        {value}
+      </Text>
+      {winning ? (
+        <Box aria-hidden style={{ fontSize: 14 }}>
+          👑
+        </Box>
+      ) : null}
     </Flex>
   )
 }
