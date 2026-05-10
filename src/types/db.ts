@@ -23,6 +23,7 @@ export interface VideoRow {
   youtube_id: string
   title: string
   note: string | null
+  watched_at: string | null
   created_at: string
 }
 

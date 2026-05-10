@@ -6,18 +6,21 @@ interface Props {
   youtubeId: string
   onPlay: () => void
   onPauseOrEnd: () => void
+  onEnded?: () => void
 }
 
-export function YouTubePlayer({ youtubeId, onPlay, onPauseOrEnd }: Props) {
+export function YouTubePlayer({ youtubeId, onPlay, onPauseOrEnd, onEnded }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<YT.Player | null>(null)
   const onPlayRef = useRef(onPlay)
   const onPauseOrEndRef = useRef(onPauseOrEnd)
+  const onEndedRef = useRef(onEnded)
 
   useEffect(() => {
     onPlayRef.current = onPlay
     onPauseOrEndRef.current = onPauseOrEnd
-  }, [onPlay, onPauseOrEnd])
+    onEndedRef.current = onEnded
+  }, [onPlay, onPauseOrEnd, onEnded])
 
   useEffect(() => {
     let cancelled = false
@@ -32,6 +35,7 @@ export function YouTubePlayer({ youtubeId, onPlay, onPauseOrEnd }: Props) {
             const State = YTApi.PlayerState
             if (e.data === State.PLAYING) onPlayRef.current()
             else if (e.data === State.PAUSED || e.data === State.ENDED) onPauseOrEndRef.current()
+            if (e.data === State.ENDED) onEndedRef.current?.()
           },
         },
       })

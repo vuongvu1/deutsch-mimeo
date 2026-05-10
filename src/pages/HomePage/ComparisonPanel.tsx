@@ -1,4 +1,4 @@
-import { Box, Card, Flex, Grid, Text } from '@radix-ui/themes'
+import { Box, Card, Flex, Text, Tooltip } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 
 import { useComparisonStats } from '@/hooks/useStats'
@@ -68,96 +68,82 @@ export function ComparisonPanel({ challenge }: Props) {
   ]
 
   return (
-    <Grid columns={{ initial: '1', sm: '2' }} gap={{ initial: '3', sm: '4' }}>
-      {categories.map((cat) => (
-        <CategoryCard key={cat.id} category={cat} />
-      ))}
-    </Grid>
-  )
-}
-
-function CategoryCard({ category }: { category: Category }) {
-  const { miValue, meoValue, format, label, icon } = category
-  const miWins = miValue > meoValue
-  const meoWins = meoValue > miValue
-  const tie = miValue === meoValue && miValue > 0
-  return (
     <Card>
-      <Flex align="center" gap="2" mb="3">
-        <Text size="5" aria-hidden>
-          {icon}
-        </Text>
-        <Text size="2" weight="medium" color="gray">
-          {label}
-        </Text>
-      </Flex>
-      <Flex align="center" justify="between" gap="2">
-        <UserSide
-          name="Mi"
-          emoji="🐷"
-          value={format(miValue)}
-          winning={miWins}
-          variant="mi"
-          tie={tie}
-        />
-        <Text size="1" color="gray" weight="bold" style={{ textTransform: 'uppercase' }}>
-          vs
-        </Text>
-        <UserSide
-          name="Meo"
-          emoji="🐱"
-          value={format(meoValue)}
-          winning={meoWins}
-          variant="meo"
-          tie={tie}
-        />
+      <Flex direction="column">
+        {categories.map((cat, idx) => (
+          <CategoryRow key={cat.id} category={cat} isLast={idx === categories.length - 1} />
+        ))}
       </Flex>
     </Card>
   )
 }
 
+function CategoryRow({ category, isLast }: { category: Category; isLast: boolean }) {
+  const { miValue, meoValue, format, icon, label } = category
+  const miWins = miValue > meoValue
+  const meoWins = meoValue > miValue
+  return (
+    <Flex
+      align="center"
+      gap="3"
+      py="3"
+      className={styles.row}
+      data-last={isLast}
+    >
+      <Tooltip content={label}>
+        <Box className={styles.icon} aria-label={label}>
+          {icon}
+        </Box>
+      </Tooltip>
+      <Flex flexGrow="1" align="center" justify="between" gap="3">
+        <UserSide emoji="🐷" value={format(miValue)} winning={miWins} />
+        <UserSide emoji="🐱" value={format(meoValue)} winning={meoWins} align="right" />
+      </Flex>
+    </Flex>
+  )
+}
+
 function UserSide({
-  name,
   emoji,
   value,
   winning,
-  tie,
-  variant,
+  align = 'left',
 }: {
-  name: string
   emoji: string
   value: string
   winning: boolean
-  tie: boolean
-  variant: 'mi' | 'meo'
+  align?: 'left' | 'right'
 }) {
   return (
-    <Box
+    <Flex
+      align="center"
+      gap="2"
+      justify={align === 'right' ? 'end' : 'start'}
       flexGrow="1"
       className={styles.side}
       data-winning={winning}
-      data-tie={tie}
-      data-variant={variant}
     >
-      <Flex direction="column" align="center" gap="1" py="2">
-        <Box position="relative" style={{ fontSize: 32, lineHeight: 1 }} aria-hidden>
-          {emoji}
-          {winning ? (
-            <Box
-              position="absolute"
-              style={{ top: -10, right: '50%', transform: 'translateX(28px)', fontSize: 18 }}
-            >
-              👑
-            </Box>
-          ) : null}
-        </Box>
-        <Text size="1" color="gray" className={styles.sideName}>
-          {name}
-        </Text>
-        <Text size="3" weight="bold">
-          {value}
-        </Text>
-      </Flex>
-    </Box>
+      {align === 'left' ? (
+        <>
+          <Text size="4" aria-hidden>
+            {emoji}
+          </Text>
+          <Text size="3" weight="bold" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            {value}
+          </Text>
+          {winning ? <span aria-hidden>👑</span> : null}
+        </>
+      ) : (
+        <>
+          {winning ? <span aria-hidden>👑</span> : null}
+          <Text size="3" weight="bold" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            {value}
+          </Text>
+          <Text size="4" aria-hidden>
+            {emoji}
+          </Text>
+        </>
+      )}
+    </Flex>
   )
 }

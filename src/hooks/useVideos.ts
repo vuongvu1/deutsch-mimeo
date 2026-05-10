@@ -80,3 +80,21 @@ export function useDeleteVideo() {
     },
   })
 }
+
+export function useSetVideoWatched() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { id: string; user_id: UserId; watched: boolean }) => {
+      const { error } = await supabase
+        .from('videos')
+        .update({ watched_at: input.watched ? new Date().toISOString() : null })
+        .eq('id', input.id)
+      if (error) throw error
+      return input
+    },
+    onSuccess: (input) => {
+      qc.invalidateQueries({ queryKey: ['videos', input.user_id] })
+      qc.invalidateQueries({ queryKey: ['video', input.id] })
+    },
+  })
+}

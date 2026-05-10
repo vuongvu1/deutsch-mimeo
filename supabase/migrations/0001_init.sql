@@ -28,8 +28,10 @@ create table if not exists videos (
   youtube_id text not null,
   title text not null,
   note text,
+  watched_at timestamptz,
   created_at timestamptz not null default now()
 );
+alter table videos add column if not exists watched_at timestamptz;
 create index if not exists videos_user_id_idx on videos(user_id, created_at desc);
 
 create table if not exists sessions (

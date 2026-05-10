@@ -51,7 +51,12 @@ export function StatsPage() {
             <Stat label={t('stats.last30')} value={formatMinutes(stats.monthSeconds)} />
             <Stat label={t('stats.allTime')} value={formatMinutes(stats.allTimeSeconds)} />
             <Stat label={t('stats.longest')} value={formatSeconds(stats.longestSessionSeconds)} />
-            <Stat label={t('stats.videos')} value={`${stats.videoCount}`} />
+            <Stat label={t('stats.activeVideos')} value={`${stats.activeVideoCount}`} />
+            <Stat
+              label={t('stats.watchedVideos')}
+              value={`${stats.watchedVideoCount}`}
+              accent={stats.watchedVideoCount > 0}
+            />
           </Grid>
 
           <Heading size="5" weight="bold" mb="3">

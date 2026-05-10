@@ -1,12 +1,37 @@
+.draggableWrap {
+  position: relative;
+  touch-action: manipulation;
+}
+
+.draggableWrap[data-dragging='true'] .item {
+  opacity: 0.85;
+  cursor: grabbing;
+  box-shadow: var(--shadow-5);
+}
+
 .item {
   display: block;
   transition:
     transform 150ms ease,
-    border-color 150ms ease;
+    border-color 150ms ease,
+    opacity 150ms ease;
 }
 
 .item:hover {
   transform: translateY(-2px);
+}
+
+.item[data-watched='true'] {
+  opacity: 0.7;
+}
+
+.dragHandle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
 }
 
 .thumb {
@@ -15,4 +40,23 @@
   object-fit: cover;
   border-radius: var(--radius-2);
   background: var(--gray-a3);
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dropZone {
+  position: relative;
+  border-radius: var(--radius-3);
+  transition:
+    background 150ms ease,
+    outline-color 150ms ease;
+  outline: 2px dashed transparent;
+  outline-offset: 4px;
+  min-height: 60px;
+}
+
+.dropZone[data-over='true'] {
+  background: var(--accent-a3);
+  outline-color: var(--accent-9);
 }

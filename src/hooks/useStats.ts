@@ -10,7 +10,8 @@ export interface UserStatsForChallenge {
   monthSeconds: number
   allTimeSeconds: number
   longestSessionSeconds: number
-  videoCount: number
+  activeVideoCount: number
+  watchedVideoCount: number
   goalCompleteToday: boolean
   daysCompleteAllChallenges: number
   totalDistinctActiveDays: number
@@ -57,11 +58,20 @@ async function fetchUserStats(
     .eq('all_complete', true)
   if (completionRes.error) throw completionRes.error
 
-  const videosRes = await supabase
-    .from('videos')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-  if (videosRes.error) throw videosRes.error
+  const [activeRes, watchedRes] = await Promise.all([
+    supabase
+      .from('videos')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .is('watched_at', null),
+    supabase
+      .from('videos')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .not('watched_at', 'is', null),
+  ])
+  if (activeRes.error) throw activeRes.error
+  if (watchedRes.error) throw watchedRes.error
 
   return {
     todaySeconds,
@@ -69,7 +79,8 @@ async function fetchUserStats(
     monthSeconds,
     allTimeSeconds,
     longestSessionSeconds,
-    videoCount: videosRes.count ?? 0,
+    activeVideoCount: activeRes.count ?? 0,
+    watchedVideoCount: watchedRes.count ?? 0,
     goalCompleteToday: todaySeconds >= challenge.daily_goal_seconds,
     daysCompleteAllChallenges: completionRes.data?.length ?? 0,
     totalDistinctActiveDays: distinctActiveDays.size,

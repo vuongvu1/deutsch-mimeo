@@ -1,32 +1,25 @@
-.side {
+.row {
+  border-bottom: 1px solid var(--gray-a3);
+}
+
+.row[data-last='true'] {
+  border-bottom: none;
+}
+
+.icon {
+  font-size: 22px;
+  line-height: 1;
+  width: 28px;
   text-align: center;
-  border-radius: var(--radius-2);
-  background: var(--gray-a3);
-  border: 1px solid var(--gray-a4);
-  opacity: 0.65;
-  transition:
-    opacity 200ms ease,
-    border-color 200ms ease,
-    background 200ms ease;
-  min-width: 0;
+  cursor: default;
+  user-select: none;
+}
+
+.side {
+  opacity: 0.55;
+  transition: opacity 150ms ease;
 }
 
 .side[data-winning='true'] {
   opacity: 1;
-  border-color: var(--accent-9);
-  background: var(--accent-a3);
-}
-
-.side[data-tie='true'] {
-  opacity: 0.85;
-}
-
-.side[data-variant='mi'][data-winning='true'] .sideName,
-.side[data-variant='mi'] .sideName {
-  color: var(--pink-11);
-}
-
-.side[data-variant='meo'][data-winning='true'] .sideName,
-.side[data-variant='meo'] .sideName {
-  color: var(--sky-11);
 }

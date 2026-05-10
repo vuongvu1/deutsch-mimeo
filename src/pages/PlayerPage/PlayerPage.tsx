@@ -9,7 +9,7 @@ import { useChallengeBySlug } from '@/hooks/useChallenges'
 import { useSessionTracker } from '@/hooks/useSessionTracker'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
-import { useVideo } from '@/hooks/useVideos'
+import { useSetVideoWatched, useVideo } from '@/hooks/useVideos'
 import { formatMinutes, formatSeconds } from '@/lib/dates'
 import { paths } from '@/routes/paths'
 import type { ChallengeRow, UserId, UserRow, VideoRow } from '@/types/db'
@@ -58,6 +58,7 @@ function PlayerScreen({
     videoId: video.id,
     enabled: true,
   })
+  const setWatched = useSetVideoWatched()
   const todayQuery = useTodaySecondsForChallenge(user.id, challenge.id)
   const baselineRef = useRef<number | null>(null)
   useEffect(() => {
@@ -83,6 +84,11 @@ function PlayerScreen({
           youtubeId={video.youtube_id}
           onPlay={tracker.handlePlay}
           onPauseOrEnd={tracker.handlePauseOrEnd}
+          onEnded={() => {
+            if (!video.watched_at) {
+              setWatched.mutate({ id: video.id, user_id: user.id, watched: true })
+            }
+          }}
         />
       </Box>
 

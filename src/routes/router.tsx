@@ -1,19 +1,42 @@
+import { Container, Flex, Spinner } from '@radix-ui/themes'
+import { Suspense, lazy } from 'react'
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 
 import { AppHeader } from '@/components/AppHeader'
-import { ChallengeListPage } from '@/pages/ChallengeListPage'
 import { HomePage } from '@/pages/HomePage'
-import { PlayerPage } from '@/pages/PlayerPage'
-import { StatsPage } from '@/pages/StatsPage'
-import { VideoLibraryPage } from '@/pages/VideoLibraryPage'
 
 import { routePatterns } from './paths'
+
+const ChallengeListPage = lazy(() =>
+  import('@/pages/ChallengeListPage').then((m) => ({ default: m.ChallengeListPage })),
+)
+const VideoLibraryPage = lazy(() =>
+  import('@/pages/VideoLibraryPage').then((m) => ({ default: m.VideoLibraryPage })),
+)
+const PlayerPage = lazy(() =>
+  import('@/pages/PlayerPage').then((m) => ({ default: m.PlayerPage })),
+)
+const StatsPage = lazy(() =>
+  import('@/pages/StatsPage').then((m) => ({ default: m.StatsPage })),
+)
+
+function PageLoader() {
+  return (
+    <Container size="3" px={{ initial: '4', sm: '5' }} py="6">
+      <Flex justify="center" py="6">
+        <Spinner size="3" />
+      </Flex>
+    </Container>
+  )
+}
 
 function AppLayout() {
   return (
     <>
       <AppHeader />
-      <Outlet />
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
     </>
   )
 }
