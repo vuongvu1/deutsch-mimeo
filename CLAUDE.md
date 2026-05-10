@@ -23,7 +23,8 @@ Personal German-learning challenge tracker for **two users** (Mi 🐷 and Meo �
 - **React Router v7** with createBrowserRouter
 - **Plain CSS modules** + CSS variables (tokens in `src/index.css`)
 - **YouTube IFrame Player API** for play-state events; **YouTube oEmbed** for auto-fetching titles (no API key needed)
-- `@/*` path alias → `src/*` (configured in `tsconfig.app.json` and `vite.config.ts`)
+- `@/*` path alias → `src/*` (configured in `tsconfig.app.json` and `vite.config.ts` using `fileURLToPath(new URL('./src', import.meta.url))` — ESM idiom, no `__dirname`)
+- pnpm pinned via `package.json#packageManager` (currently `10.33.2`)
 
 ## Data model (Supabase)
 
@@ -103,15 +104,25 @@ PlayerPage shows two stats: "this session" (= `sessionSeconds`) and "today total
 3. `daily_completion` view starts gating "day complete" on this new challenge for any day that has activity
 4. To wire a clickable destination, add an entry to `SLUG_TO_PATH` in `ChallengeListPage.tsx` and build the page(s)
 
+## Deployment
+
+Target is **Cloudflare Pages**. SPA fallback configured via `public/_redirects` (single line: `/*  /index.html  200`) — needed because React Router uses client-side routing on `/u/:userId/...` paths.
+
+Build command: `pnpm build` (output: `dist/`). Env vars to set in CF Pages: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
+
 ## What's done (commit log)
 
 - `764a624` Initial commit: Deutsch Duo scaffold — full MVP (all 5 pages, Supabase wiring, build green)
 - `7fbee7c` Rename to Deutsch MiMeo
 - `414735e` Add 13-week activity heatmap to stats page
+- `e5a2ac8` chore: update deps (bumped `@types/node`, pinned pnpm)
+- `0d296fb` Add SPA fallback for Cloudflare Pages (`public/_redirects`)
+- `0332923` Add path aliasing for source directory in Vite config (ESM `fileURLToPath` style)
+- `088945f` Add CLAUDE.md with session context for future Claude sessions
 
 ## Open ideas (not started — pick what's next)
 
-- **Push to GitHub + deploy on Vercel** — needs the user to create the repo
+- **Push to GitHub + deploy on Cloudflare Pages** — needs the user to create the repo (CF Pages config notes above)
 - **Per-video session history** on the player page (last N sessions, aggregated per-video minutes)
 - **All-complete calendar** — different lens than the heatmap, gates on multi-challenge logic
 - **Add a 2nd challenge end-to-end** (e.g. `lesen` reading) to exercise multi-challenge "day complete" in the UI
