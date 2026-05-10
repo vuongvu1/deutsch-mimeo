@@ -1,4 +1,18 @@
+import { Cross2Icon, PlusIcon } from '@radix-ui/react-icons'
+import {
+  Box,
+  Button,
+  Callout,
+  Card,
+  Container,
+  Flex,
+  Heading,
+  IconButton,
+  Text,
+  TextField,
+} from '@radix-ui/themes'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
 import { TopBar } from '@/components/TopBar'
@@ -12,51 +26,57 @@ import type { UserId, UserRow, VideoRow } from '@/types/db'
 import styles from './VideoLibraryPage.module.css'
 
 export function VideoLibraryPage() {
+  const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
   const userQuery = useUser(userId as UserId | undefined)
   const videosQuery = useVideos(userId as UserId | undefined)
   const challengeQuery = useChallengeBySlug('listen')
 
   if (userId !== 'mi' && userId !== 'meo') return <Navigate to="/" replace />
-  if (userQuery.isLoading) {
-    return (
-      <div className="container">
-        <p className="muted">Lade…</p>
-      </div>
-    )
-  }
   const user = userQuery.data
   if (!user) return <Navigate to="/" replace />
 
   const videos = videosQuery.data ?? []
-  const challengeTitle = challengeQuery.data?.title ?? 'Listen'
+  const challengeTitle = t(`challenges.${challengeQuery.data?.slug ?? 'listen'}.title`, {
+    defaultValue: challengeQuery.data?.title ?? 'Listen',
+  })
 
   return (
-    <div className="container">
-      <TopBar back={{ to: paths.challenges(user.id) }} title={challengeTitle} emoji="🎧" />
+    <Container size="3" px={{ initial: '4', sm: '5' }} py={{ initial: '5', sm: '6' }}>
+      <TopBar
+        back={{ to: paths.challenges(user.id) }}
+        title={challengeTitle}
+        emoji={t('videoLibrary.pageTitleEmoji')}
+      />
 
       <AddVideoForm user={user} />
 
-      <h2 className={styles.h2}>
-        Deine Videos <span className="subtle">({videos.length})</span>
-      </h2>
+      <Heading size="5" weight="bold" mt="6" mb="3">
+        {t('videoLibrary.yourVideos')}{' '}
+        <Text size="3" color="gray" weight="regular">
+          ({videos.length})
+        </Text>
+      </Heading>
 
       {videosQuery.isLoading ? (
-        <p className="muted">Lade…</p>
+        <Text color="gray">{t('common.loading')}</Text>
       ) : videos.length === 0 ? (
-        <div className="card muted">Noch keine Videos. Füge eins oben hinzu.</div>
+        <Card>
+          <Text color="gray">{t('videoLibrary.empty')}</Text>
+        </Card>
       ) : (
-        <div className={styles.list}>
+        <Flex direction="column" gap="3">
           {videos.map((v) => (
             <VideoItem key={v.id} video={v} userId={user.id} />
           ))}
-        </div>
+        </Flex>
       )}
-    </div>
+    </Container>
   )
 }
 
 function AddVideoForm({ user }: { user: UserRow }) {
+  const { t } = useTranslation()
   const [url, setUrl] = useState('')
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -68,7 +88,7 @@ function AddVideoForm({ user }: { user: UserRow }) {
     setError(null)
     const id = extractYouTubeId(url)
     if (!id) {
-      setError('Bitte gültige YouTube-URL einfügen')
+      setError(t('videoLibrary.invalidUrl'))
       return
     }
     setSubmitting(true)
@@ -83,62 +103,102 @@ function AddVideoForm({ user }: { user: UserRow }) {
       setUrl('')
       setNote('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Hinzufügen')
+      setError(err instanceof Error ? err.message : t('videoLibrary.addError'))
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className={styles.form}>
-      <div className={styles.fields}>
-        <input
-          type="url"
-          placeholder="YouTube-URL einfügen…"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Notiz (optional)"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </div>
-      <button type="submit" className="btn btn-primary" disabled={submitting || !url.trim()}>
-        {submitting ? 'Hinzufügen…' : '+ Video'}
-      </button>
-      {error ? <div className={styles.error}>{error}</div> : null}
-    </form>
+    <Card asChild>
+      <form onSubmit={onSubmit}>
+        <Flex direction="column" gap="3">
+          <TextField.Root
+            type="url"
+            size="3"
+            placeholder={t('videoLibrary.addUrlPlaceholder')}
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            required
+          />
+          <TextField.Root
+            type="text"
+            size="3"
+            placeholder={t('videoLibrary.notePlaceholder')}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <Button
+            type="submit"
+            size="3"
+            variant="solid"
+            disabled={submitting || !url.trim()}
+          >
+            <PlusIcon />
+            {submitting ? t('videoLibrary.adding') : t('videoLibrary.addCta')}
+          </Button>
+          {error ? (
+            <Callout.Root color="red" size="1">
+              <Callout.Text>{error}</Callout.Text>
+            </Callout.Root>
+          ) : null}
+        </Flex>
+      </form>
+    </Card>
   )
 }
 
 function VideoItem({ video, userId }: { video: VideoRow; userId: UserId }) {
+  const { t } = useTranslation()
   const deleteVideo = useDeleteVideo()
   const onDelete = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (confirm(`„${video.title}“ löschen?`)) {
+    if (confirm(t('videoLibrary.confirmDelete', { title: video.title }))) {
       deleteVideo.mutate({ id: video.id, user_id: userId })
     }
   }
   return (
-    <Link to={paths.player(userId, video.id)} className={styles.item}>
-      <img className={styles.thumb} src={youtubeThumbUrl(video.youtube_id)} alt="" />
-      <div className={styles.itemBody}>
-        <div className={styles.itemTitle}>{video.title}</div>
-        {video.note ? <div className={styles.itemNote}>{video.note}</div> : null}
-      </div>
-      <button
-        type="button"
-        className={styles.deleteBtn}
-        onClick={onDelete}
-        aria-label="Löschen"
-        title="Löschen"
-      >
-        ×
-      </button>
-    </Link>
+    <Card asChild variant="surface">
+      <Link to={paths.player(userId, video.id)} className={styles.item}>
+        <Flex align="center" gap="3">
+          <Box asChild flexShrink="0">
+            <img
+              className={styles.thumb}
+              src={youtubeThumbUrl(video.youtube_id)}
+              alt=""
+            />
+          </Box>
+          <Box flexGrow="1" minWidth="0">
+            <Text
+              as="div"
+              size="3"
+              weight="medium"
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {video.title}
+            </Text>
+            {video.note ? (
+              <Text as="div" size="2" color="gray">
+                {video.note}
+              </Text>
+            ) : null}
+          </Box>
+          <IconButton
+            type="button"
+            variant="ghost"
+            color="gray"
+            onClick={onDelete}
+            aria-label={t('common.delete')}
+          >
+            <Cross2Icon />
+          </IconButton>
+        </Flex>
+      </Link>
+    </Card>
   )
 }

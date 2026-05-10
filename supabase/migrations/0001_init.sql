@@ -119,8 +119,10 @@ on conflict (id) do update
   set display_name = excluded.display_name,
       emoji        = excluded.emoji;
 
-insert into challenges (slug, title, description, daily_goal_seconds, sort_order) values
-  ('listen', 'Listen 30 min/day',
+-- The id is pinned so it matches the LISTEN_CHALLENGE_ID constant in the frontend
+-- (src/hooks/useChallenges.ts) — sessions.challenge_id FK relies on this value.
+insert into challenges (id, slug, title, description, daily_goal_seconds, sort_order) values
+  ('00000000-0000-4000-8000-000000000001', 'listen', 'Listen 30 min/day',
    'Watch German YouTube videos for at least 30 minutes total each day.',
    1800, 0)
 on conflict (slug) do update

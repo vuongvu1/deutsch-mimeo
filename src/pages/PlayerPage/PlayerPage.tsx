@@ -1,8 +1,10 @@
+import { Box, Callout, Card, Container, Flex, Grid, Text } from '@radix-ui/themes'
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 
-import { TopBar } from '@/components/TopBar'
 import { ProgressBar } from '@/components/ProgressBar'
+import { TopBar } from '@/components/TopBar'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
 import { useSessionTracker } from '@/hooks/useSessionTracker'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
@@ -16,6 +18,7 @@ import styles from './PlayerPage.module.css'
 import { YouTubePlayer } from './YouTubePlayer'
 
 export function PlayerPage() {
+  const { t } = useTranslation()
   const { userId, videoId } = useParams<{ userId: string; videoId: string }>()
   const userQuery = useUser(userId as UserId | undefined)
   const videoQuery = useVideo(videoId)
@@ -23,11 +26,11 @@ export function PlayerPage() {
 
   if (userId !== 'mi' && userId !== 'meo') return <Navigate to="/" replace />
 
-  if (userQuery.isLoading || videoQuery.isLoading || challengeQuery.isLoading) {
+  if (videoQuery.isLoading) {
     return (
-      <div className="container">
-        <p className="muted">Lade…</p>
-      </div>
+      <Container size="3" px={{ initial: '4', sm: '5' }} py="6">
+        <Text color="gray">{t('common.loading')}</Text>
+      </Container>
     )
   }
   const user = userQuery.data
@@ -48,6 +51,7 @@ function PlayerScreen({
   video: VideoRow
   challenge: ChallengeRow
 }) {
+  const { t } = useTranslation()
   const tracker = useSessionTracker({
     userId: user.id,
     challengeId: challenge.id,
@@ -55,8 +59,6 @@ function PlayerScreen({
     enabled: true,
   })
   const todayQuery = useTodaySecondsForChallenge(user.id, challenge.id)
-  // Snapshot the persisted total at first load; live = snapshot + current session,
-  // so flushes during this session don't double-count.
   const baselineRef = useRef<number | null>(null)
   useEffect(() => {
     if (baselineRef.current === null && todayQuery.data !== undefined) {
@@ -69,46 +71,56 @@ function PlayerScreen({
   const complete = liveToday >= goal
 
   return (
-    <div className="container">
+    <Container size="3" px={{ initial: '4', sm: '5' }} py={{ initial: '5', sm: '6' }}>
       <TopBar
         back={{ to: paths.videoLibrary(user.id) }}
         title={video.title}
         emoji={user.emoji}
       />
 
-      <div className={styles.playerWrap}>
+      <Box className={styles.playerWrap} mb="5">
         <YouTubePlayer
           youtubeId={video.youtube_id}
           onPlay={tracker.handlePlay}
           onPauseOrEnd={tracker.handlePauseOrEnd}
         />
-      </div>
+      </Box>
 
-      <div className={styles.statsRow}>
-        <div className={styles.stat}>
-          <div className={styles.statLabel}>Diese Session</div>
-          <div className={styles.statValue}>{formatSeconds(tracker.sessionSeconds)}</div>
-          <div className={styles.statHint}>
-            {tracker.isPlaying ? '▶︎ läuft' : '⏸ pausiert'}
-          </div>
-        </div>
-        <div className={styles.stat}>
-          <div className={styles.statLabel}>Heute total</div>
-          <div className={styles.statValue}>
-            {formatMinutes(liveToday)}{' '}
-            <span className="subtle">/ {formatMinutes(goal)}</span>
-          </div>
-          <div className={styles.progress}>
+      <Grid columns={{ initial: '1', sm: '2' }} gap="3" mb="5">
+        <Card>
+          <Text size="2" color="gray">
+            {t('player.session')}
+          </Text>
+          <Text as="div" size="7" weight="bold" mt="1">
+            {formatSeconds(tracker.sessionSeconds)}
+          </Text>
+          <Text as="div" size="2" color={tracker.isPlaying ? 'green' : 'gray'} mt="1">
+            {tracker.isPlaying ? t('player.playing') : t('player.paused')}
+          </Text>
+        </Card>
+        <Card>
+          <Text size="2" color="gray">
+            {t('player.todayTotal')}
+          </Text>
+          <Flex align="baseline" gap="2" mt="1">
+            <Text size="7" weight="bold">
+              {formatMinutes(liveToday)}
+            </Text>
+            <Text size="3" color="gray">
+              / {formatMinutes(goal)}
+            </Text>
+          </Flex>
+          <Box mt="3">
             <ProgressBar value={liveToday} max={goal} complete={complete} />
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Card>
+      </Grid>
 
       {complete ? (
-        <div className={styles.complete}>
-          🎉 Tagesziel erreicht! Du kannst weiterhören — alles zählt.
-        </div>
+        <Callout.Root color="green">
+          <Callout.Text>{t('player.goalReached')}</Callout.Text>
+        </Callout.Root>
       ) : null}
-    </div>
+    </Container>
   )
 }

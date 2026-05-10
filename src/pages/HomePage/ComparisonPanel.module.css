@@ -1,107 +1,32 @@
-.grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 640px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-4);
-  }
-}
-
-.cat {
-  background: var(--bg-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-}
-
-.catHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.catIcon {
-  font-size: 22px;
-}
-
-.catLabel {
-  font-size: 14px;
-  color: var(--text-2);
-  font-weight: 600;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.vs {
-  font-size: 12px;
-  color: var(--text-3);
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
 .side {
-  position: relative;
   text-align: center;
-  padding: var(--space-3) var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--bg-2);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-2);
+  background: var(--gray-a3);
+  border: 1px solid var(--gray-a4);
   opacity: 0.65;
   transition:
     opacity 200ms ease,
-    border-color 200ms ease;
+    border-color 200ms ease,
+    background 200ms ease;
+  min-width: 0;
 }
 
 .side[data-winning='true'] {
   opacity: 1;
-  border-color: var(--accent);
-  background: var(--bg-3);
+  border-color: var(--accent-9);
+  background: var(--accent-a3);
 }
 
 .side[data-tie='true'] {
   opacity: 0.85;
 }
 
-.sideEmoji {
-  position: relative;
-  font-size: 32px;
-  line-height: 1;
-}
-
-.crown {
-  position: absolute;
-  top: -10px;
-  right: 50%;
-  transform: translateX(28px);
-  font-size: 18px;
-}
-
-.sideName {
-  font-size: 13px;
-  color: var(--text-2);
-  margin-top: var(--space-1);
-}
-
-.sideValue {
-  font-size: 18px;
-  font-weight: 700;
-  margin-top: var(--space-1);
-}
-
+.side[data-variant='mi'][data-winning='true'] .sideName,
 .side[data-variant='mi'] .sideName {
-  color: var(--mi);
+  color: var(--pink-11);
 }
 
+.side[data-variant='meo'][data-winning='true'] .sideName,
 .side[data-variant='meo'] .sideName {
-  color: var(--meo);
+  color: var(--sky-11);
 }

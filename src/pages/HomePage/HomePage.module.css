@@ -1,50 +1,4 @@
-.header {
-  text-align: center;
-  margin-bottom: var(--space-6);
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
-}
-
-.brandEmoji {
-  font-size: 32px;
-}
-
-.brandTitle {
-  font-size: 28px;
-  letter-spacing: -0.02em;
-}
-
-.userGrid {
-  display: grid;
-  gap: var(--space-4);
-  grid-template-columns: 1fr;
-  margin-bottom: var(--space-7);
-}
-
-@media (min-width: 640px) {
-  .userGrid {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-5);
-  }
-}
-
 .userCard {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: var(--space-7) var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--bg-1);
-  border: 2px solid var(--border);
-  box-shadow: var(--shadow-2);
   transition:
     transform 200ms ease,
     border-color 200ms ease;
@@ -55,39 +9,11 @@
 }
 
 .userCard[data-variant='mi'] {
-  background: linear-gradient(160deg, var(--mi-bg), var(--bg-1));
-  border-color: var(--mi);
+  background: linear-gradient(160deg, var(--pink-a3), var(--color-panel-solid));
+  border-color: var(--pink-a7);
 }
 
 .userCard[data-variant='meo'] {
-  background: linear-gradient(160deg, var(--meo-bg), var(--bg-1));
-  border-color: var(--meo);
-}
-
-.userEmoji {
-  font-size: 72px;
-  line-height: 1;
-  margin-bottom: var(--space-3);
-}
-
-.userName {
-  font-size: 28px;
-  font-weight: 800;
-  margin-bottom: var(--space-2);
-}
-
-.userCta {
-  color: var(--text-2);
-  font-size: 14px;
-}
-
-.sectionTitle {
-  font-size: 18px;
-  margin-bottom: var(--space-4);
-  color: var(--text-2);
-  font-weight: 600;
-}
-
-.comparison {
-  margin-bottom: var(--space-6);
+  background: linear-gradient(160deg, var(--sky-a3), var(--color-panel-solid));
+  border-color: var(--sky-a7);
 }

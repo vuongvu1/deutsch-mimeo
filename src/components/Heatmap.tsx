@@ -1,3 +1,6 @@
+import { Text } from '@radix-ui/themes'
+import { useTranslation } from 'react-i18next'
+
 import { formatMinutes } from '@/lib/dates'
 
 import styles from './Heatmap.module.css'
@@ -7,9 +10,6 @@ interface Props {
   goalSeconds: number
   weeks?: number
 }
-
-const WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
-const MONTH_LABELS = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']
 
 function localDateString(d: Date): string {
   const y = d.getFullYear()
@@ -28,6 +28,10 @@ function intensity(seconds: number, goal: number): 0 | 1 | 2 | 3 | 4 {
 }
 
 export function Heatmap({ totals, goalSeconds, weeks = 13 }: Props) {
+  const { t } = useTranslation()
+  const weekdays = t('heatmap.weekdays', { returnObjects: true }) as string[]
+  const months = t('heatmap.months', { returnObjects: true }) as string[]
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   // Monday-based: getDay() returns 0 for Sun, 1 for Mon. Map Mon=0..Sun=6.
@@ -54,7 +58,7 @@ export function Heatmap({ totals, goalSeconds, weeks = 13 }: Props) {
   for (let i = 0; i < cols.length; i++) {
     const m = cols[i].days[0].date.getMonth()
     if (m !== lastMonth) {
-      monthMarkers.push({ col: i, label: MONTH_LABELS[m] })
+      monthMarkers.push({ col: i, label: months[m] })
       lastMonth = m
     }
   }
@@ -74,8 +78,12 @@ export function Heatmap({ totals, goalSeconds, weeks = 13 }: Props) {
       </div>
       <div className={styles.grid}>
         <div className={styles.weekdayCol}>
-          {WEEKDAY_LABELS.map((d, i) => (
-            <span key={d} className={styles.weekdayLabel} data-show={i % 2 === 0 ? 'true' : 'false'}>
+          {weekdays.map((d, i) => (
+            <span
+              key={d}
+              className={styles.weekdayLabel}
+              data-show={i % 2 === 0 ? 'true' : 'false'}
+            >
               {d}
             </span>
           ))}
@@ -102,11 +110,15 @@ export function Heatmap({ totals, goalSeconds, weeks = 13 }: Props) {
         ))}
       </div>
       <div className={styles.legend}>
-        <span className="subtle">Weniger</span>
+        <Text color="gray" size="1">
+          {t('heatmap.less')}
+        </Text>
         {[0, 1, 2, 3, 4].map((lvl) => (
           <div key={lvl} className={styles.cell} data-level={lvl} aria-hidden />
         ))}
-        <span className="subtle">Mehr</span>
+        <Text color="gray" size="1">
+          {t('heatmap.more')}
+        </Text>
       </div>
     </div>
   )
