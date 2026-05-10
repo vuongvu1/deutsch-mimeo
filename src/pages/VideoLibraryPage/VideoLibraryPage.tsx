@@ -10,6 +10,7 @@ import {
 } from '@dnd-kit/core'
 import { CheckIcon, Cross2Icon, PlusIcon, ResetIcon } from '@radix-ui/react-icons'
 import {
+  AlertDialog,
   Box,
   Button,
   Callout,
@@ -154,7 +155,6 @@ function DroppableSection({ id, children }: { id: Section; children: ReactNode }
 function AddVideoForm({ user }: { user: UserRow }) {
   const { t } = useTranslation()
   const [url, setUrl] = useState('')
-  const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const addVideo = useAddVideo()
@@ -174,10 +174,8 @@ function AddVideoForm({ user }: { user: UserRow }) {
         user_id: user.id,
         youtube_id: id,
         title,
-        note: note.trim() || null,
       })
       setUrl('')
-      setNote('')
     } catch (err) {
       setError(err instanceof Error ? err.message : t('videoLibrary.addError'))
     } finally {
@@ -197,15 +195,6 @@ function AddVideoForm({ user }: { user: UserRow }) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
-            />
-          </Box>
-          <Box width={{ initial: '100%', sm: '180px' }}>
-            <TextField.Root
-              type="text"
-              size="3"
-              placeholder={t('videoLibrary.notePlaceholder')}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
             />
           </Box>
           <Button type="submit" size="3" variant="solid" disabled={submitting || !url.trim()}>
@@ -229,6 +218,7 @@ function DraggableVideoItem({ video, userId }: { video: VideoRow; userId: UserId
   const { t } = useTranslation()
   const deleteVideo = useDeleteVideo()
   const setWatched = useSetVideoWatched()
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const isWatched = !!video.watched_at
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -241,12 +231,14 @@ function DraggableVideoItem({ video, userId }: { video: VideoRow; userId: UserId
       }
     : undefined
 
-  const onDelete = (e: React.MouseEvent) => {
+  const onDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (confirm(t('videoLibrary.confirmDelete', { title: video.title }))) {
-      deleteVideo.mutate({ id: video.id, user_id: userId })
-    }
+    setDeleteOpen(true)
+  }
+
+  const onConfirmDelete = () => {
+    deleteVideo.mutate({ id: video.id, user_id: userId })
   }
 
   const onToggleWatched = (e: React.MouseEvent) => {
@@ -276,13 +268,8 @@ function DraggableVideoItem({ video, userId }: { video: VideoRow; userId: UserId
               >
                 {video.title}
               </Text>
-              {video.note ? (
-                <Text as="div" size="2" color="gray">
-                  {video.note}
-                </Text>
-              ) : null}
             </Box>
-            <Flex gap="1" flexShrink="0">
+            <Flex gap="2" flexShrink="0" align="center" ml="2">
               <Tooltip
                 content={
                   isWatched ? t('videoLibrary.unmarkWatched') : t('videoLibrary.markWatched')
@@ -307,7 +294,7 @@ function DraggableVideoItem({ video, userId }: { video: VideoRow; userId: UserId
                   type="button"
                   variant="ghost"
                   color="gray"
-                  onClick={onDelete}
+                  onClick={onDeleteClick}
                   aria-label={t('common.delete')}
                 >
                   <Cross2Icon />
@@ -317,6 +304,28 @@ function DraggableVideoItem({ video, userId }: { video: VideoRow; userId: UserId
           </Flex>
         </Link>
       </Card>
+      <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialog.Content maxWidth="450px">
+          <AlertDialog.Title>
+            {t('videoLibrary.confirmDelete', { title: video.title })}
+          </AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            {t('videoLibrary.deleteWarning')}
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                {t('common.cancel')}
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button variant="solid" color="red" onClick={onConfirmDelete}>
+                {t('common.delete')}
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </div>
   )
 }
