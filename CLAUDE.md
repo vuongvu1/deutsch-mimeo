@@ -106,9 +106,14 @@ PlayerPage shows two stats: "this session" (= `sessionSeconds`) and "today total
 
 ## Deployment
 
-Target is **Cloudflare Pages**. SPA fallback configured via `public/_redirects` (single line: `/*  /index.html  200`) — needed because React Router uses client-side routing on `/u/:userId/...` paths.
+Deployed via **Cloudflare Workers + Static Assets** (the path that replaces classic Pages for Vite projects). Config pinned in `wrangler.jsonc`:
 
-Build command: `pnpm build` (output: `dist/`). Env vars to set in CF Pages: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- `assets.not_found_handling: "single-page-application"` handles React Router's client-side routing on `/u/:userId/...` paths. Do **not** add a `public/_redirects` file — Workers Assets rejects rules that strip `.html`/`/index` (infinite-loop validation) and the SPA mode already covers fallback.
+- `compatibility_date` is pinned to the day deploy was set up; bump it deliberately when opting into newer runtime behavior.
+
+Build command: `pnpm build` (output: `dist/`). Env vars to set in the Cloudflare dashboard for both Production and Preview: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, plus `NODE_VERSION=22` (Vite 8 needs Node ≥20.19).
+
+Pushes to `main` auto-redeploy via the Cloudflare ↔ GitHub integration; PRs get preview URLs at `*.pages.dev`. Add the production URL (and any custom domain) to Supabase → Authentication → URL Configuration if you ever turn on auth.
 
 ## What's done (commit log)
 
