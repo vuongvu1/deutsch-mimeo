@@ -13,7 +13,7 @@ import {
 } from '@radix-ui/themes'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import { useClearSessions, useResetData } from '@/hooks/useResetData'
 import { paths } from '@/routes/paths'
@@ -22,6 +22,8 @@ import { useAppearance } from '@/theme/ThemeProvider'
 export function AppHeader() {
   const { t, i18n } = useTranslation()
   const { appearance, toggle } = useAppearance()
+  const [searchParams] = useSearchParams()
+  const isAdmin = searchParams.get('admin') === 'true'
 
   const currentLang = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'de'
   const themeTooltip =
@@ -60,28 +62,32 @@ export function AppHeader() {
                   {appearance === 'dark' ? <SunIcon /> : <MoonIcon />}
                 </IconButton>
               </Tooltip>
-              <DestructiveAction
-                triggerIcon={<ResetIcon />}
-                triggerColor="amber"
-                triggerLabel={t('header.clearSessions')}
-                title={t('clearSessions.title')}
-                body={t('clearSessions.body')}
-                confirmCta={t('clearSessions.confirmCta')}
-                inProgressLabel={t('clearSessions.inProgress')}
-                errorFallback={t('clearSessions.error')}
-                useMutationHook={useClearSessions}
-              />
-              <DestructiveAction
-                triggerIcon={<TrashIcon />}
-                triggerColor="red"
-                triggerLabel={t('header.reset')}
-                title={t('reset.title')}
-                body={t('reset.body')}
-                confirmCta={t('reset.confirmCta')}
-                inProgressLabel={t('reset.inProgress')}
-                errorFallback={t('reset.error')}
-                useMutationHook={useResetData}
-              />
+              {isAdmin ? (
+                <>
+                  <DestructiveAction
+                    triggerIcon={<ResetIcon />}
+                    triggerColor="amber"
+                    triggerLabel={t('header.clearSessions')}
+                    title={t('clearSessions.title')}
+                    body={t('clearSessions.body')}
+                    confirmCta={t('clearSessions.confirmCta')}
+                    inProgressLabel={t('clearSessions.inProgress')}
+                    errorFallback={t('clearSessions.error')}
+                    useMutationHook={useClearSessions}
+                  />
+                  <DestructiveAction
+                    triggerIcon={<TrashIcon />}
+                    triggerColor="red"
+                    triggerLabel={t('header.reset')}
+                    title={t('reset.title')}
+                    body={t('reset.body')}
+                    confirmCta={t('reset.confirmCta')}
+                    inProgressLabel={t('reset.inProgress')}
+                    errorFallback={t('reset.error')}
+                    useMutationHook={useResetData}
+                  />
+                </>
+              ) : null}
             </Flex>
           </Flex>
         </Container>
