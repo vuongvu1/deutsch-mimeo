@@ -24,6 +24,7 @@ export interface VideoRow {
   title: string
   note: string | null
   watched_at: string | null
+  position: number
   created_at: string
 }
 

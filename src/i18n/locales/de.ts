@@ -66,6 +66,8 @@ export const de = {
     markWatched: 'Als gesehen markieren',
     unmarkWatched: 'Als ungesehen markieren',
     dropHere: 'Hier ablegen',
+    moveUp: 'Nach oben',
+    moveDown: 'Nach unten',
   },
   player: {
     session: 'Diese Session',

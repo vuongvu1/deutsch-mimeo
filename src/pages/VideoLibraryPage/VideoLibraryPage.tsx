@@ -1,14 +1,11 @@
 import {
-  DndContext,
-  PointerSensor,
-  TouchSensor,
-  useDraggable,
-  useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import { CheckIcon, Cross2Icon, PlusIcon, ResetIcon } from '@radix-ui/react-icons'
+  ArrowDownIcon,
+  ArrowUpIcon,
+  CheckIcon,
+  Cross2Icon,
+  PlusIcon,
+  ResetIcon,
+} from '@radix-ui/react-icons'
 import {
   AlertDialog,
   Box,
@@ -23,7 +20,7 @@ import {
   TextField,
   Tooltip,
 } from '@radix-ui/themes'
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
@@ -33,6 +30,7 @@ import { useUser } from '@/hooks/useUsers'
 import {
   useAddVideo,
   useDeleteVideo,
+  useReorderVideos,
   useSetVideoWatched,
   useVideos,
 } from '@/hooks/useVideos'
@@ -42,20 +40,12 @@ import type { UserId, UserRow, VideoRow } from '@/types/db'
 
 import styles from './VideoLibraryPage.module.css'
 
-type Section = 'active' | 'watched'
-
 export function VideoLibraryPage() {
   const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
   const userQuery = useUser(userId as UserId | undefined)
   const videosQuery = useVideos(userId as UserId | undefined)
   const challengeQuery = useChallengeBySlug('listen')
-  const setWatched = useSetVideoWatched()
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
-  )
 
   if (userId !== 'mi' && userId !== 'meo') return <Navigate to="/" replace />
   const user = userQuery.data
@@ -69,21 +59,6 @@ export function VideoLibraryPage() {
     defaultValue: challengeQuery.data?.title ?? 'Listen',
   })
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active: dragged, over } = event
-    if (!over) return
-    const id = String(dragged.id)
-    const target = over.id as Section
-    const video = videos.find((v) => v.id === id)
-    if (!video) return
-    const isWatched = !!video.watched_at
-    if (target === 'watched' && !isWatched) {
-      setWatched.mutate({ id, user_id: user.id, watched: true })
-    } else if (target === 'active' && isWatched) {
-      setWatched.mutate({ id, user_id: user.id, watched: false })
-    }
-  }
-
   return (
     <Container size="3" px={{ initial: '4', sm: '5' }} py={{ initial: '5', sm: '6' }}>
       <TopBar
@@ -94,61 +69,58 @@ export function VideoLibraryPage() {
 
       <AddVideoForm user={user} />
 
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <Heading size="5" weight="bold" mt="6" mb="3">
-          {t('videoLibrary.yourVideos')}{' '}
-          <Text size="3" color="gray" weight="regular">
-            ({active.length})
-          </Text>
-        </Heading>
+      <Heading size="5" weight="bold" mt="6" mb="3">
+        {t('videoLibrary.yourVideos')}{' '}
+        <Text size="3" color="gray" weight="regular">
+          ({active.length})
+        </Text>
+      </Heading>
 
-        <DroppableSection id="active">
-          {videosQuery.isLoading ? (
-            <Text color="gray">{t('common.loading')}</Text>
-          ) : active.length === 0 ? (
-            <Card>
-              <Text color="gray">{t('videoLibrary.empty')}</Text>
-            </Card>
-          ) : (
-            <Flex direction="column" gap="3">
-              {active.map((v) => (
-                <DraggableVideoItem key={v.id} video={v} userId={user.id} />
-              ))}
-            </Flex>
-          )}
-        </DroppableSection>
+      {videosQuery.isLoading ? (
+        <Text color="gray">{t('common.loading')}</Text>
+      ) : active.length === 0 ? (
+        <Card>
+          <Text color="gray">{t('videoLibrary.empty')}</Text>
+        </Card>
+      ) : (
+        <Flex direction="column" gap="3">
+          {active.map((v, idx) => (
+            <VideoItem
+              key={v.id}
+              video={v}
+              userId={user.id}
+              section={active}
+              index={idx}
+            />
+          ))}
+        </Flex>
+      )}
 
-        <Heading size="5" weight="bold" mt="6" mb="3">
-          {t('videoLibrary.watched')}{' '}
-          <Text size="3" color="gray" weight="regular">
-            ({watched.length})
-          </Text>
-        </Heading>
+      <Heading size="5" weight="bold" mt="6" mb="3">
+        {t('videoLibrary.watched')}{' '}
+        <Text size="3" color="gray" weight="regular">
+          ({watched.length})
+        </Text>
+      </Heading>
 
-        <DroppableSection id="watched">
-          {watched.length === 0 ? (
-            <Card>
-              <Text color="gray">{t('videoLibrary.watchedEmpty')}</Text>
-            </Card>
-          ) : (
-            <Flex direction="column" gap="3">
-              {watched.map((v) => (
-                <DraggableVideoItem key={v.id} video={v} userId={user.id} />
-              ))}
-            </Flex>
-          )}
-        </DroppableSection>
-      </DndContext>
+      {watched.length === 0 ? (
+        <Card>
+          <Text color="gray">{t('videoLibrary.watchedEmpty')}</Text>
+        </Card>
+      ) : (
+        <Flex direction="column" gap="3">
+          {watched.map((v, idx) => (
+            <VideoItem
+              key={v.id}
+              video={v}
+              userId={user.id}
+              section={watched}
+              index={idx}
+            />
+          ))}
+        </Flex>
+      )}
     </Container>
-  )
-}
-
-function DroppableSection({ id, children }: { id: Section; children: ReactNode }) {
-  const { isOver, setNodeRef } = useDroppable({ id })
-  return (
-    <Box ref={setNodeRef} className={styles.dropZone} data-over={isOver}>
-      {children}
-    </Box>
   )
 }
 
@@ -214,22 +186,25 @@ function AddVideoForm({ user }: { user: UserRow }) {
   )
 }
 
-function DraggableVideoItem({ video, userId }: { video: VideoRow; userId: UserId }) {
+function VideoItem({
+  video,
+  userId,
+  section,
+  index,
+}: {
+  video: VideoRow
+  userId: UserId
+  section: VideoRow[]
+  index: number
+}) {
   const { t } = useTranslation()
   const deleteVideo = useDeleteVideo()
   const setWatched = useSetVideoWatched()
+  const reorder = useReorderVideos()
   const [deleteOpen, setDeleteOpen] = useState(false)
   const isWatched = !!video.watched_at
-
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: video.id,
-  })
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: 20,
-      }
-    : undefined
+  const canMoveUp = index > 0
+  const canMoveDown = index < section.length - 1
 
   const onDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -247,14 +222,32 @@ function DraggableVideoItem({ video, userId }: { video: VideoRow; userId: UserId
     setWatched.mutate({ id: video.id, user_id: userId, watched: !isWatched })
   }
 
+  const swap = (i: number, j: number) => {
+    const next = section.slice()
+    const tmp = next[i]
+    next[i] = next[j]
+    next[j] = tmp
+    reorder.mutate({ user_id: userId, orderedIds: next.map((v) => v.id) })
+  }
+
+  const onMoveUp = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (canMoveUp) swap(index, index - 1)
+  }
+
+  const onMoveDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (canMoveDown) swap(index, index + 1)
+  }
+
   return (
-    <div ref={setNodeRef} style={style} className={styles.draggableWrap} data-dragging={isDragging}>
+    <>
       <Card asChild variant="surface" className={styles.item} data-watched={isWatched}>
         <Link to={paths.player(userId, video.id)}>
           <Flex align="center" gap="3">
-            <Box flexShrink="0" {...listeners} {...attributes} className={styles.dragHandle}>
-              <img className={styles.thumb} src={youtubeThumbUrl(video.youtube_id)} alt="" />
-            </Box>
+            <img className={styles.thumb} src={youtubeThumbUrl(video.youtube_id)} alt="" />
             <Box flexGrow="1" minWidth="0">
               <Text
                 as="div"
@@ -270,6 +263,30 @@ function DraggableVideoItem({ video, userId }: { video: VideoRow; userId: UserId
               </Text>
             </Box>
             <Flex gap="2" flexShrink="0" align="center" ml="2">
+              <Tooltip content={t('videoLibrary.moveUp')}>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  disabled={!canMoveUp}
+                  onClick={onMoveUp}
+                  aria-label={t('videoLibrary.moveUp')}
+                >
+                  <ArrowUpIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip content={t('videoLibrary.moveDown')}>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  disabled={!canMoveDown}
+                  onClick={onMoveDown}
+                  aria-label={t('videoLibrary.moveDown')}
+                >
+                  <ArrowDownIcon />
+                </IconButton>
+              </Tooltip>
               <Tooltip
                 content={
                   isWatched ? t('videoLibrary.unmarkWatched') : t('videoLibrary.markWatched')
@@ -326,6 +343,6 @@ function DraggableVideoItem({ video, userId }: { video: VideoRow; userId: UserId
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
-    </div>
+    </>
   )
 }

@@ -66,6 +66,8 @@ export const en = {
     markWatched: 'Mark as watched',
     unmarkWatched: 'Mark as unwatched',
     dropHere: 'Drop here',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
   },
   player: {
     session: 'This session',

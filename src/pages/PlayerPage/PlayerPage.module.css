@@ -8,6 +8,7 @@
 }
 
 .playlistItem {
+  display: block;
   transition:
     transform 150ms ease,
     border-color 150ms ease;

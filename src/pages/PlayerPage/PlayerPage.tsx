@@ -1,4 +1,16 @@
-import { Box, Callout, Card, Container, Flex, Grid, Heading, Text } from '@radix-ui/themes'
+import { ArrowDownIcon, ArrowUpIcon } from '@radix-ui/react-icons'
+import {
+  Box,
+  Callout,
+  Card,
+  Container,
+  Flex,
+  Grid,
+  Heading,
+  IconButton,
+  Text,
+  Tooltip,
+} from '@radix-ui/themes'
 import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -9,7 +21,12 @@ import { useChallengeBySlug } from '@/hooks/useChallenges'
 import { useSessionTracker } from '@/hooks/useSessionTracker'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
-import { useSetVideoWatched, useVideo, useVideos } from '@/hooks/useVideos'
+import {
+  useReorderVideos,
+  useSetVideoWatched,
+  useVideo,
+  useVideos,
+} from '@/hooks/useVideos'
 import { formatMinutes, formatSeconds } from '@/lib/dates'
 import { youtubeThumbUrl } from '@/lib/youtube'
 import { paths } from '@/routes/paths'
@@ -75,6 +92,7 @@ function PlayerScreen({
     enabled: true,
   })
   const setWatched = useSetVideoWatched()
+  const reorder = useReorderVideos()
   const todayQuery = useTodaySecondsForChallenge(user.id, challenge.id)
   const videosQuery = useVideos(user.id)
   const baselineRef = useRef<number | null>(null)
@@ -106,6 +124,17 @@ function PlayerScreen({
     if (next) {
       navigate(paths.player(user.id, next.id), { state: { autoplay: true } })
     }
+  }
+
+  const swapUpcoming = (i: number, j: number) => {
+    const next = upcoming.slice()
+    const tmp = next[i]
+    next[i] = next[j]
+    next[j] = tmp
+    const orderedIds = video.watched_at
+      ? next.map((v) => v.id)
+      : [video.id, ...next.map((v) => v.id)]
+    reorder.mutate({ user_id: user.id, orderedIds })
   }
 
   return (
@@ -182,35 +211,104 @@ function PlayerScreen({
         </Card>
       ) : (
         <Flex direction="column" gap="2">
-          {upcoming.map((v) => (
-            <Card asChild variant="surface" key={v.id} className={styles.playlistItem}>
-              <Link to={paths.player(user.id, v.id)} state={{ autoplay: true }}>
-                <Flex align="center" gap="3">
-                  <img
-                    className={styles.playlistThumb}
-                    src={youtubeThumbUrl(v.youtube_id)}
-                    alt=""
-                  />
-                  <Text
-                    as="div"
-                    size="2"
-                    weight="medium"
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      flex: 1,
-                      minWidth: 0,
-                    }}
-                  >
-                    {v.title}
-                  </Text>
-                </Flex>
-              </Link>
-            </Card>
+          {upcoming.map((v, idx) => (
+            <PlaylistItem
+              key={v.id}
+              video={v}
+              userId={user.id}
+              index={idx}
+              total={upcoming.length}
+              onMoveUp={() => swapUpcoming(idx, idx - 1)}
+              onMoveDown={() => swapUpcoming(idx, idx + 1)}
+            />
           ))}
         </Flex>
       )}
     </Container>
+  )
+}
+
+function PlaylistItem({
+  video,
+  userId,
+  index,
+  total,
+  onMoveUp,
+  onMoveDown,
+}: {
+  video: VideoRow
+  userId: UserId
+  index: number
+  total: number
+  onMoveUp: () => void
+  onMoveDown: () => void
+}) {
+  const { t } = useTranslation()
+  const canMoveUp = index > 0
+  const canMoveDown = index < total - 1
+
+  const handleUp = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (canMoveUp) onMoveUp()
+  }
+  const handleDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (canMoveDown) onMoveDown()
+  }
+
+  return (
+    <Card asChild variant="surface" className={styles.playlistItem}>
+      <Link to={paths.player(userId, video.id)} state={{ autoplay: true }}>
+        <Flex align="center" gap="3">
+          <img
+            className={styles.playlistThumb}
+            src={youtubeThumbUrl(video.youtube_id)}
+            alt=""
+          />
+          <Text
+            as="div"
+            size="2"
+            weight="medium"
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            {video.title}
+          </Text>
+          <Flex gap="2" flexShrink="0" align="center">
+            <Tooltip content={t('videoLibrary.moveUp')}>
+              <IconButton
+                type="button"
+                variant="ghost"
+                color="gray"
+                disabled={!canMoveUp}
+                onClick={handleUp}
+                aria-label={t('videoLibrary.moveUp')}
+              >
+                <ArrowUpIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip content={t('videoLibrary.moveDown')}>
+              <IconButton
+                type="button"
+                variant="ghost"
+                color="gray"
+                disabled={!canMoveDown}
+                onClick={handleDown}
+                aria-label={t('videoLibrary.moveDown')}
+              >
+                <ArrowDownIcon />
+              </IconButton>
+            </Tooltip>
+          </Flex>
+        </Flex>
+      </Link>
+    </Card>
   )
 }
