@@ -73,6 +73,8 @@ export const en = {
     paused: '⏸ paused',
     todayTotal: 'Today total',
     goalReached: '🎉 Daily goal reached! Keep listening — it all counts.',
+    upNext: 'Up next',
+    playlistEmpty: 'No more videos.',
   },
   stats: {
     pageTitle: 'Stats',

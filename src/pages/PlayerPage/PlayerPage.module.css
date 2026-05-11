@@ -6,3 +6,24 @@
   overflow: hidden;
   background: #000;
 }
+
+.playlistItem {
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease;
+}
+
+.playlistItem:hover {
+  transform: translateY(-2px);
+}
+
+.playlistThumb {
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: var(--radius-2);
+  background: var(--gray-a3);
+  display: block;
+  flex-shrink: 0;
+  user-select: none;
+}

@@ -4,12 +4,13 @@ import { loadYouTubeApi } from '@/lib/youtube'
 
 interface Props {
   youtubeId: string
+  autoplay?: boolean
   onPlay: () => void
   onPauseOrEnd: () => void
   onEnded?: () => void
 }
 
-export function YouTubePlayer({ youtubeId, onPlay, onPauseOrEnd, onEnded }: Props) {
+export function YouTubePlayer({ youtubeId, autoplay, onPlay, onPauseOrEnd, onEnded }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<YT.Player | null>(null)
   const onPlayRef = useRef(onPlay)
@@ -29,7 +30,12 @@ export function YouTubePlayer({ youtubeId, onPlay, onPauseOrEnd, onEnded }: Prop
       if (cancelled || !containerRef.current) return
       player = new YTApi.Player(containerRef.current, {
         videoId: youtubeId,
-        playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+        playerVars: {
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          ...(autoplay ? { autoplay: 1 } : {}),
+        },
         events: {
           onStateChange: (e) => {
             const State = YTApi.PlayerState
@@ -50,7 +56,7 @@ export function YouTubePlayer({ youtubeId, onPlay, onPauseOrEnd, onEnded }: Prop
       }
       playerRef.current = null
     }
-  }, [youtubeId])
+  }, [youtubeId, autoplay])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }

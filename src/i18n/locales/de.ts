@@ -73,6 +73,8 @@ export const de = {
     paused: '⏸ pausiert',
     todayTotal: 'Heute total',
     goalReached: '🎉 Tagesziel erreicht! Du kannst weiterhören — alles zählt.',
+    upNext: 'Als nächstes',
+    playlistEmpty: 'Keine weiteren Videos.',
   },
   stats: {
     pageTitle: 'Stats',
