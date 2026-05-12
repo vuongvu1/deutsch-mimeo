@@ -9,6 +9,7 @@ import { useUsers } from '@/hooks/useUsers'
 import { paths } from '@/routes/paths'
 import type { UserRow } from '@/types/db'
 
+import { ActivityLog } from './ActivityLog'
 import { ComparisonPanel } from './ComparisonPanel'
 import styles from './HomePage.module.css'
 
@@ -42,6 +43,13 @@ export function HomePage() {
           {t('home.todayCompare')}
         </Heading>
         <ComparisonPanel challenge={listenChallenge.data ?? undefined} />
+      </Section>
+
+      <Section size="1" pt="0">
+        <Heading size="4" mb="4" color="gray" weight="medium">
+          {t('home.recentActivity')}
+        </Heading>
+        <ActivityLog />
       </Section>
     </Container>
   )

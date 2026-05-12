@@ -1,0 +1,28 @@
+.rowWrapper {
+  border-top: 1px solid var(--gray-a4);
+}
+
+.rowWrapper[data-first] {
+  border-top: none;
+}
+
+.rowLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+}
+
+.rowLink:hover {
+  background: var(--gray-a3);
+}
+
+.row[data-variant='mi'] {
+  box-shadow: inset 3px 0 0 var(--pink-a7);
+  padding-left: var(--space-3);
+}
+
+.row[data-variant='meo'] {
+  box-shadow: inset 3px 0 0 var(--sky-a7);
+  padding-left: var(--space-3);
+}

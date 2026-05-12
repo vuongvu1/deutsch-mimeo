@@ -135,6 +135,54 @@ export function useTodaySecondsForChallenge(
   })
 }
 
+export interface RecentSessionEntry {
+  id: string
+  user_id: UserId
+  video_id: string | null
+  seconds: number
+  started_at: string
+  updated_at: string
+  video_title: string | null
+  video_youtube_id: string | null
+}
+
+export function useRecentSessions(limit = 10) {
+  return useQuery({
+    queryKey: ['recent-sessions', limit],
+    queryFn: async (): Promise<RecentSessionEntry[]> => {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('id, user_id, video_id, seconds, started_at, updated_at, videos(title, youtube_id)')
+        .gt('seconds', 0)
+        .order('updated_at', { ascending: false })
+        .limit(limit)
+      if (error) throw error
+      type Row = {
+        id: string
+        user_id: UserId
+        video_id: string | null
+        seconds: number
+        started_at: string
+        updated_at: string
+        videos: { title: string; youtube_id: string } | { title: string; youtube_id: string }[] | null
+      }
+      return (data ?? []).map((r: Row) => {
+        const v = Array.isArray(r.videos) ? (r.videos[0] ?? null) : r.videos
+        return {
+          id: r.id,
+          user_id: r.user_id,
+          video_id: r.video_id,
+          seconds: r.seconds,
+          started_at: r.started_at,
+          updated_at: r.updated_at,
+          video_title: v?.title ?? null,
+          video_youtube_id: v?.youtube_id ?? null,
+        }
+      })
+    },
+  })
+}
+
 export function useDailyTotalsRange(
   userId: UserId | undefined,
   challengeId: string | undefined,

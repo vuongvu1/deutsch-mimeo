@@ -76,6 +76,7 @@ export function useSessionTracker({ userId, challengeId, videoId, enabled }: Arg
       qc.invalidateQueries({ queryKey: ['today-seconds', userId, challengeId] })
       qc.invalidateQueries({ queryKey: ['stats', userId] })
       qc.invalidateQueries({ queryKey: ['comparison-stats'] })
+      qc.invalidateQueries({ queryKey: ['recent-sessions'] })
     } finally {
       flushingRef.current = false
       ticksSinceFlushRef.current = 0

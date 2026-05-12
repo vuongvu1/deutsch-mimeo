@@ -33,6 +33,12 @@ export const de = {
     welcome: 'Wer ist da?',
     cta: "Los geht's →",
     todayCompare: 'Heute · Vergleich',
+    recentActivity: 'Letzte Aktivität',
+  },
+  activityLog: {
+    verb: 'hörte',
+    empty: 'Noch keine Aktivität — starte ein Video, um loszulegen.',
+    deletedVideo: '(gelöschtes Video)',
   },
   comparison: {
     todayListened: 'Heute gehört',

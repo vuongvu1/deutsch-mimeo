@@ -33,6 +33,12 @@ export const en = {
     welcome: "Who's there?",
     cta: "Let's go →",
     todayCompare: 'Today · Compare',
+    recentActivity: 'Recent activity',
+  },
+  activityLog: {
+    verb: 'listened to',
+    empty: 'No activity yet — hit play on a video to get started.',
+    deletedVideo: '(deleted video)',
   },
   comparison: {
     todayListened: 'Listened today',
