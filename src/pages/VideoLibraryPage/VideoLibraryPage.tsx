@@ -2,6 +2,8 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   Cross2Icon,
   DoubleArrowUpIcon,
   PlusIcon,
@@ -51,12 +53,16 @@ import type { UserId, UserRow, VideoRow } from '@/types/db'
 
 import styles from './VideoLibraryPage.module.css'
 
+const PAGE_SIZE = 10
+
 export function VideoLibraryPage() {
   const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
   const userQuery = useUser(userId as UserId | undefined)
   const videosQuery = useVideos(userId as UserId | undefined)
   const challengeQuery = useChallengeBySlug('listen')
+  const [activePage, setActivePage] = useState(1)
+  const [watchedPage, setWatchedPage] = useState(1)
 
   if (userId !== 'mi' && userId !== 'meo') return <Navigate to="/" replace />
   const user = userQuery.data
@@ -65,6 +71,15 @@ export function VideoLibraryPage() {
   const videos = videosQuery.data ?? []
   const active = videos.filter((v) => !v.watched_at)
   const watched = videos.filter((v) => v.watched_at)
+
+  const activeTotalPages = Math.max(1, Math.ceil(active.length / PAGE_SIZE))
+  const watchedTotalPages = Math.max(1, Math.ceil(watched.length / PAGE_SIZE))
+  const activeCurPage = Math.min(activePage, activeTotalPages)
+  const watchedCurPage = Math.min(watchedPage, watchedTotalPages)
+  const activeOffset = (activeCurPage - 1) * PAGE_SIZE
+  const watchedOffset = (watchedCurPage - 1) * PAGE_SIZE
+  const activeSlice = active.slice(activeOffset, activeOffset + PAGE_SIZE)
+  const watchedSlice = watched.slice(watchedOffset, watchedOffset + PAGE_SIZE)
 
   const challengeTitle = t(`challenges.${challengeQuery.data?.slug ?? 'listen'}.title`, {
     defaultValue: challengeQuery.data?.title ?? 'Listen',
@@ -94,17 +109,26 @@ export function VideoLibraryPage() {
           <Text color="gray">{t('videoLibrary.empty')}</Text>
         </Card>
       ) : (
-        <Flex direction="column" gap="3">
-          {active.map((v, idx) => (
-            <VideoItem
-              key={v.id}
-              video={v}
-              userId={user.id}
-              section={active}
-              index={idx}
+        <>
+          <Flex direction="column" gap="3">
+            {activeSlice.map((v, idx) => (
+              <VideoItem
+                key={v.id}
+                video={v}
+                userId={user.id}
+                section={active}
+                index={activeOffset + idx}
+              />
+            ))}
+          </Flex>
+          {activeTotalPages > 1 ? (
+            <Pagination
+              page={activeCurPage}
+              totalPages={activeTotalPages}
+              onPage={setActivePage}
             />
-          ))}
-        </Flex>
+          ) : null}
+        </>
       )}
 
       <Heading size="5" weight="bold" mt="6" mb="3">
@@ -119,19 +143,67 @@ export function VideoLibraryPage() {
           <Text color="gray">{t('videoLibrary.watchedEmpty')}</Text>
         </Card>
       ) : (
-        <Flex direction="column" gap="3">
-          {watched.map((v, idx) => (
-            <VideoItem
-              key={v.id}
-              video={v}
-              userId={user.id}
-              section={watched}
-              index={idx}
+        <>
+          <Flex direction="column" gap="3">
+            {watchedSlice.map((v, idx) => (
+              <VideoItem
+                key={v.id}
+                video={v}
+                userId={user.id}
+                section={watched}
+                index={watchedOffset + idx}
+              />
+            ))}
+          </Flex>
+          {watchedTotalPages > 1 ? (
+            <Pagination
+              page={watchedCurPage}
+              totalPages={watchedTotalPages}
+              onPage={setWatchedPage}
             />
-          ))}
-        </Flex>
+          ) : null}
+        </>
       )}
     </Container>
+  )
+}
+
+function Pagination({
+  page,
+  totalPages,
+  onPage,
+}: {
+  page: number
+  totalPages: number
+  onPage: (p: number) => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <Flex gap="3" align="center" justify="center" mt="3">
+      <Button
+        variant="soft"
+        color="gray"
+        disabled={page <= 1}
+        onClick={() => onPage(page - 1)}
+        aria-label={t('common.prev')}
+      >
+        <ChevronLeftIcon />
+        {t('common.prev')}
+      </Button>
+      <Text color="gray" size="2">
+        {t('common.pageOf', { page, total: totalPages })}
+      </Text>
+      <Button
+        variant="soft"
+        color="gray"
+        disabled={page >= totalPages}
+        onClick={() => onPage(page + 1)}
+        aria-label={t('common.next')}
+      >
+        {t('common.next')}
+        <ChevronRightIcon />
+      </Button>
+    </Flex>
   )
 }
 

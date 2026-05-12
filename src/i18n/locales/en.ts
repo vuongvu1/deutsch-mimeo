@@ -5,6 +5,9 @@ export const en = {
     delete: 'Delete',
     back: 'Back',
     cancel: 'Cancel',
+    prev: 'Previous',
+    next: 'Next',
+    pageOf: 'Page {{page}} of {{total}}',
   },
   header: {
     appName: 'Deutsch MiMeo',
