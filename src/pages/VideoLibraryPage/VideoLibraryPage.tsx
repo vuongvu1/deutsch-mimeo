@@ -13,14 +13,16 @@ import {
   Callout,
   Card,
   Container,
+  Dialog,
   Flex,
   Heading,
   IconButton,
+  ScrollArea,
   Text,
   TextField,
   Tooltip,
 } from '@radix-ui/themes'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
@@ -29,12 +31,20 @@ import { useChallengeBySlug } from '@/hooks/useChallenges'
 import { useUser } from '@/hooks/useUsers'
 import {
   useAddVideo,
+  useAddVideosBulk,
   useDeleteVideo,
   useReorderVideos,
   useSetVideoWatched,
   useVideos,
 } from '@/hooks/useVideos'
-import { extractYouTubeId, fetchYouTubeTitle, youtubeThumbUrl } from '@/lib/youtube'
+import {
+  extractPlaylistId,
+  extractYouTubeId,
+  fetchPlaylistItems,
+  fetchYouTubeTitle,
+  youtubeThumbUrl,
+  type PlaylistVideo,
+} from '@/lib/youtube'
 import { paths } from '@/routes/paths'
 import type { UserId, UserRow, VideoRow } from '@/types/db'
 
@@ -129,14 +139,44 @@ function AddVideoForm({ user }: { user: UserRow }) {
   const [url, setUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [playlistPreview, setPlaylistPreview] = useState<PlaylistVideo[] | null>(null)
   const addVideo = useAddVideo()
+  const addVideosBulk = useAddVideosBulk()
+  const videosQuery = useVideos(user.id)
+  const existingIds = useMemo(
+    () => new Set((videosQuery.data ?? []).map((v) => v.youtube_id)),
+    [videosQuery.data],
+  )
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    const playlistId = extractPlaylistId(url)
+    if (playlistId) {
+      setSubmitting(true)
+      try {
+        const items = await fetchPlaylistItems(playlistId)
+        if (items.length === 0) {
+          setError(t('videoLibrary.playlistEmpty'))
+        } else {
+          setPlaylistPreview(items)
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t('videoLibrary.addError'))
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
     const id = extractYouTubeId(url)
     if (!id) {
       setError(t('videoLibrary.invalidUrl'))
+      return
+    }
+    if (existingIds.has(id)) {
+      setError(t('videoLibrary.alreadyAdded'))
       return
     }
     setSubmitting(true)
@@ -155,34 +195,134 @@ function AddVideoForm({ user }: { user: UserRow }) {
     }
   }
 
+  const newItems = playlistPreview?.filter((v) => !existingIds.has(v.youtubeId)) ?? []
+  const dupCount = (playlistPreview?.length ?? 0) - newItems.length
+
+  const onConfirmBulk = async () => {
+    if (!playlistPreview || newItems.length === 0) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      await addVideosBulk.mutateAsync({
+        user_id: user.id,
+        items: newItems.map((v) => ({ youtube_id: v.youtubeId, title: v.title })),
+      })
+      setPlaylistPreview(null)
+      setUrl('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('videoLibrary.addError'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
-    <Card asChild>
-      <form onSubmit={onSubmit}>
-        <Flex direction={{ initial: 'column', sm: 'row' }} gap="2" align="stretch">
-          <Box flexGrow="1" minWidth="0">
-            <TextField.Root
-              type="url"
-              size="3"
-              placeholder={t('videoLibrary.addUrlPlaceholder')}
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              required
-            />
-          </Box>
-          <Button type="submit" size="3" variant="solid" disabled={submitting || !url.trim()}>
-            <PlusIcon />
-            {submitting ? t('videoLibrary.adding') : t('videoLibrary.addCta')}
-          </Button>
-        </Flex>
-        {error ? (
-          <Box mt="2">
-            <Callout.Root color="red" size="1">
-              <Callout.Text>{error}</Callout.Text>
-            </Callout.Root>
-          </Box>
-        ) : null}
-      </form>
-    </Card>
+    <>
+      <Card asChild>
+        <form onSubmit={onSubmit}>
+          <Flex direction={{ initial: 'column', sm: 'row' }} gap="2" align="stretch">
+            <Box flexGrow="1" minWidth="0">
+              <TextField.Root
+                type="url"
+                size="3"
+                placeholder={t('videoLibrary.addUrlPlaceholder')}
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+              />
+            </Box>
+            <Button type="submit" size="3" variant="solid" disabled={submitting || !url.trim()}>
+              <PlusIcon />
+              {submitting ? t('videoLibrary.adding') : t('videoLibrary.addCta')}
+            </Button>
+          </Flex>
+          {error ? (
+            <Box mt="2">
+              <Callout.Root color="red" size="1">
+                <Callout.Text>{error}</Callout.Text>
+              </Callout.Root>
+            </Box>
+          ) : null}
+        </form>
+      </Card>
+      <Dialog.Root
+        open={!!playlistPreview}
+        onOpenChange={(open) => {
+          if (!open && !submitting) setPlaylistPreview(null)
+        }}
+      >
+        <Dialog.Content maxWidth="520px">
+          <Dialog.Title>
+            {t('videoLibrary.playlistTitle', { count: playlistPreview?.length ?? 0 })}
+          </Dialog.Title>
+          <Dialog.Description size="2" color="gray" mb="3">
+            {t('videoLibrary.playlistSummary', { newCount: newItems.length, dupCount })}
+          </Dialog.Description>
+          <ScrollArea type="auto" scrollbars="vertical" style={{ maxHeight: '50vh' }}>
+            <Flex direction="column" gap="2" pr="3">
+              {playlistPreview?.map((item) => {
+                const dup = existingIds.has(item.youtubeId)
+                return (
+                  <Flex
+                    key={item.youtubeId}
+                    align="center"
+                    gap="3"
+                    style={{ opacity: dup ? 0.5 : 1 }}
+                  >
+                    <img
+                      src={youtubeThumbUrl(item.youtubeId)}
+                      alt=""
+                      width={80}
+                      height={45}
+                      style={{
+                        borderRadius: 'var(--radius-2)',
+                        objectFit: 'cover',
+                        flexShrink: 0,
+                        background: 'var(--gray-a3)',
+                      }}
+                    />
+                    <Box flexGrow="1" minWidth="0">
+                      <Text
+                        as="div"
+                        size="2"
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+                      {dup ? (
+                        <Text as="div" size="1" color="gray">
+                          {t('videoLibrary.alreadyAdded')}
+                        </Text>
+                      ) : null}
+                    </Box>
+                  </Flex>
+                )
+              })}
+            </Flex>
+          </ScrollArea>
+          <Flex gap="3" mt="4" justify="end">
+            <Dialog.Close>
+              <Button variant="soft" color="gray" disabled={submitting}>
+                {t('common.cancel')}
+              </Button>
+            </Dialog.Close>
+            <Button
+              variant="solid"
+              onClick={onConfirmBulk}
+              disabled={submitting || newItems.length === 0}
+            >
+              {submitting
+                ? t('videoLibrary.adding')
+                : t('videoLibrary.addNCta', { count: newItems.length })}
+            </Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+    </>
   )
 }
 

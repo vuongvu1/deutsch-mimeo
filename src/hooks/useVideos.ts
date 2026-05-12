@@ -79,6 +79,41 @@ export function useAddVideo() {
   })
 }
 
+interface AddVideosBulkInput {
+  user_id: UserId
+  items: { youtube_id: string; title: string }[]
+}
+
+export function useAddVideosBulk() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: AddVideosBulkInput): Promise<VideoRow[]> => {
+      if (input.items.length === 0) return []
+      const { data: minRow, error: minErr } = await supabase
+        .from('videos')
+        .select('position')
+        .eq('user_id', input.user_id)
+        .order('position', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      if (minErr) throw minErr
+      const minPos = minRow?.position ?? 1
+      const rows = input.items.map((item, idx) => ({
+        user_id: input.user_id,
+        youtube_id: item.youtube_id,
+        title: item.title,
+        position: minPos - input.items.length + idx,
+      }))
+      const { data, error } = await supabase.from('videos').insert(rows).select()
+      if (error) throw error
+      return data
+    },
+    onSuccess: (_, input) => {
+      qc.invalidateQueries({ queryKey: ['videos', input.user_id] })
+    },
+  })
+}
+
 export function useDeleteVideo() {
   const qc = useQueryClient()
   return useMutation({
