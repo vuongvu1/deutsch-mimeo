@@ -21,6 +21,7 @@ import {
   Heading,
   IconButton,
   ScrollArea,
+  Skeleton,
   Text,
   TextField,
   Tooltip,
@@ -103,7 +104,7 @@ export function VideoLibraryPage() {
       </Heading>
 
       {videosQuery.isLoading ? (
-        <Text color="gray">{t('common.loading')}</Text>
+        <VideoItemSkeletonList count={3} />
       ) : active.length === 0 ? (
         <Card>
           <Text color="gray">{t('videoLibrary.empty')}</Text>
@@ -138,7 +139,9 @@ export function VideoLibraryPage() {
         </Text>
       </Heading>
 
-      {watched.length === 0 ? (
+      {videosQuery.isLoading ? (
+        <VideoItemSkeletonList count={2} />
+      ) : watched.length === 0 ? (
         <Card>
           <Text color="gray">{t('videoLibrary.watchedEmpty')}</Text>
         </Card>
@@ -396,6 +399,27 @@ function AddVideoForm({ user }: { user: UserRow }) {
         </Dialog.Content>
       </Dialog.Root>
     </>
+  )
+}
+
+function VideoItemSkeletonList({ count }: { count: number }) {
+  return (
+    <Flex direction="column" gap="3" aria-hidden>
+      {Array.from({ length: count }).map((_, i) => (
+        <Card key={i} variant="surface" className={styles.item}>
+          <Flex align="center" gap="3">
+            <Skeleton className={styles.thumb} />
+            <Box flexGrow="1" minWidth="0">
+              <Skeleton>
+                <Text as="div" size="3" weight="medium">
+                  Loading video title placeholder
+                </Text>
+              </Skeleton>
+            </Box>
+          </Flex>
+        </Card>
+      ))}
+    </Flex>
   )
 }
 
