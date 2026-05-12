@@ -77,6 +77,7 @@ export const de = {
     markWatched: 'Als gesehen markieren',
     unmarkWatched: 'Als ungesehen markieren',
     dropHere: 'Hier ablegen',
+    moveToTop: 'Nach ganz oben',
     moveUp: 'Nach oben',
     moveDown: 'Nach unten',
   },

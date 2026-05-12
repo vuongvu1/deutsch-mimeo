@@ -77,6 +77,7 @@ export const en = {
     markWatched: 'Mark as watched',
     unmarkWatched: 'Mark as unwatched',
     dropHere: 'Drop here',
+    moveToTop: 'Move to top',
     moveUp: 'Move up',
     moveDown: 'Move down',
   },

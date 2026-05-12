@@ -3,6 +3,7 @@ import {
   ArrowUpIcon,
   CheckIcon,
   Cross2Icon,
+  DoubleArrowUpIcon,
   PlusIcon,
   ResetIcon,
 } from '@radix-ui/react-icons'
@@ -382,6 +383,16 @@ function VideoItem({
     if (canMoveDown) swap(index, index + 1)
   }
 
+  const onMoveToTop = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!canMoveUp) return
+    const next = section.slice()
+    const [moved] = next.splice(index, 1)
+    next.unshift(moved)
+    reorder.mutate({ user_id: userId, orderedIds: next.map((v) => v.id) })
+  }
+
   return (
     <>
       <Card asChild variant="surface" className={styles.item} data-watched={isWatched}>
@@ -403,6 +414,18 @@ function VideoItem({
               </Text>
             </Box>
             <Flex gap="2" flexShrink="0" align="center" ml="2">
+              <Tooltip content={t('videoLibrary.moveToTop')}>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  disabled={!canMoveUp}
+                  onClick={onMoveToTop}
+                  aria-label={t('videoLibrary.moveToTop')}
+                >
+                  <DoubleArrowUpIcon />
+                </IconButton>
+              </Tooltip>
               <Tooltip content={t('videoLibrary.moveUp')}>
                 <IconButton
                   type="button"
