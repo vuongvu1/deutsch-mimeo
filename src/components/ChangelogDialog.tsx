@@ -1,7 +1,6 @@
 import { RocketIcon } from '@radix-ui/react-icons'
 import {
   Badge,
-  Box,
   Button,
   Dialog,
   Flex,
@@ -44,26 +43,27 @@ export function ChangelogDialog() {
         <ScrollArea type="auto" scrollbars="vertical" style={{ maxHeight: '60vh' }}>
           <Flex direction="column" gap="4" pr="3">
             {changelog.map((v) => (
-              <Box key={v.version}>
-                <Flex align="baseline" gap="2" mb="2" wrap="wrap">
+              <Flex key={v.version} direction="column" gap="2">
+                <Flex align="baseline" gap="2" wrap="wrap">
                   <Heading size="3">v{v.version}</Heading>
                   <Text size="1" color="gray">
                     {v.date}
                   </Text>
                 </Flex>
-                <Flex direction="column" gap="2">
-                  {v.entries.map((entry, idx) => (
-                    <Flex key={idx} align="start" gap="2">
-                      <Box flexShrink="0" mt="1">
-                        <Badge color={TYPE_COLORS[entry.type]} variant="soft" size="1">
-                          {t(`changelog.types.${entry.type}`)}
-                        </Badge>
-                      </Box>
-                      <Text size="2">{entry[lang]}</Text>
-                    </Flex>
-                  ))}
-                </Flex>
-              </Box>
+                {v.entries.map((entry, idx) => (
+                  <Text key={idx} as="div" size="2">
+                    <Badge
+                      color={TYPE_COLORS[entry.type]}
+                      variant="soft"
+                      size="1"
+                      mr="2"
+                    >
+                      {t(`changelog.types.${entry.type}`)}
+                    </Badge>
+                    {entry[lang]}
+                  </Text>
+                ))}
+              </Flex>
             ))}
           </Flex>
         </ScrollArea>
