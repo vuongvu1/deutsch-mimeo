@@ -97,6 +97,7 @@ PlayerPage shows two stats: "this session" (= `sessionSeconds`) and "today total
 - **German UI copy** is intentional (Lade…, Heute, Tage komplett, etc.)
 - **No comments** unless explaining a non-obvious *why*
 - **No `TodoWrite` from Claude** in user-facing work — this file is the source of truth for follow-ups
+- **Update `src/lib/changelog.ts`** whenever a feature, bug fix, or notable improvement ships — prepend an entry with the matching `type` (`feature` / `fix` / `improvement` / `chore`) and both `de` + `en` copy. Bump the version (semver-ish) and set `date` to today; group same-day changes under one version block. This file powers the in-app Changelog dialog, so missing entries = invisible work
 
 ## Adding a new challenge (the easy path)
 

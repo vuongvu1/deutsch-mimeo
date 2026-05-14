@@ -1,4 +1,5 @@
-import { Badge, Box, Card, Container, Flex, Select, Text } from '@radix-ui/themes'
+import { SpeakerLoudIcon, SpeakerOffIcon } from '@radix-ui/react-icons'
+import { Badge, Box, Card, Container, Flex, IconButton, Select, Text, Tooltip } from '@radix-ui/themes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
@@ -11,6 +12,15 @@ import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
 import { DEFAULT_PACK_ID, VOCAB_PACKS, VOCAB_PACKS_BY_ID } from '@/data/vocab'
 import type { VocabWord } from '@/data/vocab'
+import {
+  isMuted,
+  playGoalReached,
+  playMatch,
+  playRoundDone,
+  playWrong,
+  setMuted,
+  subscribeMute,
+} from '@/lib/sounds'
 import { paths } from '@/routes/paths'
 import type { UserId } from '@/types/db'
 
@@ -81,6 +91,7 @@ export function VocabGamePage() {
         back={{ to: paths.challenges(user.id) }}
         title={t('vocab.pageTitle')}
         emoji={t('vocab.pageTitleEmoji')}
+        rightSlot={<MuteToggle />}
       />
       <Game
         user={user}
@@ -150,12 +161,28 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
     if (tiles.length === 0) return
     if (!tiles.every((tile) => tile.removed)) return
     setRoundDoneFlash(true)
+    playRoundDone()
     const timer = window.setTimeout(() => {
       setRoundDoneFlash(false)
       setTiles(drawNextRound())
     }, ROUND_DONE_FLASH_MS)
     return () => window.clearTimeout(timer)
   }, [tiles, drawNextRound])
+
+  // Celebrate the daily goal exactly once, and only when this session caused
+  // the crossing (not when the page loads with baselineToday already ≥ goal).
+  const goalCelebratedRef = useRef(false)
+  useEffect(() => {
+    if (goalCelebratedRef.current) return
+    if (matchesInSession === 0) return
+    if (baselineToday >= goal) {
+      goalCelebratedRef.current = true
+      return
+    }
+    if (todayTotal < goal) return
+    goalCelebratedRef.current = true
+    playGoalReached()
+  }, [matchesInSession, todayTotal, baselineToday, goal])
 
   const onTileClick = useCallback(
     (tile: Tile) => {
@@ -189,11 +216,13 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
           ),
         )
         setSelectedId(null)
+        playMatch()
         void incrementMatch()
       } else {
         const wrongSet = new Set([selected.id, tile.id])
         setWrongIds(wrongSet)
         setSelectedId(null)
+        playWrong()
         window.setTimeout(() => setWrongIds(new Set()), WRONG_FLASH_MS)
       }
     },
@@ -280,6 +309,26 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
         </Box>
       )}
     </Flex>
+  )
+}
+
+function MuteToggle() {
+  const { t } = useTranslation()
+  const [muted, setMutedState] = useState<boolean>(() => isMuted())
+  useEffect(() => subscribeMute(setMutedState), [])
+  const label = muted ? t('vocab.sound.unmute') : t('vocab.sound.mute')
+  return (
+    <Tooltip content={label}>
+      <IconButton
+        variant="soft"
+        radius="full"
+        aria-label={label}
+        aria-pressed={muted}
+        onClick={() => setMuted(!muted)}
+      >
+        {muted ? <SpeakerOffIcon /> : <SpeakerLoudIcon />}
+      </IconButton>
+    </Tooltip>
   )
 }
 

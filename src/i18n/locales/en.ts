@@ -148,6 +148,10 @@ export const en = {
     instructions: 'Tap a German word, then its English translation.',
     matches_one: '{{count}} match',
     matches_other: '{{count}} matches',
+    sound: {
+      mute: 'Mute sounds',
+      unmute: 'Unmute sounds',
+    },
   },
   heatmap: {
     less: 'Less',

@@ -148,6 +148,10 @@ export const de = {
     instructions: 'Tippe ein deutsches Wort, dann die passende Übersetzung.',
     matches_one: '{{count}} Treffer',
     matches_other: '{{count}} Treffer',
+    sound: {
+      mute: 'Töne aus',
+      unmute: 'Töne an',
+    },
   },
   heatmap: {
     less: 'Weniger',

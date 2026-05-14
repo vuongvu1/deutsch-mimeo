@@ -14,6 +14,32 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.6.0',
+    date: '2026-05-14',
+    entries: [
+      {
+        type: 'feature',
+        de: 'Neue Challenge „Vokabeln" — Match-Pairs-Minispiel auf Deutsch ↔ Englisch.',
+        en: 'New "Vocabulary" challenge — German ↔ English match-pairs mini-game.',
+      },
+      {
+        type: 'feature',
+        de: 'Fünf Wortpakete (A1-Grundlagen, Essen, Reisen, Familie, A2-Arbeit) — im Spiel umschaltbar.',
+        en: 'Five word packs (A1 Basics, Food, Travel, Family, A2 Work) — switchable mid-game.',
+      },
+      {
+        type: 'feature',
+        de: 'Soundeffekte für Treffer, Runde fertig und Tagesziel — mit Stummschalter im Header.',
+        en: 'Sound effects for matches, round-done and daily goal — with a mute toggle in the header.',
+      },
+      {
+        type: 'improvement',
+        de: 'Stats-Seite und Heatmap zeigen jetzt beide Challenges.',
+        en: 'Stats page and heatmap now cover both challenges.',
+      },
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-05-14',
     entries: [
