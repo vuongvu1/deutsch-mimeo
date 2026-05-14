@@ -49,6 +49,7 @@ import { YouTubePlayer } from './YouTubePlayer'
 const PAGE_SIZE = 10
 const AUTO_NEXT_STORAGE_KEY = 'mimeo:autoNext'
 const MOVIE_MODE_STORAGE_KEY = 'mimeo:movieMode'
+const TAB_SECONDS_STORAGE_KEY = 'mimeo:tabSessionSeconds'
 
 function getInitialAutoNext(): boolean {
   if (typeof window === 'undefined') return true
@@ -60,6 +61,12 @@ function getInitialAutoNext(): boolean {
 function getInitialMovieMode(): boolean {
   if (typeof window === 'undefined') return false
   return window.localStorage.getItem(MOVIE_MODE_STORAGE_KEY) === 'true'
+}
+
+function getInitialTabBaseline(): number {
+  if (typeof window === 'undefined') return 0
+  const n = Number(window.sessionStorage.getItem(TAB_SECONDS_STORAGE_KEY))
+  return Number.isFinite(n) && n > 0 ? n : 0
 }
 
 export function PlayerPage() {
@@ -126,6 +133,8 @@ function PlayerScreen({
   const [page, setPage] = useState(1)
   const [autoNext, setAutoNext] = useState<boolean>(getInitialAutoNext)
   const [movieMode, setMovieMode] = useState<boolean>(getInitialMovieMode)
+  const [tabBaseline] = useState<number>(getInitialTabBaseline)
+  const tabSessionSeconds = tabBaseline + tracker.sessionSeconds
   useEffect(() => {
     if (baselineRef.current === null && todayQuery.data !== undefined) {
       baselineRef.current = todayQuery.data
@@ -140,6 +149,9 @@ function PlayerScreen({
   useEffect(() => {
     window.localStorage.setItem(MOVIE_MODE_STORAGE_KEY, movieMode ? 'true' : 'false')
   }, [movieMode])
+  useEffect(() => {
+    window.sessionStorage.setItem(TAB_SECONDS_STORAGE_KEY, String(tabSessionSeconds))
+  }, [tabSessionSeconds])
   useEffect(() => {
     if (!movieMode) return
     const prevOverflow = document.body.style.overflow
@@ -257,7 +269,7 @@ function PlayerScreen({
             {t('player.session')}
           </Text>
           <Text as="div" size="7" weight="bold" mt="1">
-            {formatSeconds(tracker.sessionSeconds)}
+            {formatSeconds(tabSessionSeconds)}
           </Text>
           <Text as="div" size="2" color={tracker.isPlaying ? 'green' : 'gray'} mt="1">
             {tracker.isPlaying ? t('player.playing') : t('player.paused')}

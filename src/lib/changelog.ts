@@ -14,14 +14,25 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
-    version: '0.6.0',
-    date: '2026-05-14',
+    version: '0.6.1',
+    date: '2026-05-15',
     entries: [
       {
         type: 'feature',
         de: 'Kinomodus im Player — vergrößert das Video, dimmt den Hintergrund und zeigt die heutigen Minuten als schwebendes Overlay. Schalter neben Autoplay, Klick auf den Hintergrund oder Escape beendet ihn.',
         en: 'Movie mode in the player — enlarges the video, dims the background and shows today\'s minutes as a floating overlay. Switch next to autoplay; click backdrop or press Escape to exit.',
       },
+      {
+        type: 'improvement',
+        de: '„Diese Session" zählt jetzt über Videowechsel hinweg weiter und zählt erst beim Schließen des Browser-Tabs zurück auf 0.',
+        en: '"This session" counter now keeps running across video changes and only resets when you close the browser tab.',
+      },
+    ],
+  },
+  {
+    version: '0.6.0',
+    date: '2026-05-14',
+    entries: [
       {
         type: 'feature',
         de: 'Neue Challenge „Vokabeln" — Match-Pairs-Minispiel auf Deutsch ↔ Englisch.',
