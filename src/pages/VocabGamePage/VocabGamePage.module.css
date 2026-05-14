@@ -1,0 +1,81 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.625rem;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.tile {
+  position: relative;
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.625rem;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--radius-3);
+  font-weight: 600;
+  font-size: clamp(0.8rem, 2.4vw, 1rem);
+  line-height: 1.2;
+  border: none;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease,
+    opacity 200ms ease;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.tile:active {
+  transform: scale(0.97);
+}
+
+.tileDe {
+  background: var(--accent-9);
+  color: var(--accent-contrast);
+}
+
+.tileEn {
+  background: var(--gray-3);
+  color: var(--gray-12);
+}
+
+.tileSelected {
+  box-shadow: 0 0 0 3px var(--amber-9);
+  transform: translateY(-2px);
+}
+
+.tileWrong {
+  animation: shake 0.32s ease;
+  background: var(--red-9) !important;
+  color: var(--red-contrast) !important;
+}
+
+.tileRemoved {
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+.roundDoneBanner {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 1rem;
+}

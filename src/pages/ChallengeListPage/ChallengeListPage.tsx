@@ -7,12 +7,13 @@ import { TopBar } from '@/components/TopBar'
 import { useChallenges } from '@/hooks/useChallenges'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
-import { formatMinutes } from '@/lib/dates'
+import { formatChallengeValue } from '@/lib/format'
 import { paths } from '@/routes/paths'
 import type { ChallengeRow, UserId, UserRow } from '@/types/db'
 
 const SLUG_TO_PATH: Record<string, ((u: UserId) => string) | undefined> = {
   listen: (u) => paths.videoLibrary(u),
+  vocab: (u) => paths.vocabGame(u),
 }
 
 export function ChallengeListPage() {
@@ -87,9 +88,9 @@ function ChallengeCard({ challenge, user }: { challenge: ChallengeRow; user: Use
       </Flex>
       <ProgressBar value={seconds} max={goal} complete={complete} />
       <Flex justify="between" mt="2">
-        <Text size="2">{formatMinutes(seconds)}</Text>
+        <Text size="2">{formatChallengeValue(challenge.slug, seconds, t)}</Text>
         <Text size="2" color="gray">
-          / {formatMinutes(goal)}
+          / {formatChallengeValue(challenge.slug, goal, t)}
         </Text>
       </Flex>
     </>
