@@ -42,6 +42,16 @@ export const changelog: ChangelogVersion[] = [
         de: 'Aussprache des deutschen Worts beim Antippen — via Web Speech API.',
         en: 'Pronounces the German word when a tile is tapped — via the Web Speech API.',
       },
+      {
+        type: 'fix',
+        de: 'Vokabel-Treffer wurden manchmal verloren, wenn man die Seite schnell verließ — alle Treffer werden jetzt korrekt gespeichert.',
+        en: 'Vocab matches could be lost when leaving the page quickly — all matches now persist correctly.',
+      },
+      {
+        type: 'fix',
+        de: 'Letzte-Aktivität zeigt jetzt korrekt „spielte Vokabeln" mit Treffer-Zahl statt Hörminuten.',
+        en: 'Recent activity now correctly shows "played vocabulary" with match count instead of listening minutes.',
+      },
     ],
   },
   {

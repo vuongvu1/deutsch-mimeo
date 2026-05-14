@@ -52,6 +52,8 @@ export const en = {
   },
   activityLog: {
     verb: 'listened to',
+    verbVocab: 'played',
+    vocabTitle: 'vocabulary',
     empty: 'No activity yet — hit play on a video to get started.',
     deletedVideo: '(deleted video)',
   },

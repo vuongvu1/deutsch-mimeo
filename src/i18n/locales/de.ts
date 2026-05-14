@@ -52,6 +52,8 @@ export const de = {
   },
   activityLog: {
     verb: 'hörte',
+    verbVocab: 'spielte',
+    vocabTitle: 'Vokabeln',
     empty: 'Noch keine Aktivität — starte ein Video, um loszulegen.',
     deletedVideo: '(gelöschtes Video)',
   },

@@ -2,8 +2,10 @@ import { Box, Card, Flex, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
+import { VOCAB_CHALLENGE_ID } from '@/hooks/useChallenges'
 import { useRecentSessions } from '@/hooks/useStats'
-import { formatMinutes, formatRelativeTime } from '@/lib/dates'
+import { formatRelativeTime } from '@/lib/dates'
+import { formatChallengeValue } from '@/lib/format'
 import { paths } from '@/routes/paths'
 import type { UserId } from '@/types/db'
 
@@ -37,10 +39,16 @@ export function ActivityLog() {
     <Card>
       <Flex direction="column">
         {entries.map((e, idx) => {
-          const verb = t('activityLog.verb')
-          const title = e.video_title ?? t('activityLog.deletedVideo')
-          const minutes = formatMinutes(e.seconds)
+          const isVocab = e.challenge_id === VOCAB_CHALLENGE_ID
+          const verb = isVocab ? t('activityLog.verbVocab') : t('activityLog.verb')
+          const title = isVocab
+            ? t('activityLog.vocabTitle')
+            : (e.video_title ?? t('activityLog.deletedVideo'))
+          const value = isVocab
+            ? formatChallengeValue('vocab', e.seconds, t)
+            : formatChallengeValue('listen', e.seconds, t)
           const when = formatRelativeTime(e.updated_at, i18n.language)
+          const linkTo = !isVocab && e.video_id ? paths.player(e.user_id, e.video_id) : null
           const row = (
             <Flex
               align="center"
@@ -64,7 +72,7 @@ export function ActivityLog() {
                 color="gray"
                 style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}
               >
-                {minutes} · {when}
+                {value} · {when}
               </Text>
             </Flex>
           )
@@ -74,11 +82,8 @@ export function ActivityLog() {
               className={styles.rowWrapper}
               data-first={idx === 0 || undefined}
             >
-              {e.video_id ? (
-                <Link
-                  to={paths.player(e.user_id, e.video_id)}
-                  className={styles.rowLink}
-                >
+              {linkTo ? (
+                <Link to={linkTo} className={styles.rowLink}>
                   {row}
                 </Link>
               ) : (

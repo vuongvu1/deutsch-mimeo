@@ -138,6 +138,7 @@ export function useTodaySecondsForChallenge(
 export interface RecentSessionEntry {
   id: string
   user_id: UserId
+  challenge_id: string
   video_id: string | null
   seconds: number
   started_at: string
@@ -152,7 +153,9 @@ export function useRecentSessions(limit = 10) {
     queryFn: async (): Promise<RecentSessionEntry[]> => {
       const { data, error } = await supabase
         .from('sessions')
-        .select('id, user_id, video_id, seconds, started_at, updated_at, videos(title, youtube_id)')
+        .select(
+          'id, user_id, challenge_id, video_id, seconds, started_at, updated_at, videos(title, youtube_id)',
+        )
         .gt('seconds', 0)
         .order('updated_at', { ascending: false })
         .limit(limit)
@@ -160,6 +163,7 @@ export function useRecentSessions(limit = 10) {
       type Row = {
         id: string
         user_id: UserId
+        challenge_id: string
         video_id: string | null
         seconds: number
         started_at: string
@@ -171,6 +175,7 @@ export function useRecentSessions(limit = 10) {
         return {
           id: r.id,
           user_id: r.user_id,
+          challenge_id: r.challenge_id,
           video_id: r.video_id,
           seconds: r.seconds,
           started_at: r.started_at,
