@@ -48,12 +48,18 @@ import { YouTubePlayer } from './YouTubePlayer'
 
 const PAGE_SIZE = 10
 const AUTO_NEXT_STORAGE_KEY = 'mimeo:autoNext'
+const MOVIE_MODE_STORAGE_KEY = 'mimeo:movieMode'
 
 function getInitialAutoNext(): boolean {
   if (typeof window === 'undefined') return true
   const stored = window.localStorage.getItem(AUTO_NEXT_STORAGE_KEY)
   if (stored === 'false') return false
   return true
+}
+
+function getInitialMovieMode(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem(MOVIE_MODE_STORAGE_KEY) === 'true'
 }
 
 export function PlayerPage() {
@@ -119,6 +125,7 @@ function PlayerScreen({
   const baselineRef = useRef<number | null>(null)
   const [page, setPage] = useState(1)
   const [autoNext, setAutoNext] = useState<boolean>(getInitialAutoNext)
+  const [movieMode, setMovieMode] = useState<boolean>(getInitialMovieMode)
   useEffect(() => {
     if (baselineRef.current === null && todayQuery.data !== undefined) {
       baselineRef.current = todayQuery.data
@@ -130,6 +137,22 @@ function PlayerScreen({
   useEffect(() => {
     window.localStorage.setItem(AUTO_NEXT_STORAGE_KEY, autoNext ? 'true' : 'false')
   }, [autoNext])
+  useEffect(() => {
+    window.localStorage.setItem(MOVIE_MODE_STORAGE_KEY, movieMode ? 'true' : 'false')
+  }, [movieMode])
+  useEffect(() => {
+    if (!movieMode) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMovieMode(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [movieMode])
 
   const upcoming = useMemo(
     () =>
@@ -189,14 +212,43 @@ function PlayerScreen({
         emoji={user.emoji}
       />
 
-      <Box className={styles.playerWrap} mb="5">
-        <YouTubePlayer
-          youtubeId={video.youtube_id}
-          autoplay={autoplay}
-          onPlay={tracker.handlePlay}
-          onPauseOrEnd={tracker.handlePauseOrEnd}
-          onEnded={handleEnded}
+      {movieMode ? (
+        <Box
+          className={styles.movieBackdrop}
+          onClick={() => setMovieMode(false)}
+          aria-label={t('player.exitMovieMode')}
         />
+      ) : null}
+
+      {movieMode ? (
+        <Box className={styles.movieStats}>
+          <Text size="2" color="gray" style={{ flexShrink: 0 }}>
+            {t('player.todayTotal')}
+          </Text>
+          <Box className={styles.movieStatsBar}>
+            <ProgressBar value={liveToday} max={goal} complete={complete} />
+          </Box>
+          <Flex align="baseline" gap="1" style={{ flexShrink: 0 }}>
+            <Text size="3" weight="bold" style={{ color: 'white' }}>
+              {formatMinutes(liveToday)}
+            </Text>
+            <Text size="1" color="gray">
+              / {formatMinutes(goal)}
+            </Text>
+          </Flex>
+        </Box>
+      ) : null}
+
+      <Box className={styles.playerSlot} mb="5">
+        <Box className={`${styles.playerBox} ${movieMode ? styles.playerBoxMovie : ''}`}>
+          <YouTubePlayer
+            youtubeId={video.youtube_id}
+            autoplay={autoplay}
+            onPlay={tracker.handlePlay}
+            onPauseOrEnd={tracker.handlePauseOrEnd}
+            onEnded={handleEnded}
+          />
+        </Box>
       </Box>
 
       <Grid columns={{ initial: '1', sm: '2' }} gap="3" mb="5">
@@ -244,17 +296,30 @@ function PlayerScreen({
             ({upcoming.length})
           </Text>
         </Heading>
-        <Text as="label" size="2" color="gray" style={{ cursor: 'var(--cursor-switch)' }}>
-          <Flex align="center" gap="2">
-            <Switch
-              color="amber"
-              checked={autoNext}
-              onCheckedChange={setAutoNext}
-              aria-label={t('player.autoplay')}
-            />
-            {t('player.autoplay')}
-          </Flex>
-        </Text>
+        <Flex align="center" gap="4">
+          <Text as="label" size="2" color="gray" style={{ cursor: 'var(--cursor-switch)' }}>
+            <Flex align="center" gap="2">
+              <Switch
+                color="amber"
+                checked={autoNext}
+                onCheckedChange={setAutoNext}
+                aria-label={t('player.autoplay')}
+              />
+              {t('player.autoplay')}
+            </Flex>
+          </Text>
+          <Text as="label" size="2" color="gray" style={{ cursor: 'var(--cursor-switch)' }}>
+            <Flex align="center" gap="2">
+              <Switch
+                color="amber"
+                checked={movieMode}
+                onCheckedChange={setMovieMode}
+                aria-label={t('player.movieMode')}
+              />
+              {t('player.movieMode')}
+            </Flex>
+          </Text>
+        </Flex>
       </Flex>
       {videosQuery.isLoading ? (
         <Text color="gray" size="2">

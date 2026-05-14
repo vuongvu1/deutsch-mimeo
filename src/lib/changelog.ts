@@ -19,6 +19,11 @@ export const changelog: ChangelogVersion[] = [
     entries: [
       {
         type: 'feature',
+        de: 'Kinomodus im Player — vergrößert das Video, dimmt den Hintergrund und zeigt die heutigen Minuten als schwebendes Overlay. Schalter neben Autoplay, Klick auf den Hintergrund oder Escape beendet ihn.',
+        en: 'Movie mode in the player — enlarges the video, dims the background and shows today\'s minutes as a floating overlay. Switch next to autoplay; click backdrop or press Escape to exit.',
+      },
+      {
+        type: 'feature',
         de: 'Neue Challenge „Vokabeln" — Match-Pairs-Minispiel auf Deutsch ↔ Englisch.',
         en: 'New "Vocabulary" challenge — German ↔ English match-pairs mini-game.',
       },
@@ -51,6 +56,11 @@ export const changelog: ChangelogVersion[] = [
         type: 'fix',
         de: 'Letzte-Aktivität zeigt jetzt korrekt „spielte Vokabeln" mit Treffer-Zahl statt Hörminuten.',
         en: 'Recent activity now correctly shows "played vocabulary" with match count instead of listening minutes.',
+      },
+      {
+        type: 'improvement',
+        de: '„Heute · Vergleich" zeigt jetzt Vokabel-Treffer für heute und die letzten 7 Tage.',
+        en: '"Today · Compare" now includes today\'s and 7-day vocab match counts.',
       },
     ],
   },

@@ -59,7 +59,10 @@ export const en = {
   },
   comparison: {
     todayListened: 'Listened today',
+    todayVocab: 'Vocab today',
+    weekListened: '7-day listened',
     weekTotal: '7-day total',
+    weekVocab: '7-day vocab',
     daysComplete: 'Days complete',
     longest: 'Longest session',
   },
@@ -111,6 +114,8 @@ export const en = {
     upNext: 'Up next',
     playlistEmpty: 'No more videos.',
     autoplay: 'Autoplay',
+    movieMode: 'Movie mode',
+    exitMovieMode: 'Exit movie mode',
   },
   stats: {
     pageTitle: 'Stats',

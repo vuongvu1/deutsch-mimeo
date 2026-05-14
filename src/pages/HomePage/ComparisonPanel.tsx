@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next'
 
 import { useComparisonStats } from '@/hooks/useStats'
 import { formatMinutes, formatSeconds } from '@/lib/dates'
+import { formatChallengeValue } from '@/lib/format'
 import type { ChallengeRow } from '@/types/db'
 
 import styles from './ComparisonPanel.module.css'
 
 interface Props {
-  challenge: ChallengeRow | undefined
+  listenChallenge: ChallengeRow | undefined
+  vocabChallenge: ChallengeRow | undefined
 }
 
 interface Category {
@@ -20,11 +22,19 @@ interface Category {
   format: (n: number) => string
 }
 
-export function ComparisonPanel({ challenge }: Props) {
+export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
   const { t } = useTranslation()
-  const { data, isLoading } = useComparisonStats(challenge)
+  const listen = useComparisonStats(listenChallenge)
+  const vocab = useComparisonStats(vocabChallenge)
 
-  if (!challenge || isLoading || !data) {
+  if (
+    !listenChallenge ||
+    !vocabChallenge ||
+    listen.isLoading ||
+    vocab.isLoading ||
+    !listen.data ||
+    !vocab.data
+  ) {
     return (
       <Card>
         <Text color="gray">{t('common.loadingStats')}</Text>
@@ -32,37 +42,57 @@ export function ComparisonPanel({ challenge }: Props) {
     )
   }
 
+  const ld = listen.data
+  const vd = vocab.data
+  const vocabFmt = (n: number) => formatChallengeValue('vocab', n, t)
+
   const categories: Category[] = [
     {
-      id: 'today',
+      id: 'today-listen',
       label: t('comparison.todayListened'),
       icon: '💪',
-      miValue: data.mi.todaySeconds,
-      meoValue: data.meo.todaySeconds,
+      miValue: ld.mi.todaySeconds,
+      meoValue: ld.meo.todaySeconds,
       format: formatMinutes,
     },
     {
-      id: 'week',
-      label: t('comparison.weekTotal'),
+      id: 'today-vocab',
+      label: t('comparison.todayVocab'),
+      icon: '🧠',
+      miValue: vd.mi.todaySeconds,
+      meoValue: vd.meo.todaySeconds,
+      format: vocabFmt,
+    },
+    {
+      id: 'week-listen',
+      label: t('comparison.weekListened'),
       icon: '🔥',
-      miValue: data.mi.weekSeconds,
-      meoValue: data.meo.weekSeconds,
+      miValue: ld.mi.weekSeconds,
+      meoValue: ld.meo.weekSeconds,
       format: formatMinutes,
+    },
+    {
+      id: 'week-vocab',
+      label: t('comparison.weekVocab'),
+      icon: '📚',
+      miValue: vd.mi.weekSeconds,
+      meoValue: vd.meo.weekSeconds,
+      format: vocabFmt,
     },
     {
       id: 'days-complete',
       label: t('comparison.daysComplete'),
       icon: '💯',
-      miValue: data.mi.daysCompleteAllChallenges,
-      meoValue: data.meo.daysCompleteAllChallenges,
+      miValue: ld.mi.daysCompleteAllChallenges,
+      meoValue: ld.meo.daysCompleteAllChallenges,
       format: (n) => `${n}`,
     },
     {
       id: 'longest',
       label: t('comparison.longest'),
       icon: '🚀',
-      miValue: data.mi.longestSessionSeconds,
-      meoValue: data.meo.longestSessionSeconds,
+      miValue: ld.mi.longestSessionSeconds,
+      meoValue: ld.meo.longestSessionSeconds,
       format: formatSeconds,
     },
   ]

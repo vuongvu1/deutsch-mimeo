@@ -59,7 +59,10 @@ export const de = {
   },
   comparison: {
     todayListened: 'Heute gehört',
+    todayVocab: 'Heute Vokabeln',
+    weekListened: '7-Tage gehört',
     weekTotal: '7-Tage Total',
+    weekVocab: '7-Tage Vokabeln',
     daysComplete: 'Tage komplett',
     longest: 'Längste Session',
   },
@@ -111,6 +114,8 @@ export const de = {
     upNext: 'Als nächstes',
     playlistEmpty: 'Keine weiteren Videos.',
     autoplay: 'Autoplay',
+    movieMode: 'Kinomodus',
+    exitMovieMode: 'Kinomodus beenden',
   },
   stats: {
     pageTitle: 'Stats',

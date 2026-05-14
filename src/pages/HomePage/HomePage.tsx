@@ -19,6 +19,7 @@ export function HomePage() {
   const { t } = useTranslation()
   const usersQuery = useUsers()
   const listenChallenge = useChallengeBySlug('listen')
+  const vocabChallenge = useChallengeBySlug('vocab')
 
   const users = usersQuery.data
   const mi = users.find((u) => u.id === 'mi')!
@@ -42,7 +43,10 @@ export function HomePage() {
         <Heading size="4" mb="4" color="gray" weight="medium">
           {t('home.todayCompare')}
         </Heading>
-        <ComparisonPanel challenge={listenChallenge.data ?? undefined} />
+        <ComparisonPanel
+          listenChallenge={listenChallenge.data ?? undefined}
+          vocabChallenge={vocabChallenge.data ?? undefined}
+        />
       </Section>
 
       <Section size="1" pt="0">
