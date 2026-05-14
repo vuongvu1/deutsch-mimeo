@@ -5,6 +5,7 @@ export const en = {
     delete: 'Delete',
     back: 'Back',
     cancel: 'Cancel',
+    close: 'Close',
     prev: 'Previous',
     next: 'Next',
     pageOf: 'Page {{page}} of {{total}}',
@@ -15,8 +16,19 @@ export const en = {
     themeLabel: 'Theme',
     themeLight: 'Light',
     themeDark: 'Dark',
+    changelog: 'Changelog',
     clearSessions: 'Clear sessions',
     reset: 'Reset everything',
+  },
+  changelog: {
+    title: "What's new",
+    subtitle: 'Recent features, fixes and improvements.',
+    types: {
+      feature: 'New',
+      fix: 'Fix',
+      improvement: 'Improved',
+      chore: 'Chore',
+    },
   },
   clearSessions: {
     title: 'Clear all sessions?',

@@ -5,6 +5,7 @@ export const de = {
     delete: 'Löschen',
     back: 'Zurück',
     cancel: 'Abbrechen',
+    close: 'Schließen',
     prev: 'Vorherige',
     next: 'Nächste',
     pageOf: 'Seite {{page}} von {{total}}',
@@ -15,8 +16,19 @@ export const de = {
     themeLabel: 'Theme',
     themeLight: 'Hell',
     themeDark: 'Dunkel',
+    changelog: 'Änderungen',
     clearSessions: 'Sessions löschen',
     reset: 'Alles zurücksetzen',
+  },
+  changelog: {
+    title: 'Was ist neu?',
+    subtitle: 'Neueste Features, Fixes und Verbesserungen.',
+    types: {
+      feature: 'Neu',
+      fix: 'Fix',
+      improvement: 'Verbessert',
+      chore: 'Wartung',
+    },
   },
   clearSessions: {
     title: 'Alle Sessions löschen?',

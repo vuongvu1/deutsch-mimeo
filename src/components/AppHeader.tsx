@@ -15,6 +15,7 @@ import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
+import { ChangelogDialog } from '@/components/ChangelogDialog'
 import { useClearSessions, useResetData } from '@/hooks/useResetData'
 import { paths } from '@/routes/paths'
 import { useAppearance } from '@/theme/ThemeProvider'
@@ -62,6 +63,7 @@ export function AppHeader() {
                   {appearance === 'dark' ? <SunIcon /> : <MoonIcon />}
                 </IconButton>
               </Tooltip>
+              <ChangelogDialog />
               {isAdmin ? (
                 <>
                   <DestructiveAction

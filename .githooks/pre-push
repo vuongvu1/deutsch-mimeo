@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Block push if files in src/ changed without updating src/lib/changelog.ts.
+# Bypass with: git push --no-verify
+
+zero="0000000000000000000000000000000000000000"
+exit_code=0
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue
+
+  if [ "$remote_sha" = "$zero" ]; then
+    base=$(git merge-base "$local_sha" origin/main 2>/dev/null || true)
+    [ -z "$base" ] && continue
+    range="$base..$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  files=$(git diff --name-only "$range")
+  src_changed=false
+  changelog_changed=false
+
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    case "$f" in
+      src/lib/changelog.ts) changelog_changed=true ;;
+      src/*) src_changed=true ;;
+    esac
+  done <<< "$files"
+
+  if $src_changed && ! $changelog_changed; then
+    echo ""
+    echo "Push blocked on $local_ref:"
+    echo "  Files in src/ changed but src/lib/changelog.ts wasn't updated."
+    echo ""
+    echo "  src/ files in this push:"
+    git diff --name-only "$range" | grep '^src/' | head -10 | sed 's/^/    /'
+    echo ""
+    echo "  Either:"
+    echo "    - Add an entry to src/lib/changelog.ts and commit it, or"
+    echo "    - Bypass with: git push --no-verify  (for refactors, deps, chores)"
+    echo ""
+    exit_code=1
+  fi
+done
+
+exit $exit_code
