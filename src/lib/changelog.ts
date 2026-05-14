@@ -37,6 +37,11 @@ export const changelog: ChangelogVersion[] = [
         de: 'Stats-Seite und Heatmap zeigen jetzt beide Challenges.',
         en: 'Stats page and heatmap now cover both challenges.',
       },
+      {
+        type: 'feature',
+        de: 'Aussprache des deutschen Worts beim Antippen — via Web Speech API.',
+        en: 'Pronounces the German word when a tile is tapped — via the Web Speech API.',
+      },
     ],
   },
   {

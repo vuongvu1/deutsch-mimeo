@@ -19,6 +19,7 @@ import {
   playRoundDone,
   playWrong,
   setMuted,
+  speakGerman,
   subscribeMute,
 } from '@/lib/sounds'
 import { paths } from '@/routes/paths'
@@ -191,6 +192,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
 
       if (!selectedId) {
         setSelectedId(tile.id)
+        if (tile.kind === 'de') speakGerman(tile.text)
         return
       }
       if (selectedId === tile.id) {
@@ -201,11 +203,13 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
       const selected = tiles.find((t) => t.id === selectedId)
       if (!selected) {
         setSelectedId(tile.id)
+        if (tile.kind === 'de') speakGerman(tile.text)
         return
       }
 
       if (selected.kind === tile.kind) {
         setSelectedId(tile.id)
+        if (tile.kind === 'de') speakGerman(tile.text)
         return
       }
 

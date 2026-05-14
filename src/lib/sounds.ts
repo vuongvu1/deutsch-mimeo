@@ -121,3 +121,49 @@ export function playGoalReached(): void {
     envelopedTone(ctx, start + i * stride, freq, noteDuration, 0.18)
   })
 }
+
+let voicesCache: SpeechSynthesisVoice[] = []
+
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  const synth = window.speechSynthesis
+  voicesCache = synth.getVoices()
+  synth.addEventListener('voiceschanged', () => {
+    voicesCache = synth.getVoices()
+  })
+}
+
+function scoreGermanVoice(v: SpeechSynthesisVoice): number {
+  const name = v.name.toLowerCase()
+  let s = 0
+  if (name.includes('premium')) s += 100
+  if (name.includes('enhanced')) s += 90
+  if (name.includes('neural')) s += 90
+  if (name.includes('natural')) s += 85
+  if (name.includes('siri')) s += 80
+  if (!v.localService) s += 60
+  if (name.includes('google')) s += 40
+  if (name.includes('microsoft')) s += 30
+  if (v.lang.toLowerCase() === 'de-de') s += 5
+  if (name === 'anna' || name.includes('espeak')) s -= 50
+  return s
+}
+
+function pickGermanVoice(): SpeechSynthesisVoice | null {
+  const candidates = voicesCache.filter((v) => v.lang.toLowerCase().startsWith('de'))
+  if (candidates.length === 0) return null
+  return candidates.slice().sort((a, b) => scoreGermanVoice(b) - scoreGermanVoice(a))[0]
+}
+
+export function speakGerman(text: string): void {
+  if (muted) return
+  if (typeof window === 'undefined') return
+  const synth = window.speechSynthesis
+  if (!synth) return
+  synth.cancel()
+  const utter = new SpeechSynthesisUtterance(text)
+  utter.lang = 'de-DE'
+  utter.rate = 0.9
+  const voice = pickGermanVoice()
+  if (voice) utter.voice = voice
+  synth.speak(utter)
+}
