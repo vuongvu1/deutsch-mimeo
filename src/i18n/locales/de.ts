@@ -92,6 +92,7 @@ export const de = {
     goalReached: '🎉 Tagesziel erreicht! Du kannst weiterhören — alles zählt.',
     upNext: 'Als nächstes',
     playlistEmpty: 'Keine weiteren Videos.',
+    autoplay: 'Autoplay',
   },
   stats: {
     pageTitle: 'Stats',

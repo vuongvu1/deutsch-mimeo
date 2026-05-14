@@ -92,6 +92,7 @@ export const en = {
     goalReached: '🎉 Daily goal reached! Keep listening — it all counts.',
     upNext: 'Up next',
     playlistEmpty: 'No more videos.',
+    autoplay: 'Autoplay',
   },
   stats: {
     pageTitle: 'Stats',

@@ -2,8 +2,6 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   Cross2Icon,
   DoubleArrowUpIcon,
   PlusIcon,
@@ -30,6 +28,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
+import { Pagination } from '@/components/Pagination'
 import { TopBar } from '@/components/TopBar'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
 import { useUser } from '@/hooks/useUsers'
@@ -168,45 +167,6 @@ export function VideoLibraryPage() {
         </>
       )}
     </Container>
-  )
-}
-
-function Pagination({
-  page,
-  totalPages,
-  onPage,
-}: {
-  page: number
-  totalPages: number
-  onPage: (p: number) => void
-}) {
-  const { t } = useTranslation()
-  return (
-    <Flex gap="3" align="center" justify="center" mt="3">
-      <Button
-        variant="soft"
-        color="gray"
-        disabled={page <= 1}
-        onClick={() => onPage(page - 1)}
-        aria-label={t('common.prev')}
-      >
-        <ChevronLeftIcon />
-        {t('common.prev')}
-      </Button>
-      <Text color="gray" size="2">
-        {t('common.pageOf', { page, total: totalPages })}
-      </Text>
-      <Button
-        variant="soft"
-        color="gray"
-        disabled={page >= totalPages}
-        onClick={() => onPage(page + 1)}
-        aria-label={t('common.next')}
-      >
-        {t('common.next')}
-        <ChevronRightIcon />
-      </Button>
-    </Flex>
   )
 }
 

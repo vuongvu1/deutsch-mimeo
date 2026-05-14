@@ -1,6 +1,14 @@
-import { ArrowDownIcon, ArrowUpIcon } from '@radix-ui/react-icons'
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  CheckIcon,
+  Cross2Icon,
+  DoubleArrowUpIcon,
+} from '@radix-ui/react-icons'
+import {
+  AlertDialog,
   Box,
+  Button,
   Callout,
   Card,
   Container,
@@ -8,13 +16,15 @@ import {
   Grid,
   Heading,
   IconButton,
+  Switch,
   Text,
   Tooltip,
 } from '@radix-ui/themes'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
+import { Pagination } from '@/components/Pagination'
 import { ProgressBar } from '@/components/ProgressBar'
 import { TopBar } from '@/components/TopBar'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
@@ -22,6 +32,7 @@ import { useSessionTracker } from '@/hooks/useSessionTracker'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
 import {
+  useDeleteVideo,
   useReorderVideos,
   useSetVideoWatched,
   useVideo,
@@ -34,6 +45,16 @@ import type { ChallengeRow, UserId, UserRow, VideoRow } from '@/types/db'
 
 import styles from './PlayerPage.module.css'
 import { YouTubePlayer } from './YouTubePlayer'
+
+const PAGE_SIZE = 10
+const AUTO_NEXT_STORAGE_KEY = 'mimeo:autoNext'
+
+function getInitialAutoNext(): boolean {
+  if (typeof window === 'undefined') return true
+  const stored = window.localStorage.getItem(AUTO_NEXT_STORAGE_KEY)
+  if (stored === 'false') return false
+  return true
+}
 
 export function PlayerPage() {
   const { t } = useTranslation()
@@ -96,6 +117,8 @@ function PlayerScreen({
   const todayQuery = useTodaySecondsForChallenge(user.id, challenge.id)
   const videosQuery = useVideos(user.id)
   const baselineRef = useRef<number | null>(null)
+  const [page, setPage] = useState(1)
+  const [autoNext, setAutoNext] = useState<boolean>(getInitialAutoNext)
   useEffect(() => {
     if (baselineRef.current === null && todayQuery.data !== undefined) {
       baselineRef.current = todayQuery.data
@@ -104,12 +127,20 @@ function PlayerScreen({
   useEffect(() => {
     window.scrollTo({ top: 0 })
   }, [])
+  useEffect(() => {
+    window.localStorage.setItem(AUTO_NEXT_STORAGE_KEY, autoNext ? 'true' : 'false')
+  }, [autoNext])
 
   const upcoming = useMemo(
     () =>
       (videosQuery.data ?? []).filter((v) => v.id !== video.id && !v.watched_at),
     [videosQuery.data, video.id],
   )
+
+  const totalPages = Math.max(1, Math.ceil(upcoming.length / PAGE_SIZE))
+  const curPage = Math.min(page, totalPages)
+  const offset = (curPage - 1) * PAGE_SIZE
+  const pageSlice = upcoming.slice(offset, offset + PAGE_SIZE)
 
   const baseline = baselineRef.current ?? 0
   const liveToday = baseline + tracker.sessionSeconds
@@ -120,10 +151,18 @@ function PlayerScreen({
     if (!video.watched_at) {
       setWatched.mutate({ id: video.id, user_id: user.id, watched: true })
     }
+    if (!autoNext) return
     const next = upcoming[0]
     if (next) {
       navigate(paths.player(user.id, next.id), { state: { autoplay: true } })
     }
+  }
+
+  const persistOrder = (next: VideoRow[]) => {
+    const orderedIds = video.watched_at
+      ? next.map((v) => v.id)
+      : [video.id, ...next.map((v) => v.id)]
+    reorder.mutate({ user_id: user.id, orderedIds })
   }
 
   const swapUpcoming = (i: number, j: number) => {
@@ -131,10 +170,15 @@ function PlayerScreen({
     const tmp = next[i]
     next[i] = next[j]
     next[j] = tmp
-    const orderedIds = video.watched_at
-      ? next.map((v) => v.id)
-      : [video.id, ...next.map((v) => v.id)]
-    reorder.mutate({ user_id: user.id, orderedIds })
+    persistOrder(next)
+  }
+
+  const moveUpcomingToTop = (i: number) => {
+    if (i <= 0) return
+    const next = upcoming.slice()
+    const [moved] = next.splice(i, 1)
+    next.unshift(moved)
+    persistOrder(next)
   }
 
   return (
@@ -193,12 +237,25 @@ function PlayerScreen({
         </Box>
       ) : null}
 
-      <Heading size="4" weight="bold" mb="3">
-        {t('player.upNext')}{' '}
-        <Text size="3" color="gray" weight="regular">
-          ({upcoming.length})
+      <Flex align="center" justify="between" gap="3" mb="3">
+        <Heading size="4" weight="bold">
+          {t('player.upNext')}{' '}
+          <Text size="3" color="gray" weight="regular">
+            ({upcoming.length})
+          </Text>
+        </Heading>
+        <Text as="label" size="2" color="gray" style={{ cursor: 'var(--cursor-switch)' }}>
+          <Flex align="center" gap="2">
+            <Switch
+              color="amber"
+              checked={autoNext}
+              onCheckedChange={setAutoNext}
+              aria-label={t('player.autoplay')}
+            />
+            {t('player.autoplay')}
+          </Flex>
         </Text>
-      </Heading>
+      </Flex>
       {videosQuery.isLoading ? (
         <Text color="gray" size="2">
           {t('common.loading')}
@@ -210,19 +267,28 @@ function PlayerScreen({
           </Text>
         </Card>
       ) : (
-        <Flex direction="column" gap="2">
-          {upcoming.map((v, idx) => (
-            <PlaylistItem
-              key={v.id}
-              video={v}
-              userId={user.id}
-              index={idx}
-              total={upcoming.length}
-              onMoveUp={() => swapUpcoming(idx, idx - 1)}
-              onMoveDown={() => swapUpcoming(idx, idx + 1)}
-            />
-          ))}
-        </Flex>
+        <>
+          <Flex direction="column" gap="2">
+            {pageSlice.map((v, idx) => {
+              const realIdx = offset + idx
+              return (
+                <PlaylistItem
+                  key={v.id}
+                  video={v}
+                  userId={user.id}
+                  index={realIdx}
+                  total={upcoming.length}
+                  onMoveUp={() => swapUpcoming(realIdx, realIdx - 1)}
+                  onMoveDown={() => swapUpcoming(realIdx, realIdx + 1)}
+                  onMoveToTop={() => moveUpcomingToTop(realIdx)}
+                />
+              )
+            })}
+          </Flex>
+          {totalPages > 1 ? (
+            <Pagination page={curPage} totalPages={totalPages} onPage={setPage} />
+          ) : null}
+        </>
       )}
     </Container>
   )
@@ -235,6 +301,7 @@ function PlaylistItem({
   total,
   onMoveUp,
   onMoveDown,
+  onMoveToTop,
 }: {
   video: VideoRow
   userId: UserId
@@ -242,8 +309,12 @@ function PlaylistItem({
   total: number
   onMoveUp: () => void
   onMoveDown: () => void
+  onMoveToTop: () => void
 }) {
   const { t } = useTranslation()
+  const setWatched = useSetVideoWatched()
+  const deleteVideo = useDeleteVideo()
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const canMoveUp = index > 0
   const canMoveDown = index < total - 1
 
@@ -257,58 +328,134 @@ function PlaylistItem({
     e.stopPropagation()
     if (canMoveDown) onMoveDown()
   }
+  const handleTop = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (canMoveUp) onMoveToTop()
+  }
+  const onMarkWatched = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setWatched.mutate({ id: video.id, user_id: userId, watched: true })
+  }
+  const onDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDeleteOpen(true)
+  }
+  const onConfirmDelete = () => {
+    deleteVideo.mutate({ id: video.id, user_id: userId })
+  }
 
   return (
-    <Card asChild variant="surface" className={styles.playlistItem}>
-      <Link to={paths.player(userId, video.id)} state={{ autoplay: true }}>
-        <Flex align="center" gap="3">
-          <img
-            className={styles.playlistThumb}
-            src={youtubeThumbUrl(video.youtube_id)}
-            alt=""
-          />
-          <Text
-            as="div"
-            size="2"
-            weight="medium"
-            style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            {video.title}
-          </Text>
-          <Flex gap="2" flexShrink="0" align="center">
-            <Tooltip content={t('videoLibrary.moveUp')}>
-              <IconButton
-                type="button"
-                variant="ghost"
-                color="gray"
-                disabled={!canMoveUp}
-                onClick={handleUp}
-                aria-label={t('videoLibrary.moveUp')}
-              >
-                <ArrowUpIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip content={t('videoLibrary.moveDown')}>
-              <IconButton
-                type="button"
-                variant="ghost"
-                color="gray"
-                disabled={!canMoveDown}
-                onClick={handleDown}
-                aria-label={t('videoLibrary.moveDown')}
-              >
-                <ArrowDownIcon />
-              </IconButton>
-            </Tooltip>
+    <>
+      <Card asChild variant="surface" className={styles.playlistItem}>
+        <Link to={paths.player(userId, video.id)} state={{ autoplay: true }}>
+          <Flex align="center" gap="3">
+            <img
+              className={styles.playlistThumb}
+              src={youtubeThumbUrl(video.youtube_id)}
+              alt=""
+            />
+            <Text
+              as="div"
+              size="2"
+              weight="medium"
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {video.title}
+            </Text>
+            <Flex gap="2" flexShrink="0" align="center">
+              <Tooltip content={t('videoLibrary.moveToTop')}>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  disabled={!canMoveUp}
+                  onClick={handleTop}
+                  aria-label={t('videoLibrary.moveToTop')}
+                >
+                  <DoubleArrowUpIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip content={t('videoLibrary.moveUp')}>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  disabled={!canMoveUp}
+                  onClick={handleUp}
+                  aria-label={t('videoLibrary.moveUp')}
+                >
+                  <ArrowUpIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip content={t('videoLibrary.moveDown')}>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  disabled={!canMoveDown}
+                  onClick={handleDown}
+                  aria-label={t('videoLibrary.moveDown')}
+                >
+                  <ArrowDownIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip content={t('videoLibrary.markWatched')}>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="green"
+                  onClick={onMarkWatched}
+                  aria-label={t('videoLibrary.markWatched')}
+                >
+                  <CheckIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip content={t('common.delete')}>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  onClick={onDeleteClick}
+                  aria-label={t('common.delete')}
+                >
+                  <Cross2Icon />
+                </IconButton>
+              </Tooltip>
+            </Flex>
           </Flex>
-        </Flex>
-      </Link>
-    </Card>
+        </Link>
+      </Card>
+      <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialog.Content maxWidth="450px">
+          <AlertDialog.Title>
+            {t('videoLibrary.confirmDelete', { title: video.title })}
+          </AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            {t('videoLibrary.deleteWarning')}
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                {t('common.cancel')}
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button variant="solid" color="red" onClick={onConfirmDelete}>
+                {t('common.delete')}
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+    </>
   )
 }
