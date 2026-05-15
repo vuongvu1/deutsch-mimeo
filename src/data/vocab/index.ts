@@ -14,10 +14,27 @@ export interface VocabPack {
   words: VocabWord[]
 }
 
-export const VOCAB_PACKS: readonly VocabPack[] = [a1Basics, a1Food, a1Travel, a1Family, a2Work]
+const THEMED_PACKS: readonly VocabPack[] = [a1Basics, a1Food, a1Travel, a1Family, a2Work]
+
+function buildAllPack(): VocabPack {
+  const seen = new Set<string>()
+  const words: VocabWord[] = []
+  for (const pack of THEMED_PACKS) {
+    for (const w of pack.words) {
+      if (seen.has(w.de)) continue
+      seen.add(w.de)
+      words.push(w)
+    }
+  }
+  return { id: 'all', words }
+}
+
+const allPack = buildAllPack()
+
+export const VOCAB_PACKS: readonly VocabPack[] = [allPack, ...THEMED_PACKS]
 
 export const VOCAB_PACKS_BY_ID: Record<string, VocabPack | undefined> = Object.fromEntries(
   VOCAB_PACKS.map((p) => [p.id, p]),
 )
 
-export const DEFAULT_PACK_ID = a1Basics.id
+export const DEFAULT_PACK_ID = 'all'

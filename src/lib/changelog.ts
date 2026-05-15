@@ -73,6 +73,11 @@ export const changelog: ChangelogVersion[] = [
         de: '„Heute · Vergleich" zeigt jetzt Vokabel-Treffer für heute und die letzten 7 Tage.',
         en: '"Today · Compare" now includes today\'s and 7-day vocab match counts.',
       },
+      {
+        type: 'improvement',
+        de: 'Neue Standardauswahl „Alle Wörter" im Vokabel-Dropdown — mischt Wörter aus allen Paketen.',
+        en: 'New default "All words" option in the vocab dropdown — mixes words from every pack.',
+      },
     ],
   },
   {

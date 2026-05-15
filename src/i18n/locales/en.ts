@@ -142,6 +142,7 @@ export const en = {
       label: 'Word pack',
     },
     packs: {
+      all: 'All words',
       'a1-basics': 'A1 · Basics',
       'a1-food': 'A1 · Food & Drink',
       'a1-travel': 'A1 · Travel & Places',
