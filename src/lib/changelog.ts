@@ -14,6 +14,22 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.7.0',
+    date: '2026-05-16',
+    entries: [
+      {
+        type: 'feature',
+        de: 'Wörter merken im Vokabelspiel — tippe das Lesezeichen-Symbol auf einer deutschen Karte, um sie in deine persönliche Liste zu speichern. Über das Lesezeichen-Symbol oben kannst du sie ansehen, anhören oder löschen.',
+        en: 'Save words in the vocab game — tap the bookmark on a German tile to add it to your personal notebook. Use the bookmark button in the header to review, pronounce, or remove them.',
+      },
+      {
+        type: 'feature',
+        de: 'Neues Paket „🔖 Gemerkte Wörter" im Dropdown — spiele nur mit deinen markierten Vokabeln.',
+        en: 'New "🔖 Saved words" option in the pack dropdown — play only with words you\'ve bookmarked.',
+      },
+    ],
+  },
+  {
     version: '0.6.1',
     date: '2026-05-15',
     entries: [

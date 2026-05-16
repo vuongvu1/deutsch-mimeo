@@ -10,8 +10,13 @@
   }
 }
 
+.tileWrap {
+  position: relative;
+}
+
 .tile {
   position: relative;
+  width: 100%;
   min-height: 84px;
   display: flex;
   align-items: center;
@@ -32,6 +37,55 @@
     opacity 200ms ease;
   word-break: break-word;
   hyphens: auto;
+}
+
+.tileText {
+  display: block;
+  padding: 0 0.5rem;
+}
+
+.saveBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.saveBtn:hover,
+.saveBtn:focus-visible {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.18);
+  outline: none;
+}
+
+.saveBtn:active {
+  transform: scale(0.92);
+}
+
+.saveBtnActive {
+  opacity: 1;
+  color: #000;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.saveBtnActive:hover,
+.saveBtnActive:focus-visible {
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .tile:active {

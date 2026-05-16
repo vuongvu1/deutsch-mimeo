@@ -54,3 +54,12 @@ export interface DailyCompletionRow {
   completed_count: number
 }
 
+export interface SavedWordRow {
+  id: string
+  user_id: UserId
+  de: string
+  en: string
+  note: string | null
+  created_at: string
+}
+

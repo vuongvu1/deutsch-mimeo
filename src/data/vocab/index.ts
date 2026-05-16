@@ -31,7 +31,12 @@ function buildAllPack(): VocabPack {
 
 const allPack = buildAllPack()
 
-export const VOCAB_PACKS: readonly VocabPack[] = [allPack, ...THEMED_PACKS]
+export const SAVED_PACK_ID = 'saved'
+
+// Stub: actual words are sourced from the user's saved-words query at render time.
+const savedPackStub: VocabPack = { id: SAVED_PACK_ID, words: [] }
+
+export const VOCAB_PACKS: readonly VocabPack[] = [allPack, savedPackStub, ...THEMED_PACKS]
 
 export const VOCAB_PACKS_BY_ID: Record<string, VocabPack | undefined> = Object.fromEntries(
   VOCAB_PACKS.map((p) => [p.id, p]),

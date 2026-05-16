@@ -143,6 +143,7 @@ export const de = {
     },
     packs: {
       all: 'Alle Wörter',
+      saved: '🔖 Gemerkte Wörter',
       'a1-basics': 'A1 · Grundlagen',
       'a1-food': 'A1 · Essen & Trinken',
       'a1-travel': 'A1 · Reisen & Orte',
@@ -159,6 +160,19 @@ export const de = {
     sound: {
       mute: 'Töne aus',
       unmute: 'Töne an',
+    },
+    saved: {
+      title: 'Gemerkte Wörter',
+      subtitle: 'Deine persönliche Vokabel-Liste — getippt während des Spiels.',
+      empty: 'Noch keine Wörter gemerkt. Tippe auf das Lesezeichen an einer deutschen Karte.',
+      save: 'Wort merken',
+      unsave: 'Wort entfernen',
+      open_one: '{{count}} gemerktes Wort',
+      open_other: '{{count}} gemerkte Wörter',
+      speak: 'Aussprechen',
+      remove: 'Entfernen',
+      emptyPackTitle: 'Noch keine gemerkten Wörter',
+      emptyPackHint: 'Wähle zuerst ein anderes Paket, tippe das Lesezeichen an deutschen Karten — und komm dann hierher zurück.',
     },
   },
   heatmap: {

@@ -1,17 +1,19 @@
-import { SpeakerLoudIcon, SpeakerOffIcon } from '@radix-ui/react-icons'
+import { BookmarkFilledIcon, BookmarkIcon, SpeakerLoudIcon, SpeakerOffIcon } from '@radix-ui/react-icons'
 import { Badge, Box, Card, Container, Flex, IconButton, Select, Text, Tooltip } from '@radix-ui/themes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 
 import { ProgressBar } from '@/components/ProgressBar'
+import { SavedWordsDialog } from '@/components/SavedWordsDialog'
 import { TopBar } from '@/components/TopBar'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
 import { useMatchSession } from '@/hooks/useMatchSession'
+import { useSaveWord, useSavedWords, useUnsaveWord } from '@/hooks/useSavedWords'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
-import { DEFAULT_PACK_ID, VOCAB_PACKS, VOCAB_PACKS_BY_ID } from '@/data/vocab'
-import type { VocabWord } from '@/data/vocab'
+import { DEFAULT_PACK_ID, SAVED_PACK_ID, VOCAB_PACKS, VOCAB_PACKS_BY_ID } from '@/data/vocab'
+import type { VocabPack, VocabWord } from '@/data/vocab'
 import {
   isMuted,
   playGoalReached,
@@ -92,7 +94,12 @@ export function VocabGamePage() {
         back={{ to: paths.challenges(user.id) }}
         title={t('vocab.pageTitle')}
         emoji={t('vocab.pageTitleEmoji')}
-        rightSlot={<MuteToggle />}
+        rightSlot={
+          <Flex gap="2" align="center">
+            <SavedWordsDialog userId={user.id} />
+            <MuteToggle />
+          </Flex>
+        }
       />
       <Game
         user={user}
@@ -120,12 +127,48 @@ interface GameProps {
 
 function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: GameProps) {
   const { t } = useTranslation()
-  const pack = VOCAB_PACKS_BY_ID[packId] ?? VOCAB_PACKS[0]
   const { matchesInSession, incrementMatch } = useMatchSession({
     userId: user.id,
     challengeId,
     enabled: true,
   })
+
+  const savedWordsQuery = useSavedWords(user.id)
+  const savedWords = savedWordsQuery.data ?? []
+  const saveWord = useSaveWord()
+  const unsaveWord = useUnsaveWord()
+  const savedSet = useMemo(
+    () => new Set(savedWords.map((w) => w.de)),
+    [savedWords],
+  )
+
+  const pack: VocabPack = useMemo(() => {
+    if (packId === SAVED_PACK_ID) {
+      return { id: SAVED_PACK_ID, words: savedWords.map((w) => ({ de: w.de, en: w.en })) }
+    }
+    return VOCAB_PACKS_BY_ID[packId] ?? VOCAB_PACKS[0]
+  }, [packId, savedWords])
+
+  const savedPackEmpty = pack.id === SAVED_PACK_ID && pack.words.length === 0
+
+  const enByDe = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const w of pack.words) map.set(w.de, w.en)
+    for (const w of savedWords) if (!map.has(w.de)) map.set(w.de, w.en)
+    return map
+  }, [pack, savedWords])
+
+  const toggleSave = useCallback(
+    (de: string) => {
+      if (savedSet.has(de)) {
+        unsaveWord.mutate({ user_id: user.id, de })
+        return
+      }
+      const en = enByDe.get(de) ?? ''
+      saveWord.mutate({ user_id: user.id, de, en })
+    },
+    [savedSet, enByDe, saveWord, unsaveWord, user.id],
+  )
 
   const todayTotal = baselineToday + matchesInSession
   const complete = todayTotal >= goal
@@ -299,6 +342,17 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
         <Card size="2" variant="classic">
           <Box className={styles.roundDoneBanner}>{t('vocab.roundDone')}</Box>
         </Card>
+      ) : savedPackEmpty ? (
+        <Card size="2" variant="surface">
+          <Flex direction="column" gap="2" align="center" p="4">
+            <Text size="3" weight="medium">
+              {t('vocab.saved.emptyPackTitle')}
+            </Text>
+            <Text size="2" color="gray" align="center">
+              {t('vocab.saved.emptyPackHint')}
+            </Text>
+          </Flex>
+        </Card>
       ) : (
         <Box className={styles.grid}>
           {tiles.map((tile) => (
@@ -308,6 +362,8 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
               selected={selectedId === tile.id}
               wrong={wrongIds.has(tile.id)}
               onClick={() => onTileClick(tile)}
+              saved={tile.kind === 'de' && savedSet.has(tile.text)}
+              onToggleSave={tile.kind === 'de' ? () => toggleSave(tile.text) : undefined}
             />
           ))}
         </Box>
@@ -341,12 +397,17 @@ function TileButton({
   selected,
   wrong,
   onClick,
+  saved,
+  onToggleSave,
 }: {
   tile: Tile
   selected: boolean
   wrong: boolean
   onClick: () => void
+  saved: boolean
+  onToggleSave?: () => void
 }) {
+  const { t } = useTranslation()
   const cls = [
     styles.tile,
     tile.kind === 'de' ? styles.tileDe : styles.tileEn,
@@ -356,9 +417,28 @@ function TileButton({
   ]
     .filter(Boolean)
     .join(' ')
+  const saveLabel = saved ? t('vocab.saved.unsave') : t('vocab.saved.save')
   return (
-    <button type="button" className={cls} onClick={onClick} aria-pressed={selected}>
-      {tile.text}
-    </button>
+    <div className={styles.tileWrap}>
+      <button type="button" className={cls} onClick={onClick} aria-pressed={selected}>
+        <span className={styles.tileText}>{tile.text}</span>
+      </button>
+      {onToggleSave && !tile.removed ? (
+        <Tooltip content={saveLabel}>
+          <button
+            type="button"
+            aria-label={saveLabel}
+            aria-pressed={saved}
+            className={`${styles.saveBtn} ${saved ? styles.saveBtnActive : ''}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleSave()
+            }}
+          >
+            {saved ? <BookmarkFilledIcon /> : <BookmarkIcon />}
+          </button>
+        </Tooltip>
+      ) : null}
+    </div>
   )
 }

@@ -143,6 +143,7 @@ export const en = {
     },
     packs: {
       all: 'All words',
+      saved: '🔖 Saved words',
       'a1-basics': 'A1 · Basics',
       'a1-food': 'A1 · Food & Drink',
       'a1-travel': 'A1 · Travel & Places',
@@ -159,6 +160,19 @@ export const en = {
     sound: {
       mute: 'Mute sounds',
       unmute: 'Unmute sounds',
+    },
+    saved: {
+      title: 'Saved words',
+      subtitle: 'Your personal vocab notebook — bookmarked while playing.',
+      empty: 'No words saved yet. Tap the bookmark on a German tile.',
+      save: 'Save word',
+      unsave: 'Remove word',
+      open_one: '{{count}} saved word',
+      open_other: '{{count}} saved words',
+      speak: 'Pronounce',
+      remove: 'Remove',
+      emptyPackTitle: 'No saved words yet',
+      emptyPackHint: 'Pick another pack first, tap the bookmark on German tiles, then come back here.',
     },
   },
   heatmap: {
