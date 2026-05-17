@@ -1,14 +1,11 @@
-import { RocketIcon } from '@radix-ui/react-icons'
 import {
   Badge,
   Button,
   Dialog,
   Flex,
   Heading,
-  IconButton,
   ScrollArea,
   Text,
-  Tooltip,
 } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 
@@ -21,20 +18,17 @@ const TYPE_COLORS: Record<ChangelogEntryType, 'green' | 'amber' | 'blue' | 'gray
   chore: 'gray',
 }
 
-export function ChangelogDialog() {
+interface Props {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function ChangelogDialog({ open, onOpenChange }: Props) {
   const { t, i18n } = useTranslation()
-  const triggerLabel = t('header.changelog')
   const lang: 'en' | 'de' = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'de'
 
   return (
-    <Dialog.Root>
-      <Tooltip content={triggerLabel}>
-        <Dialog.Trigger>
-          <IconButton variant="soft" aria-label={triggerLabel}>
-            <RocketIcon />
-          </IconButton>
-        </Dialog.Trigger>
-      </Tooltip>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="520px">
         <Dialog.Title>{t('changelog.title')}</Dialog.Title>
         <Dialog.Description size="2" color="gray" mb="4">

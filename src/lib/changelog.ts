@@ -14,6 +14,22 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.9.0',
+    date: '2026-05-18',
+    entries: [
+      {
+        type: 'feature',
+        de: 'Versionsnummer im Header neben dem Raketen-Symbol — klicke darauf, um die Änderungsliste zu öffnen.',
+        en: 'Version number in the header next to the rocket icon — click it to open the changelog.',
+      },
+      {
+        type: 'feature',
+        de: 'Update-Hinweis im Header: Wenn eine neue Version live ist, erscheint ein grüner Aktualisieren-Knopf, mit dem du die App neu lädst.',
+        en: 'Update banner in the header: when a new version is live, a green refresh button appears so you can reload the app.',
+      },
+    ],
+  },
+  {
     version: '0.8.1',
     date: '2026-05-17',
     entries: [

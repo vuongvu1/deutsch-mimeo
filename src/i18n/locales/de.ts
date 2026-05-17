@@ -17,6 +17,7 @@ export const de = {
     themeLight: 'Hell',
     themeDark: 'Dunkel',
     changelog: 'Änderungen',
+    updateAvailable: 'Neue Version verfügbar — zum Aktualisieren klicken',
     clearSessions: 'Sessions löschen',
     reset: 'Alles zurücksetzen',
   },

@@ -17,6 +17,7 @@ export const en = {
     themeLight: 'Light',
     themeDark: 'Dark',
     changelog: 'Changelog',
+    updateAvailable: 'New version available — click to refresh',
     clearSessions: 'Clear sessions',
     reset: 'Reset everything',
   },

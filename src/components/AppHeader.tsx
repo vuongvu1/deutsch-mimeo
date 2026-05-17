@@ -1,4 +1,11 @@
-import { MoonIcon, ResetIcon, SunIcon, TrashIcon } from '@radix-ui/react-icons'
+import {
+  MoonIcon,
+  ResetIcon,
+  RocketIcon,
+  SunIcon,
+  TrashIcon,
+  UpdateIcon,
+} from '@radix-ui/react-icons'
 import {
   AlertDialog,
   Box,
@@ -17,18 +24,25 @@ import { Link, useSearchParams } from 'react-router-dom'
 
 import { ChangelogDialog } from '@/components/ChangelogDialog'
 import { useClearSessions, useResetData } from '@/hooks/useResetData'
+import { useUpdateAvailable } from '@/hooks/useUpdateAvailable'
+import { changelog } from '@/lib/changelog'
 import { paths } from '@/routes/paths'
 import { useAppearance } from '@/theme/ThemeProvider'
+
+const APP_VERSION = changelog[0]?.version ?? '0.0.0'
 
 export function AppHeader() {
   const { t, i18n } = useTranslation()
   const { appearance, toggle } = useAppearance()
   const [searchParams] = useSearchParams()
   const isAdmin = searchParams.get('admin') === 'true'
+  const updateAvailable = useUpdateAvailable()
+  const [changelogOpen, setChangelogOpen] = useState(false)
 
   const currentLang = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'de'
   const themeTooltip =
     appearance === 'dark' ? t('header.themeLight') : t('header.themeDark')
+  const updateLabel = t('header.updateAvailable')
 
   return (
     <Box
@@ -48,6 +62,18 @@ export function AppHeader() {
               <Link to={paths.home()}>🇩🇪 {t('header.appName')}</Link>
             </Heading>
             <Flex align="center" gap="2">
+              {updateAvailable ? (
+                <Tooltip content={updateLabel}>
+                  <IconButton
+                    variant="solid"
+                    color="green"
+                    onClick={() => window.location.reload()}
+                    aria-label={updateLabel}
+                  >
+                    <UpdateIcon />
+                  </IconButton>
+                </Tooltip>
+              ) : null}
               <Select.Root
                 value={currentLang}
                 onValueChange={(v) => void i18n.changeLanguage(v)}
@@ -63,7 +89,18 @@ export function AppHeader() {
                   {appearance === 'dark' ? <SunIcon /> : <MoonIcon />}
                 </IconButton>
               </Tooltip>
-              <ChangelogDialog />
+              <Tooltip content={t('header.changelog')}>
+                <Button
+                  variant="soft"
+                  color="gray"
+                  size="2"
+                  onClick={() => setChangelogOpen(true)}
+                  aria-label={t('header.changelog')}
+                >
+                  <RocketIcon />v{APP_VERSION}
+                </Button>
+              </Tooltip>
+              <ChangelogDialog open={changelogOpen} onOpenChange={setChangelogOpen} />
               {isAdmin ? (
                 <>
                   <DestructiveAction
