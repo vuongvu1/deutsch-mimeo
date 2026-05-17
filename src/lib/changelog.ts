@@ -22,6 +22,11 @@ export const changelog: ChangelogVersion[] = [
         de: 'Vokabelspiel: Das deutsche Wort wird jetzt auch dann vorgelesen, wenn du zuerst die englische Karte und danach die passende deutsche anklickst.',
         en: 'Vocab game: the German word is now spoken when you match by picking the English tile first and the German tile second (previously only the German-first order spoke it).',
       },
+      {
+        type: 'chore',
+        de: 'CI-Build repariert: pnpm 11 verlangt eine ausdrückliche Entscheidung über das protobufjs-Build-Skript — auf „false" gesetzt, da es nur ungenutzte CLIs erzeugt.',
+        en: 'CI build fixed: pnpm 11 requires an explicit decision on the protobufjs build script — set to false since it only builds unused CLIs.',
+      },
     ],
   },
   {

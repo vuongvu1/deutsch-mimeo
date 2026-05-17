@@ -39,10 +39,5 @@
     "typescript-eslint": "^8.59.3",
     "vite": "^8.0.13"
   },
-  "packageManager": "pnpm@11.1.1",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "protobufjs"
-    ]
-  }
+  "packageManager": "pnpm@11.1.1"
 }
