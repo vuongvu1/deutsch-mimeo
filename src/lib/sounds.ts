@@ -6,6 +6,42 @@ const ORT_WASM_BASE = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/
 const PIPER_PHONEMIZE_BASE =
   'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize'
 
+// piper-tts-web@1.0.4 hardcodes the voice URL to huggingface.co/diffusionstudio/piper-voices,
+// which has been seen returning 404 in prod (transient HF cache misses). The model is committed
+// in this repo under /voices/ and served via raw.githubusercontent.com (CORS: *). The library's
+// OPFS cache still keys off the original HF URL, so caching keeps working unchanged.
+const PIPER_VOICE_FILENAMES = new Set([
+  'de_DE-thorsten-medium.onnx',
+  'de_DE-thorsten-medium.onnx.json',
+])
+const PIPER_MIRROR_BASE =
+  'https://raw.githubusercontent.com/vuongvu1/deutsch-mimeo/main/voices/'
+
+function patchPiperVoiceFetch(): void {
+  if (typeof window === 'undefined') return
+  const w = window as Window & { __mimeoPiperFetchPatched?: boolean }
+  if (w.__mimeoPiperFetchPatched) return
+  w.__mimeoPiperFetchPatched = true
+  const original = window.fetch.bind(window)
+  window.fetch = (input, init) => {
+    const url =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url
+    const filename = url.slice(url.lastIndexOf('/') + 1)
+    if (!PIPER_VOICE_FILENAMES.has(filename)) return original(input, init)
+    const rewritten = PIPER_MIRROR_BASE + filename
+    if (typeof input === 'string' || input instanceof URL) {
+      return original(rewritten, init)
+    }
+    return original(new Request(rewritten, input))
+  }
+}
+
+patchPiperVoiceFetch()
+
 let cachedCtx: AudioContext | null = null
 let muted: boolean = (() => {
   if (typeof window === 'undefined') return false

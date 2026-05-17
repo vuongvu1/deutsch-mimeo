@@ -27,6 +27,11 @@ export const changelog: ChangelogVersion[] = [
         de: 'CI-Build repariert: pnpm 11 verlangt eine ausdrückliche Entscheidung über das protobufjs-Build-Skript — auf „false" gesetzt, da es nur ungenutzte CLIs erzeugt.',
         en: 'CI build fixed: pnpm 11 requires an explicit decision on the protobufjs build script — set to false since it only builds unused CLIs.',
       },
+      {
+        type: 'fix',
+        de: 'Piper-Stimme zuverlässiger: das Modell wird jetzt aus dem eigenen Repo geladen statt vom externen HuggingFace-Mirror, der gelegentlich 404 zurückgab.',
+        en: 'Piper voice more reliable: the model now loads from this repo instead of the external HuggingFace mirror that occasionally returned 404.',
+      },
     ],
   },
   {
