@@ -32,6 +32,11 @@ export const changelog: ChangelogVersion[] = [
         de: 'Piper-Stimme zuverlässiger: das Modell wird jetzt aus dem eigenen Repo geladen statt vom externen HuggingFace-Mirror, der gelegentlich 404 zurückgab.',
         en: 'Piper voice more reliable: the model now loads from this repo instead of the external HuggingFace mirror that occasionally returned 404.',
       },
+      {
+        type: 'improvement',
+        de: 'Piper-Stimme lädt jetzt sofort im Hintergrund, sobald die App geöffnet ist — beim Erreichen des Vokabelspiels ist sie häufiger schon einsatzbereit.',
+        en: 'Piper voice now starts loading in the background as soon as the app opens, so it\'s more often ready by the time you reach the vocab game.',
+      },
     ],
   },
   {

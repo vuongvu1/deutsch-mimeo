@@ -260,6 +260,14 @@ function startPiperInit(): Promise<piperTTS.TtsSession> {
   return piperSessionPromise
 }
 
+export function prewarmPiper(): void {
+  if (typeof window === 'undefined') return
+  if (piperBroken || piperReady || piperSessionPromise) return
+  void startPiperInit().catch(() => {
+    // already logged; fallback stays in effect
+  })
+}
+
 async function speakViaPiper(text: string, ctx: AudioContext, myId: number): Promise<void> {
   const session = await startPiperInit()
   if (muted || myId !== speakRequestId) return
