@@ -19,6 +19,11 @@ export const changelog: ChangelogVersion[] = [
     entries: [
       {
         type: 'fix',
+        de: 'Kino-Modus: Die „Heute"-Anzeige oben ist im hellen Design wieder lesbar — die Schrift war auf dem dunklen Hintergrund zu dunkel.',
+        en: 'Movie mode: the floating "today total" bar is readable again in light theme — its labels were rendering too dark on the dark backdrop.',
+      },
+      {
+        type: 'fix',
         de: 'Vokabelspiel: Das deutsche Wort wird jetzt auch dann vorgelesen, wenn du zuerst die englische Karte und danach die passende deutsche anklickst.',
         en: 'Vocab game: the German word is now spoken when you match by picking the English tile first and the German tile second (previously only the German-first order spoke it).',
       },

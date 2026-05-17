@@ -234,7 +234,7 @@ function PlayerScreen({
 
       {movieMode ? (
         <Box className={styles.movieStats}>
-          <Text size="2" color="gray" style={{ flexShrink: 0 }}>
+          <Text size="2" style={{ flexShrink: 0, color: 'rgba(255, 255, 255, 0.7)' }}>
             {t('player.todayTotal')}
           </Text>
           <Box className={styles.movieStatsBar}>
@@ -244,7 +244,7 @@ function PlayerScreen({
             <Text size="3" weight="bold" style={{ color: 'white' }}>
               {formatMinutes(liveToday)}
             </Text>
-            <Text size="1" color="gray">
+            <Text size="1" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
               / {formatMinutes(goal)}
             </Text>
           </Flex>
