@@ -14,6 +14,28 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.8.1',
+    date: '2026-05-17',
+    entries: [
+      {
+        type: 'fix',
+        de: 'Vokabelspiel: Das deutsche Wort wird jetzt auch dann vorgelesen, wenn du zuerst die englische Karte und danach die passende deutsche anklickst.',
+        en: 'Vocab game: the German word is now spoken when you match by picking the English tile first and the German tile second (previously only the German-first order spoke it).',
+      },
+    ],
+  },
+  {
+    version: '0.8.0',
+    date: '2026-05-16',
+    entries: [
+      {
+        type: 'improvement',
+        de: 'Wärmere deutsche Aussprache — beim ersten Klick auf eine Vorlesetaste startet im Hintergrund der Download einer hochwertigen neuronalen Stimme (Thorsten). Bis sie bereit ist, spricht die Systemstimme; danach klingt jedes „Wort sprechen" konstant und natürlicher.',
+        en: 'Warmer German pronunciation — the first tap on a speak button kicks off a background download of a high-quality neural voice (Thorsten). The system voice covers the gap; once ready, every speak action sounds consistently warmer and more natural.',
+      },
+    ],
+  },
+  {
     version: '0.7.0',
     date: '2026-05-16',
     entries: [

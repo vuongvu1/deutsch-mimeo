@@ -1,4 +1,10 @@
+import * as piperTTS from '@mintplex-labs/piper-tts-web'
+
 const MUTE_STORAGE_KEY = 'mimeo:sound:muted'
+const PIPER_VOICE_ID: piperTTS.VoiceId = 'de_DE-thorsten-medium'
+const ORT_WASM_BASE = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/'
+const PIPER_PHONEMIZE_BASE =
+  'https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize'
 
 let cachedCtx: AudioContext | null = null
 let muted: boolean = (() => {
@@ -17,6 +23,10 @@ export function setMuted(next: boolean): void {
   muted = next
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(MUTE_STORAGE_KEY, next ? '1' : '0')
+    if (next) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel()
+      stopCurrentPiperSource()
+    }
   }
   for (const l of listeners) l(next)
 }
@@ -154,8 +164,7 @@ function pickGermanVoice(): SpeechSynthesisVoice | null {
   return candidates.slice().sort((a, b) => scoreGermanVoice(b) - scoreGermanVoice(a))[0]
 }
 
-export function speakGerman(text: string): void {
-  if (muted) return
+function speakViaWebSpeech(text: string): void {
   if (typeof window === 'undefined') return
   const synth = window.speechSynthesis
   if (!synth) return
@@ -166,4 +175,101 @@ export function speakGerman(text: string): void {
   const voice = pickGermanVoice()
   if (voice) utter.voice = voice
   synth.speak(utter)
+}
+
+let piperSessionPromise: Promise<piperTTS.TtsSession> | null = null
+let piperReady = false
+let piperBroken = false
+let currentPiperSource: AudioBufferSourceNode | null = null
+let speakRequestId = 0
+
+function stopCurrentPiperSource(): void {
+  if (!currentPiperSource) return
+  const src = currentPiperSource
+  currentPiperSource = null
+  try {
+    src.onended = null
+    src.stop()
+  } catch {
+    // already stopped
+  }
+  try {
+    src.disconnect()
+  } catch {
+    // already disconnected
+  }
+}
+
+function startPiperInit(): Promise<piperTTS.TtsSession> {
+  if (piperBroken) return Promise.reject(new Error('piper unavailable'))
+  if (piperSessionPromise) return piperSessionPromise
+  piperSessionPromise = piperTTS.TtsSession.create({
+    voiceId: PIPER_VOICE_ID,
+    wasmPaths: {
+      onnxWasm: ORT_WASM_BASE,
+      piperData: `${PIPER_PHONEMIZE_BASE}.data`,
+      piperWasm: `${PIPER_PHONEMIZE_BASE}.wasm`,
+    },
+  })
+    .then((session) => {
+      piperReady = true
+      return session
+    })
+    .catch((err) => {
+      piperBroken = true
+      piperSessionPromise = null
+      console.info('[piper] init failed, falling back to Web Speech', err)
+      throw err
+    })
+  return piperSessionPromise
+}
+
+async function speakViaPiper(text: string, ctx: AudioContext, myId: number): Promise<void> {
+  const session = await startPiperInit()
+  if (muted || myId !== speakRequestId) return
+  const wav = await session.predict(text)
+  if (muted || myId !== speakRequestId) return
+  const buffer = await ctx.decodeAudioData(await wav.arrayBuffer())
+  if (muted || myId !== speakRequestId) return
+  stopCurrentPiperSource()
+  const source = ctx.createBufferSource()
+  source.buffer = buffer
+  source.connect(ctx.destination)
+  source.onended = () => {
+    if (currentPiperSource === source) currentPiperSource = null
+  }
+  currentPiperSource = source
+  source.start()
+}
+
+export function speakGerman(text: string): void {
+  if (muted) return
+  if (typeof window === 'undefined') return
+  if (window.speechSynthesis) window.speechSynthesis.cancel()
+  stopCurrentPiperSource()
+  const myId = ++speakRequestId
+
+  if (piperBroken) {
+    speakViaWebSpeech(text)
+    return
+  }
+
+  if (piperReady) {
+    const ctx = prepareCtx()
+    if (!ctx) {
+      speakViaWebSpeech(text)
+      return
+    }
+    speakViaPiper(text, ctx, myId).catch((err) => {
+      piperBroken = true
+      console.info('[piper] speak failed, falling back to Web Speech', err)
+      if (myId === speakRequestId) speakViaWebSpeech(text)
+    })
+    return
+  }
+
+  speakViaWebSpeech(text)
+  void startPiperInit().catch(() => {
+    // already logged; fallback stays in effect
+  })
 }

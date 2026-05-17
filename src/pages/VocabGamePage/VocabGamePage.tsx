@@ -264,6 +264,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
         )
         setSelectedId(null)
         playMatch()
+        if (selected.kind === 'en') speakGerman(tile.text)
         void incrementMatch()
       } else {
         const wrongSet = new Set([selected.id, tile.id])
