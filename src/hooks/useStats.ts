@@ -14,6 +14,7 @@ export interface UserStatsForChallenge {
   watchedVideoCount: number
   goalCompleteToday: boolean
   daysCompleteAllChallenges: number
+  totalChallengesCompleted: number
   totalDistinctActiveDays: number
 }
 
@@ -50,13 +51,19 @@ async function fetchUserStats(
     if (s.local_date >= monthStart) monthSeconds += s.seconds
   }
 
-  // Days complete all challenges (uses view)
+  // Daily completion view: counts perfect days AND sums individual goal hits
   const completionRes = await supabase
     .from('daily_completion')
-    .select('local_date, all_complete')
+    .select('local_date, all_complete, completed_count')
     .eq('user_id', userId)
-    .eq('all_complete', true)
   if (completionRes.error) throw completionRes.error
+  const completionRows = completionRes.data ?? []
+  let daysCompleteAllChallenges = 0
+  let totalChallengesCompleted = 0
+  for (const row of completionRows) {
+    if (row.all_complete) daysCompleteAllChallenges += 1
+    totalChallengesCompleted += row.completed_count ?? 0
+  }
 
   const [activeRes, watchedRes] = await Promise.all([
     supabase
@@ -82,7 +89,8 @@ async function fetchUserStats(
     activeVideoCount: activeRes.count ?? 0,
     watchedVideoCount: watchedRes.count ?? 0,
     goalCompleteToday: todaySeconds >= challenge.daily_goal_seconds,
-    daysCompleteAllChallenges: completionRes.data?.length ?? 0,
+    daysCompleteAllChallenges,
+    totalChallengesCompleted,
     totalDistinctActiveDays: distinctActiveDays.size,
   }
 }

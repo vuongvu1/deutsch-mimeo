@@ -19,6 +19,11 @@ export const changelog: ChangelogVersion[] = [
     entries: [
       {
         type: 'feature',
+        de: 'Vergleichstabelle auf der Startseite: neue Zeile „Challenges komplett" 🎯 — zählt jeden Tag, an dem Mi oder Meo das Tagesziel einer Challenge geschafft hat (Hören und Vokabeln werden einzeln gezählt).',
+        en: 'Home comparison table: new "Challenges complete" 🎯 row — counts every challenge goal Mi or Meo has cleared across all days (listen and vocab count individually).',
+      },
+      {
+        type: 'feature',
         de: 'Versionsnummer im Header neben dem Raketen-Symbol — klicke darauf, um die Änderungsliste zu öffnen.',
         en: 'Version number in the header next to the rocket icon — click it to open the changelog.',
       },

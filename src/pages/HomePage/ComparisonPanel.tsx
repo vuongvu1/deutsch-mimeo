@@ -88,6 +88,14 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
       format: (n) => `${n}`,
     },
     {
+      id: 'total-completed',
+      label: t('comparison.totalCompleted'),
+      icon: '🎯',
+      miValue: ld.mi.totalChallengesCompleted,
+      meoValue: ld.meo.totalChallengesCompleted,
+      format: (n) => `${n}`,
+    },
+    {
       id: 'longest',
       label: t('comparison.longest'),
       icon: '🚀',

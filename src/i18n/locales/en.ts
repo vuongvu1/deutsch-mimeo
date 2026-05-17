@@ -65,6 +65,7 @@ export const en = {
     weekTotal: '7-day total',
     weekVocab: '7-day vocab',
     daysComplete: 'Days complete',
+    totalCompleted: 'Challenges complete',
     longest: 'Longest session',
   },
   challengeList: {
