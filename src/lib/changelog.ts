@@ -18,6 +18,16 @@ export const changelog: ChangelogVersion[] = [
     date: '2026-05-18',
     entries: [
       {
+        type: 'improvement',
+        de: 'Vergleichstabelle: Zeile „Längste Session" entfernt — die Info findest du weiterhin auf der Stats-Seite.',
+        en: 'Comparison table: removed the "Longest session" row — that stat still lives on the stats page.',
+      },
+      {
+        type: 'feature',
+        de: 'Startseite: Jede Personen-Karte zeigt jetzt einen Live-Punkt mit der gerade aktiven Challenge, einen Tageszähler „X / Y Challenges" und einen Haken, sobald alles für heute geschafft ist. Derselbe Zähler erscheint auch neben „Heutige Challenges" auf der Challenge-Seite.',
+        en: 'Home page: each user card now shows a live dot with the challenge they\'re currently doing, a daily "X / Y challenges" counter, and a check icon as soon as they finish everything for the day. The same counter now also sits next to the "Today\'s Challenges" heading on the challenge list page.',
+      },
+      {
         type: 'fix',
         de: 'Vokabelspiel: „Heute"-Anzeige sprang nach jeder fertigen Runde um 2 statt 1 — der Tagesstart wird jetzt einmal eingefroren, damit der Server-Refetch nicht doppelt zählt.',
         en: 'Vocab game: the "Today" total jumped by 2 instead of 1 after each finished round — the day\'s baseline is now snapshotted once so the server refetch can\'t double-count alongside the in-session counter.',

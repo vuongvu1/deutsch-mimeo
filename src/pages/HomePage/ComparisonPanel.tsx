@@ -2,7 +2,7 @@ import { Box, Card, Flex, Table, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 
 import { useComparisonStats } from '@/hooks/useStats'
-import { formatMinutes, formatSeconds } from '@/lib/dates'
+import { formatMinutes } from '@/lib/dates'
 import { formatChallengeValue } from '@/lib/format'
 import type { ChallengeRow } from '@/types/db'
 
@@ -94,14 +94,6 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
       miValue: ld.mi.totalChallengesCompleted,
       meoValue: ld.meo.totalChallengesCompleted,
       format: (n) => `${n}`,
-    },
-    {
-      id: 'longest',
-      label: t('comparison.longest'),
-      icon: '🚀',
-      miValue: ld.mi.longestSessionSeconds,
-      meoValue: ld.meo.longestSessionSeconds,
-      format: formatSeconds,
     },
   ]
 

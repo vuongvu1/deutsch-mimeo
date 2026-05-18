@@ -1,3 +1,4 @@
+import { CheckIcon } from '@radix-ui/react-icons'
 import { Badge, Box, Button, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
@@ -5,7 +6,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { ProgressBar } from '@/components/ProgressBar'
 import { TopBar } from '@/components/TopBar'
 import { useChallenges } from '@/hooks/useChallenges'
-import { useTodaySecondsForChallenge } from '@/hooks/useStats'
+import { useTodaySecondsForChallenge, useUsersTodayStatus } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
 import { formatChallengeValue } from '@/lib/format'
 import { paths } from '@/routes/paths'
@@ -21,12 +22,14 @@ export function ChallengeListPage() {
   const { userId } = useParams<{ userId: string }>()
   const userQuery = useUser(userId as UserId | undefined)
   const challengesQuery = useChallenges()
+  const todayStatus = useUsersTodayStatus()
 
   if (userId !== 'mi' && userId !== 'meo') return <Navigate to="/" replace />
   const user = userQuery.data
   if (!user) return <Navigate to="/" replace />
 
   const challenges = challengesQuery.data
+  const status = todayStatus.data?.[userId]
 
   return (
     <Container size="3" px={{ initial: '4', sm: '5' }} py={{ initial: '5', sm: '6' }}>
@@ -41,9 +44,22 @@ export function ChallengeListPage() {
         }
       />
 
-      <Heading size="6" weight="bold" mb="4">
-        {t('challengeList.title')}
-      </Heading>
+      <Flex align="center" gap="3" mb="4" wrap="wrap">
+        <Heading size="6" weight="bold">
+          {t('challengeList.title')}
+        </Heading>
+        {status && status.totalActive > 0 ? (
+          <Badge
+            size="2"
+            radius="full"
+            variant="soft"
+            color={status.allComplete ? 'amber' : 'gray'}
+          >
+            {status.allComplete ? <CheckIcon /> : null}
+            {status.completedCount} / {status.totalActive}
+          </Badge>
+        ) : null}
+      </Flex>
 
       <Flex direction="column" gap="3">
         {challenges.map((c) => (

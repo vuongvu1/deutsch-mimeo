@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
+import { useChallenges } from '@/hooks/useChallenges'
 import { daysAgoLocalDate, todayLocalDate } from '@/lib/dates'
 import { supabase } from '@/lib/supabase'
 import type { ChallengeRow, UserId } from '@/types/db'
@@ -194,6 +195,81 @@ export function useRecentSessions(limit = 10) {
       })
     },
   })
+}
+
+export interface UserTodayStatus {
+  completedCount: number
+  totalActive: number
+  allComplete: boolean
+  activeChallengeSlug: string | null
+}
+
+export interface UsersTodayStatus {
+  mi: UserTodayStatus
+  meo: UserTodayStatus
+}
+
+const ACTIVE_WINDOW_MS = 45_000
+
+interface TodaySessionRow {
+  user_id: UserId
+  challenge_id: string
+  seconds: number
+  updated_at: string
+}
+
+export function useUsersTodayStatus() {
+  const today = todayLocalDate()
+  const challenges = useChallenges().data
+  return useQuery({
+    queryKey: ['users-today-status', today],
+    refetchInterval: 15_000,
+    refetchIntervalInBackground: false,
+    queryFn: async (): Promise<UsersTodayStatus> => {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('user_id, challenge_id, seconds, updated_at')
+        .eq('local_date', today)
+      if (error) throw error
+      const rows = (data ?? []) as TodaySessionRow[]
+      return {
+        mi: computeTodayStatus('mi', rows, challenges),
+        meo: computeTodayStatus('meo', rows, challenges),
+      }
+    },
+  })
+}
+
+function computeTodayStatus(
+  userId: UserId,
+  rows: TodaySessionRow[],
+  challenges: ChallengeRow[],
+): UserTodayStatus {
+  const userRows = rows.filter((r) => r.user_id === userId)
+  const totals = new Map<string, number>()
+  for (const r of userRows) {
+    totals.set(r.challenge_id, (totals.get(r.challenge_id) ?? 0) + r.seconds)
+  }
+  const activeChallenges = challenges.filter((c) => c.active)
+  const totalActive = activeChallenges.length
+  let completedCount = 0
+  for (const c of activeChallenges) {
+    if ((totals.get(c.id) ?? 0) >= c.daily_goal_seconds) completedCount += 1
+  }
+  const now = Date.now()
+  let mostRecent: TodaySessionRow | null = null
+  for (const r of userRows) {
+    if (now - new Date(r.updated_at).getTime() > ACTIVE_WINDOW_MS) continue
+    if (!mostRecent || r.updated_at > mostRecent.updated_at) mostRecent = r
+  }
+  const activeChallengeSlug =
+    mostRecent ? (challenges.find((c) => c.id === mostRecent!.challenge_id)?.slug ?? null) : null
+  return {
+    completedCount,
+    totalActive,
+    allComplete: totalActive > 0 && completedCount === totalActive,
+    activeChallengeSlug,
+  }
 }
 
 export function useDailyTotalsRange(

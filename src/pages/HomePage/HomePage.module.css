@@ -36,3 +36,60 @@
 .userCard[data-variant='meo'] .userAvatar {
   border-color: var(--sky-a8);
 }
+
+.liveBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--grass-a3);
+  border: 1px solid var(--grass-a6);
+  color: var(--grass-12);
+  line-height: 1;
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--grass-9);
+  box-shadow: 0 0 0 0 var(--grass-a8);
+  animation: livePulse 1.6s ease-out infinite;
+}
+
+@keyframes livePulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--grass-a8);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liveDot {
+    animation: none;
+  }
+}
+
+.progressBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--gray-a3);
+  border: 1px solid var(--gray-a5);
+  color: var(--gray-12);
+  line-height: 1;
+}
+
+.progressBadge[data-complete] {
+  background: var(--amber-a3);
+  border-color: var(--amber-a7);
+  color: var(--amber-12);
+}
+
+.checkIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--amber-11);
+}

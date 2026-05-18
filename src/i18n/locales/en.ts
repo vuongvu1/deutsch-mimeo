@@ -47,9 +47,16 @@ export const en = {
   },
   home: {
     welcome: "Who's there?",
-    cta: "Let's go →",
     todayCompare: 'Today · Compare',
     recentActivity: 'Recent activity',
+  },
+  userCard: {
+    doing: {
+      listen: 'Listening now',
+      vocab: 'Practicing vocab',
+    },
+    progress: '{{done}} / {{total}} challenges',
+    allDone: 'All done today!',
   },
   activityLog: {
     verb: 'listened to',
@@ -66,7 +73,6 @@ export const en = {
     weekVocab: '7-day vocab',
     daysComplete: 'Days complete',
     totalCompleted: 'Challenges complete',
-    longest: 'Longest session',
   },
   challengeList: {
     title: "Today's Challenges",
