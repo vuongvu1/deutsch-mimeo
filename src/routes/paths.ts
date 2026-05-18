@@ -7,6 +7,7 @@ export const paths = {
   player: (userId: UserId, videoId: string) => `/u/${userId}/listen/${videoId}`,
   vocabGame: (userId: UserId) => `/u/${userId}/vocab`,
   stats: (userId: UserId) => `/u/${userId}/stats`,
+  compare: () => '/compare',
 } as const
 
 export const routePatterns = {
@@ -16,4 +17,5 @@ export const routePatterns = {
   player: '/u/:userId/listen/:videoId',
   vocabGame: '/u/:userId/vocab',
   stats: '/u/:userId/stats',
+  compare: '/compare',
 } as const

@@ -73,6 +73,10 @@ export const en = {
     weekVocab: '7-day vocab',
     daysComplete: 'Days complete',
     totalCompleted: 'Challenges complete',
+    fullStatsCta: 'Show full stats',
+  },
+  compare: {
+    pageTitle: 'Full stats · Mi vs Meo',
   },
   challengeList: {
     title: "Today's Challenges",

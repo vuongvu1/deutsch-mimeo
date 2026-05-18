@@ -18,6 +18,11 @@ export const changelog: ChangelogVersion[] = [
     date: '2026-05-18',
     entries: [
       {
+        type: 'feature',
+        de: 'Neue Vergleichsseite „Alle Stats" — Knopf unter der Heute-Vergleichstabelle führt zu einer Seite, die alle Stats-Zahlen (Hören, Vokabeln, Tage) und beide Aktivitäts-Heatmaps für Mi und Meo nebeneinander zeigt.',
+        en: 'New "Full stats" comparison page — a button under the today-comparison table opens a page that puts every stats number (listening, vocab, days) and both activity heatmaps side-by-side for Mi and Meo.',
+      },
+      {
         type: 'improvement',
         de: 'Vergleichstabelle: Zeile „Längste Session" entfernt — die Info findest du weiterhin auf der Stats-Seite.',
         en: 'Comparison table: removed the "Longest session" row — that stat still lives on the stats page.',

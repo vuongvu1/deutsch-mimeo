@@ -1,9 +1,12 @@
-import { Box, Card, Flex, Table, Text } from '@radix-ui/themes'
+import { ArrowRightIcon } from '@radix-ui/react-icons'
+import { Box, Button, Card, Flex, Table, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 import { useComparisonStats } from '@/hooks/useStats'
 import { formatMinutes } from '@/lib/dates'
 import { formatChallengeValue } from '@/lib/format'
+import { paths } from '@/routes/paths'
 import type { ChallengeRow } from '@/types/db'
 
 import styles from './ComparisonPanel.module.css'
@@ -98,38 +101,48 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
   ]
 
   return (
-    <Table.Root variant="surface" size="2" className={styles.table}>
-      <Table.Header>
-        <Table.Row>
-          <Table.ColumnHeaderCell />
-          <Table.ColumnHeaderCell align="center" className={styles.userCol} data-variant="mi">
-            <Flex align="center" gap="1" justify="center">
-              <Text size="4" aria-hidden>
-                🐷
-              </Text>
-              <Text size="2" weight="bold">
-                Mi
-              </Text>
-            </Flex>
-          </Table.ColumnHeaderCell>
-          <Table.ColumnHeaderCell align="center" className={styles.userCol} data-variant="meo">
-            <Flex align="center" gap="1" justify="center">
-              <Text size="4" aria-hidden>
-                🐱
-              </Text>
-              <Text size="2" weight="bold">
-                Meo
-              </Text>
-            </Flex>
-          </Table.ColumnHeaderCell>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        {categories.map((cat) => (
-          <CategoryRow key={cat.id} category={cat} />
-        ))}
-      </Table.Body>
-    </Table.Root>
+    <Flex direction="column" gap="3">
+      <Table.Root variant="surface" size="2" className={styles.table}>
+        <Table.Header>
+          <Table.Row>
+            <Table.ColumnHeaderCell />
+            <Table.ColumnHeaderCell align="center" className={styles.userCol} data-variant="mi">
+              <Flex align="center" gap="1" justify="center">
+                <Text size="4" aria-hidden>
+                  🐷
+                </Text>
+                <Text size="2" weight="bold">
+                  Mi
+                </Text>
+              </Flex>
+            </Table.ColumnHeaderCell>
+            <Table.ColumnHeaderCell align="center" className={styles.userCol} data-variant="meo">
+              <Flex align="center" gap="1" justify="center">
+                <Text size="4" aria-hidden>
+                  🐱
+                </Text>
+                <Text size="2" weight="bold">
+                  Meo
+                </Text>
+              </Flex>
+            </Table.ColumnHeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {categories.map((cat) => (
+            <CategoryRow key={cat.id} category={cat} />
+          ))}
+        </Table.Body>
+      </Table.Root>
+      <Flex justify="end">
+        <Button asChild variant="soft" size="2">
+          <Link to={paths.compare()}>
+            {t('comparison.fullStatsCta')}
+            <ArrowRightIcon />
+          </Link>
+        </Button>
+      </Flex>
+    </Flex>
   )
 }
 

@@ -1,0 +1,51 @@
+.table {
+  --table-cell-padding: var(--space-2) var(--space-3);
+}
+
+.userCol[data-variant='mi'] {
+  background: var(--pink-a2);
+  color: var(--pink-12);
+}
+
+.userCol[data-variant='meo'] {
+  background: var(--sky-a2);
+  color: var(--sky-12);
+}
+
+.valueCell {
+  width: 35%;
+  white-space: nowrap;
+}
+
+.valueCell[data-winning='true'] {
+  background: var(--amber-a2);
+}
+
+.heatmapBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.heatmapLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.heatmapLabel[data-variant='mi'] {
+  background: var(--pink-a3);
+  border: 1px solid var(--pink-a6);
+  color: var(--pink-12);
+}
+
+.heatmapLabel[data-variant='meo'] {
+  background: var(--sky-a3);
+  border: 1px solid var(--sky-a6);
+  color: var(--sky-12);
+}
