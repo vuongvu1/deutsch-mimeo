@@ -75,6 +75,14 @@ export function VocabGamePage() {
     userId as UserId | undefined,
     challenge?.id,
   )
+  // Snapshot the baseline once so flush()'s invalidate-then-refetch
+  // doesn't compound with roundsInSession.
+  const baselineRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (baselineRef.current === null && todayQuery.data !== undefined) {
+      baselineRef.current = todayQuery.data
+    }
+  }, [todayQuery.data])
 
   const [packId, setPackId] = useState<string>(() => {
     if (userId !== 'mi' && userId !== 'meo') return DEFAULT_PACK_ID
@@ -105,7 +113,7 @@ export function VocabGamePage() {
         user={user}
         challengeId={challenge.id}
         goal={challenge.daily_goal_seconds}
-        baselineToday={todayQuery.data ?? 0}
+        baselineToday={baselineRef.current ?? 0}
         packId={packId}
         onPackChange={(id) => {
           setPackId(id)
@@ -127,7 +135,7 @@ interface GameProps {
 
 function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: GameProps) {
   const { t } = useTranslation()
-  const { matchesInSession, incrementMatch } = useMatchSession({
+  const { roundsInSession, incrementRound } = useMatchSession({
     userId: user.id,
     challengeId,
     enabled: true,
@@ -170,7 +178,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
     [savedSet, enByDe, saveWord, unsaveWord, user.id],
   )
 
-  const todayTotal = baselineToday + matchesInSession
+  const todayTotal = baselineToday + roundsInSession
   const complete = todayTotal >= goal
 
   const poolRef = useRef<VocabWord[]>([])
@@ -206,19 +214,20 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
     if (!tiles.every((tile) => tile.removed)) return
     setRoundDoneFlash(true)
     playRoundDone()
+    void incrementRound()
     const timer = window.setTimeout(() => {
       setRoundDoneFlash(false)
       setTiles(drawNextRound())
     }, ROUND_DONE_FLASH_MS)
     return () => window.clearTimeout(timer)
-  }, [tiles, drawNextRound])
+  }, [tiles, drawNextRound, incrementRound])
 
   // Celebrate the daily goal exactly once, and only when this session caused
   // the crossing (not when the page loads with baselineToday already ≥ goal).
   const goalCelebratedRef = useRef(false)
   useEffect(() => {
     if (goalCelebratedRef.current) return
-    if (matchesInSession === 0) return
+    if (roundsInSession === 0) return
     if (baselineToday >= goal) {
       goalCelebratedRef.current = true
       return
@@ -226,7 +235,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
     if (todayTotal < goal) return
     goalCelebratedRef.current = true
     playGoalReached()
-  }, [matchesInSession, todayTotal, baselineToday, goal])
+  }, [roundsInSession, todayTotal, baselineToday, goal])
 
   const onTileClick = useCallback(
     (tile: Tile) => {
@@ -265,7 +274,6 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
         setSelectedId(null)
         playMatch()
         if (selected.kind === 'en') speakGerman(tile.text)
-        void incrementMatch()
       } else {
         const wrongSet = new Set([selected.id, tile.id])
         setWrongIds(wrongSet)
@@ -274,7 +282,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
         window.setTimeout(() => setWrongIds(new Set()), WRONG_FLASH_MS)
       }
     },
-    [selectedId, tiles, wrongIds, incrementMatch, roundDoneFlash],
+    [selectedId, tiles, wrongIds, roundDoneFlash],
   )
 
   const packOptions = useMemo(() => VOCAB_PACKS.map((p) => p.id), [])
@@ -311,7 +319,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
                 {t('vocab.sessionLabel')}
               </Text>
               <Badge size="2" variant="soft" radius="full">
-                {t('vocab.matches', { count: matchesInSession })}
+                {t('vocab.rounds', { count: roundsInSession })}
               </Badge>
             </Flex>
           </Flex>
@@ -322,7 +330,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
                 {t('vocab.today')}
               </Text>
               <Text size="2" color="gray" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                {t('vocab.matches', { count: todayTotal })} / {t('vocab.matches', { count: goal })}
+                {t('vocab.rounds', { count: todayTotal })} / {t('vocab.rounds', { count: goal })}
               </Text>
             </Flex>
             <ProgressBar value={todayTotal} max={goal} complete={complete} />

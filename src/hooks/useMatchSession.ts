@@ -11,15 +11,16 @@ interface Args {
   enabled: boolean
 }
 
-const FLUSH_EVERY_MATCHES = 5
+const FLUSH_EVERY_ROUNDS = 1
 
 /**
- * Event-based session tracker for the vocab match-pairs game: each correct
- * match calls `incrementMatch()`, which bumps an in-memory counter and
- * periodically flushes to the `sessions` row (reusing the `seconds` column
- * as a generic integer counter — 1 unit = 1 correct match).
+ * Event-based session tracker for the vocab match-pairs game: each
+ * completed round (a board cleared of all pairs) calls `incrementRound()`,
+ * which bumps an in-memory counter and flushes to the `sessions` row
+ * (reusing the `seconds` column as a generic integer counter —
+ * 1 unit = 1 round completed).
  *
- * State that flush reads (matches, sessionId) lives in refs so it stays
+ * State that flush reads (rounds, sessionId) lives in refs so it stays
  * synchronously up-to-date — `setState` is async, so reading from a
  * stateRef right after setState would always be one tick behind.
  * Flushes are chained via flushChainRef so an unmount flush can't be
@@ -27,9 +28,9 @@ const FLUSH_EVERY_MATCHES = 5
  */
 export function useMatchSession({ userId, challengeId, enabled }: Args) {
   const qc = useQueryClient()
-  const [matches, setMatches] = useState(0)
+  const [rounds, setRounds] = useState(0)
 
-  const matchesRef = useRef(0)
+  const roundsRef = useRef(0)
   const sessionIdRef = useRef<string | null>(null)
   const ensurePromiseRef = useRef<Promise<string | null> | null>(null)
   const flushChainRef = useRef<Promise<void>>(Promise.resolve())
@@ -64,11 +65,11 @@ export function useMatchSession({ userId, challengeId, enabled }: Args) {
 
   const flush = useCallback((): Promise<void> => {
     const next = flushChainRef.current.then(async () => {
-      if (matchesRef.current === 0) return
-      if (matchesRef.current === lastFlushedRef.current) return
+      if (roundsRef.current === 0) return
+      if (roundsRef.current === lastFlushedRef.current) return
       const id = sessionIdRef.current ?? (await ensureSession())
       if (!id) return
-      const value = matchesRef.current
+      const value = roundsRef.current
       const { error } = await supabase
         .from('sessions')
         .update({ seconds: value, updated_at: new Date().toISOString() })
@@ -88,12 +89,12 @@ export function useMatchSession({ userId, challengeId, enabled }: Args) {
     return next
   }, [qc, userId, challengeId, ensureSession])
 
-  const incrementMatch = useCallback(async () => {
-    matchesRef.current += 1
+  const incrementRound = useCallback(async () => {
+    roundsRef.current += 1
     incrementsSinceFlushRef.current += 1
-    setMatches(matchesRef.current)
+    setRounds(roundsRef.current)
     void ensureSession()
-    if (incrementsSinceFlushRef.current >= FLUSH_EVERY_MATCHES) {
+    if (incrementsSinceFlushRef.current >= FLUSH_EVERY_ROUNDS) {
       void flush()
     }
   }, [ensureSession, flush])
@@ -122,7 +123,7 @@ export function useMatchSession({ userId, challengeId, enabled }: Args) {
   }, [])
 
   return {
-    matchesInSession: matches,
-    incrementMatch,
+    roundsInSession: rounds,
+    incrementRound,
   }
 }

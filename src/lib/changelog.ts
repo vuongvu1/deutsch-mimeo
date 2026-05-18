@@ -18,6 +18,16 @@ export const changelog: ChangelogVersion[] = [
     date: '2026-05-18',
     entries: [
       {
+        type: 'fix',
+        de: 'Vokabelspiel: „Heute"-Anzeige sprang nach jeder fertigen Runde um 2 statt 1 — der Tagesstart wird jetzt einmal eingefroren, damit der Server-Refetch nicht doppelt zählt.',
+        en: 'Vocab game: the "Today" total jumped by 2 instead of 1 after each finished round — the day\'s baseline is now snapshotted once so the server refetch can\'t double-count alongside the in-session counter.',
+      },
+      {
+        type: 'improvement',
+        de: 'Vokabel-Challenge umgestellt: das Tagesziel zählt jetzt komplett abgeschlossene Runden (10/Tag) statt einzelner Treffer (vorher 50). Eine Runde = ein Brett aus 6 Paaren geleert. Alte Statistiken wurden zu Runden umgerechnet.',
+        en: 'Vocab challenge retuned: the daily goal now counts fully cleared rounds (10/day) instead of individual matches (previously 50). One round = one board of 6 pairs cleared. Past stats were converted to rounds.',
+      },
+      {
         type: 'feature',
         de: 'Vergleichstabelle auf der Startseite: neue Zeile „Challenges komplett" 🎯 — zählt jeden Tag, an dem Mi oder Meo das Tagesziel einer Challenge geschafft hat (Hören und Vokabeln werden einzeln gezählt).',
         en: 'Home comparison table: new "Challenges complete" 🎯 row — counts every challenge goal Mi or Meo has cleared across all days (listen and vocab count individually).',

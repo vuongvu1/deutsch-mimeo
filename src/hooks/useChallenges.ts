@@ -17,9 +17,9 @@ const CHALLENGES: readonly ChallengeRow[] = [
   {
     id: VOCAB_CHALLENGE_ID,
     slug: 'vocab',
-    title: 'Vokabeln 50 Treffer/Tag',
-    description: 'Spiele das Match-Pairs-Spiel und triff jeden Tag 50 deutsch–englische Vokabelpaare.',
-    daily_goal_seconds: 50,
+    title: 'Vokabeln 10 Runden/Tag',
+    description: 'Spiele das Match-Pairs-Spiel und schließe jeden Tag 10 volle Runden ab.',
+    daily_goal_seconds: 10,
     active: true,
     sort_order: 10,
     created_at: '1970-01-01T00:00:00.000Z',

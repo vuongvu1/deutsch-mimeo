@@ -8,7 +8,7 @@ Personal German-learning challenge tracker for **two users** (Mi 🐷 and Meo �
 
 - Two hardcoded users pick themselves on the home page (no auth)
 - Each user has separate video libraries and stats
-- One challenge so far: **Listen 30 min/day** to German YouTube videos
+- Two active challenges: **Listen 30 min/day** (YouTube playback) and **Vokabeln 10 Runden/Tag** (match-pairs minigame, one round = 6 pairs cleared — `sessions.seconds` reused as a generic counter for rounds)
 - Counter ticks **only while the YouTube IFrame Player reports `PLAYING`** — pause = pause counter
 - Day boundary = device-local midnight (`local_date` column on `sessions`)
 - A "day complete" = ALL active challenges met their daily goal (computed by SQL view, so adding new challenges Just Works)

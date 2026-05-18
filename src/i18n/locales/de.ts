@@ -78,8 +78,8 @@ export const de = {
       description: 'Schau deutsche YouTube-Videos für mindestens 30 Minuten täglich.',
     },
     vocab: {
-      title: 'Vokabeln 50 Treffer/Tag',
-      description: 'Spiele das Match-Pairs-Spiel und triff jeden Tag 50 deutsch–englische Vokabelpaare.',
+      title: 'Vokabeln 10 Runden/Tag',
+      description: 'Spiele das Match-Pairs-Spiel und schließe jeden Tag 10 volle Runden ab.',
     },
   },
   videoLibrary: {
@@ -157,8 +157,8 @@ export const de = {
     roundDone: 'Runde fertig! 🎉',
     goalReached: '🎉 Tagesziel erreicht! Spiel ruhig weiter — alles zählt.',
     instructions: 'Tippe ein deutsches Wort, dann die passende Übersetzung.',
-    matches_one: '{{count}} Treffer',
-    matches_other: '{{count}} Treffer',
+    rounds_one: '{{count}} Runde',
+    rounds_other: '{{count}} Runden',
     sound: {
       mute: 'Töne aus',
       unmute: 'Töne an',

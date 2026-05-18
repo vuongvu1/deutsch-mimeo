@@ -7,7 +7,7 @@ export function formatChallengeValue(slug: string, value: number, t: TFunction):
     case 'listen':
       return formatMinutes(value)
     case 'vocab':
-      return t('vocab.matches', { count: Math.max(0, value) })
+      return t('vocab.rounds', { count: Math.max(0, value) })
     default:
       return `${value}`
   }

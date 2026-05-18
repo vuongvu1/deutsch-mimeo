@@ -78,8 +78,8 @@ export const en = {
       description: 'Watch German YouTube videos for at least 30 minutes total each day.',
     },
     vocab: {
-      title: 'Vocab 50 matches/day',
-      description: 'Play the match-pairs game and hit 50 German–English vocabulary pairs every day.',
+      title: 'Vocab 10 rounds/day',
+      description: 'Play the match-pairs game and clear 10 full rounds every day.',
     },
   },
   videoLibrary: {
@@ -157,8 +157,8 @@ export const en = {
     roundDone: 'Round done! 🎉',
     goalReached: '🎉 Daily goal hit! Keep playing — it all counts.',
     instructions: 'Tap a German word, then its English translation.',
-    matches_one: '{{count}} match',
-    matches_other: '{{count}} matches',
+    rounds_one: '{{count}} round',
+    rounds_other: '{{count}} rounds',
     sound: {
       mute: 'Mute sounds',
       unmute: 'Unmute sounds',
