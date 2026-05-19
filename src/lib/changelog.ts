@@ -14,6 +14,22 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.9.1',
+    date: '2026-05-20',
+    entries: [
+      {
+        type: 'fix',
+        de: '„Tage komplett" stand wieder auf 0 — eine versteckte dritte Challenge (Tagebuch) in der Datenbank hatte den Tag immer als unvollständig markiert. Die Challenge ist jetzt deaktiviert; die Zählung berücksichtigt wieder nur Hören und Vokabeln.',
+        en: '"Days complete" was stuck at 0 — a hidden third challenge (Tagebuch) in the database was marking every day as incomplete. It is now deactivated, so the count once again reflects just Listen + Vocab.',
+      },
+      {
+        type: 'improvement',
+        de: 'Jede Challenge merkt sich jetzt ihr Startdatum (`activated_on`): „Tage komplett" verlangt eine Challenge nur für Tage ab ihrem Start. Eine neue Challenge setzt also nicht mehr die ganze Historie auf null zurück.',
+        en: 'Every challenge now records the date it started counting (`activated_on`): "Days complete" only requires a challenge on days from that date onward. Adding a new challenge no longer wipes the historical day-complete count.',
+      },
+    ],
+  },
+  {
     version: '0.9.0',
     date: '2026-05-18',
     entries: [

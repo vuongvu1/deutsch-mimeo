@@ -19,8 +19,13 @@ create table if not exists challenges (
   daily_goal_seconds integer not null default 1800,
   active boolean not null default true,
   sort_order integer not null default 0,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  activated_on date not null default current_date
 );
+alter table challenges add column if not exists activated_on date;
+update challenges set activated_on = created_at::date where activated_on is null;
+alter table challenges alter column activated_on set not null;
+alter table challenges alter column activated_on set default current_date;
 
 create table if not exists videos (
   id uuid primary key default gen_random_uuid(),
@@ -60,9 +65,9 @@ select
 from sessions s
 group by s.user_id, s.challenge_id, s.local_date;
 
--- A day is "complete" only when EVERY active challenge meets its goal.
--- Implemented as: for each (user, date that has any session), cross-join active challenges,
--- left join the totals, then aggregate.
+-- A day is "complete" only when every active challenge that existed on
+-- or before that local_date meets its goal — so adding a new challenge
+-- gates only days from its activated_on onward, not the entire history.
 create or replace view daily_completion as
 with user_dates as (
   select distinct user_id, local_date from sessions
@@ -72,6 +77,7 @@ expected as (
   from user_dates ud
   cross join challenges c
   where c.active = true
+    and c.activated_on <= ud.local_date
 )
 select
   e.user_id,

@@ -39,7 +39,7 @@ Schema in `supabase/migrations/0001_init.sql`. Run it in Supabase Studio → SQL
 
 Views:
 - `daily_challenge_totals` — sum of seconds per (user, challenge, date)
-- `daily_completion` — for any (user, date) where there was activity, computes `all_complete = bool_and(total >= goal)` across active challenges via `cross join` so missing-challenge days don't false-positive
+- `daily_completion` — for any (user, date) where there was activity, computes `all_complete = bool_and(total >= goal)` across active challenges where `activated_on <= local_date`. The `activated_on` gate stops a newly-added challenge from retroactively turning every prior "complete" day incomplete; days before a challenge existed only need the older challenges done.
 
 RLS: enabled on all tables, single policy `"anon all"` granting full access to the `anon` role. This is intentional for a personal app with no auth.
 
@@ -103,7 +103,7 @@ PlayerPage shows two stats: "this session" (= `sessionSeconds`) and "today total
 
 1. Insert a row in `challenges` (`slug`, `title`, `description`, `daily_goal_seconds`, `sort_order`)
 2. The challenge appears automatically on `ChallengeListPage` with progress bar
-3. `daily_completion` view starts gating "day complete" on this new challenge for any day that has activity
+3. `daily_completion` view starts gating "day complete" on this new challenge from its `activated_on` date onwards. The column defaults to `current_date`, so inserting a row today means only today-and-later days require the new challenge — historical "complete" days stay intact.
 4. To wire a clickable destination, add an entry to `SLUG_TO_PATH` in `ChallengeListPage.tsx` and build the page(s)
 
 ## Deployment
