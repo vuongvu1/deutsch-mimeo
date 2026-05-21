@@ -115,11 +115,11 @@ export function useMatchSession({ userId, challengeId, enabled }: Args) {
     }
   }, [enabled, flush])
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: final flush on unmount only
   useEffect(() => {
     return () => {
       void flush()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return {

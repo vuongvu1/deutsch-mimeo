@@ -157,7 +157,10 @@ export function useReorderVideos() {
     mutationFn: async (input: ReorderInput) => {
       const results = await Promise.all(
         input.orderedIds.map((id, idx) =>
-          supabase.from('videos').update({ position: idx + 1 }).eq('id', id),
+          supabase
+            .from('videos')
+            .update({ position: idx + 1 })
+            .eq('id', id),
         ),
       )
       const failed = results.find((r) => r.error)

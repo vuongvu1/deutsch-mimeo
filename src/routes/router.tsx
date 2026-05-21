@@ -1,5 +1,5 @@
 import { Container, Flex, Spinner } from '@radix-ui/themes'
-import { Suspense, lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 
 import { AppHeader } from '@/components/AppHeader'
@@ -13,12 +13,8 @@ const ChallengeListPage = lazy(() =>
 const VideoLibraryPage = lazy(() =>
   import('@/pages/VideoLibraryPage').then((m) => ({ default: m.VideoLibraryPage })),
 )
-const PlayerPage = lazy(() =>
-  import('@/pages/PlayerPage').then((m) => ({ default: m.PlayerPage })),
-)
-const StatsPage = lazy(() =>
-  import('@/pages/StatsPage').then((m) => ({ default: m.StatsPage })),
-)
+const PlayerPage = lazy(() => import('@/pages/PlayerPage').then((m) => ({ default: m.PlayerPage })))
+const StatsPage = lazy(() => import('@/pages/StatsPage').then((m) => ({ default: m.StatsPage })))
 const VocabGamePage = lazy(() =>
   import('@/pages/VocabGamePage').then((m) => ({ default: m.VocabGamePage })),
 )

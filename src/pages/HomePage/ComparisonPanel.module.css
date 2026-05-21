@@ -2,12 +2,12 @@
   --table-cell-padding: var(--space-2) var(--space-3);
 }
 
-.userCol[data-variant='mi'] {
+.userCol[data-variant="mi"] {
   background: var(--pink-a2);
   color: var(--pink-12);
 }
 
-.userCol[data-variant='meo'] {
+.userCol[data-variant="meo"] {
   background: var(--sky-a2);
   color: var(--sky-12);
 }
@@ -17,6 +17,6 @@
   white-space: nowrap;
 }
 
-.valueCell[data-winning='true'] {
+.valueCell[data-winning="true"] {
   background: var(--amber-a2);
 }

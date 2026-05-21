@@ -90,9 +90,7 @@ export function SavedWordsDialog({ userId }: Props) {
                         color="red"
                         size="2"
                         aria-label={t('vocab.saved.remove')}
-                        onClick={() =>
-                          unsave.mutate({ user_id: userId, de: w.de })
-                        }
+                        onClick={() => unsave.mutate({ user_id: userId, de: w.de })}
                       >
                         <TrashIcon />
                       </IconButton>

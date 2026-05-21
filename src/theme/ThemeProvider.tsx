@@ -1,5 +1,5 @@
 import { Theme } from '@radix-ui/themes'
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react'
 
 type Appearance = 'light' | 'dark'
 

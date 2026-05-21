@@ -18,7 +18,7 @@ import {
   Select,
   Tooltip,
 } from '@radix-ui/themes'
-import { useState, type ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
@@ -40,8 +40,7 @@ export function AppHeader() {
   const [changelogOpen, setChangelogOpen] = useState(false)
 
   const currentLang = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'de'
-  const themeTooltip =
-    appearance === 'dark' ? t('header.themeLight') : t('header.themeDark')
+  const themeTooltip = appearance === 'dark' ? t('header.themeLight') : t('header.themeDark')
   const updateLabel = t('header.updateAvailable')
 
   return (
@@ -74,10 +73,7 @@ export function AppHeader() {
                   </IconButton>
                 </Tooltip>
               ) : null}
-              <Select.Root
-                value={currentLang}
-                onValueChange={(v) => void i18n.changeLanguage(v)}
-              >
+              <Select.Root value={currentLang} onValueChange={(v) => void i18n.changeLanguage(v)}>
                 <Select.Trigger variant="soft" aria-label={t('header.languageLabel')} />
                 <Select.Content>
                   <Select.Item value="de">🇩🇪 DE</Select.Item>

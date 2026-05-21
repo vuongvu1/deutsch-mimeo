@@ -50,20 +50,14 @@ export function ActivityLog() {
           const when = formatRelativeTime(e.updated_at, i18n.language)
           const linkTo = !isVocab && e.video_id ? paths.player(e.user_id, e.video_id) : null
           const row = (
-            <Flex
-              align="center"
-              gap="3"
-              py="2"
-              className={styles.row}
-              data-variant={e.user_id}
-            >
+            <Flex align="center" gap="3" py="2" className={styles.row} data-variant={e.user_id}>
               <Text size="4" aria-hidden style={{ lineHeight: 1 }}>
                 {USER_EMOJI[e.user_id]}
               </Text>
               <Box flexGrow="1" minWidth="0">
                 <Text as="div" size="2" truncate>
                   <Text weight="bold">{USER_NAME[e.user_id]}</Text>
-                  <Text color="gray">{' '}{verb}{' '}</Text>
+                  <Text color="gray"> {verb} </Text>
                   <Text weight="medium">{title}</Text>
                 </Text>
               </Box>
@@ -77,11 +71,7 @@ export function ActivityLog() {
             </Flex>
           )
           return (
-            <Box
-              key={e.id}
-              className={styles.rowWrapper}
-              data-first={idx === 0 || undefined}
-            >
+            <Box key={e.id} className={styles.rowWrapper} data-first={idx === 0 || undefined}>
               {linkTo ? (
                 <Link to={linkTo} className={styles.rowLink}>
                   {row}

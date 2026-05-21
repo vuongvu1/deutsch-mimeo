@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 import meoImg from '@/assets/meo.jpg'
 import miImg from '@/assets/mi.jpg'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
-import { useUsersTodayStatus, type UserTodayStatus } from '@/hooks/useStats'
+import { type UserTodayStatus, useUsersTodayStatus } from '@/hooks/useStats'
 import { useUsers } from '@/hooks/useUsers'
 import { paths } from '@/routes/paths'
 import type { UserRow } from '@/types/db'
@@ -106,9 +106,7 @@ function UserCard({
               className={styles.progressBadge}
               data-complete={status.allComplete || undefined}
             >
-              {status.allComplete ? (
-                <CheckIcon className={styles.checkIcon} aria-hidden />
-              ) : null}
+              {status.allComplete ? <CheckIcon className={styles.checkIcon} aria-hidden /> : null}
               <Text size="2" weight={status.allComplete ? 'bold' : 'medium'}>
                 {status.allComplete
                   ? t('userCard.allDone')

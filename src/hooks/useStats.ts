@@ -177,7 +177,10 @@ export function useRecentSessions(limit = 10) {
         seconds: number
         started_at: string
         updated_at: string
-        videos: { title: string; youtube_id: string } | { title: string; youtube_id: string }[] | null
+        videos:
+          | { title: string; youtube_id: string }
+          | { title: string; youtube_id: string }[]
+          | null
       }
       return (data ?? []).map((r: Row) => {
         const v = Array.isArray(r.videos) ? (r.videos[0] ?? null) : r.videos
@@ -262,8 +265,9 @@ function computeTodayStatus(
     if (now - new Date(r.updated_at).getTime() > ACTIVE_WINDOW_MS) continue
     if (!mostRecent || r.updated_at > mostRecent.updated_at) mostRecent = r
   }
-  const activeChallengeSlug =
-    mostRecent ? (challenges.find((c) => c.id === mostRecent!.challenge_id)?.slug ?? null) : null
+  const activeChallengeSlug = mostRecent
+    ? (challenges.find((c) => c.id === mostRecent!.challenge_id)?.slug ?? null)
+    : null
   return {
     completedCount,
     totalActive,

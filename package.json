@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsgo -b && vite build",
     "typecheck": "tsgo -p tsconfig.app.json --noEmit",
-    "lint": "eslint .",
+    "lint": "biome check ./src",
+    "format": "biome check ./src --write",
     "preview": "vite preview",
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
@@ -26,18 +27,12 @@
     "react-router-dom": "^7.15.1"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@biomejs/biome": "^2.4.15",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@typescript/native-preview": "7.0.0-dev.20260519.1",
     "@vitejs/plugin-react": "^6.0.2",
-    "eslint": "^10.2.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.5.0",
-    "typescript": "~6.0.2",
-    "typescript-eslint": "^8.59.3",
     "vite": "^8.0.13"
   },
   "packageManager": "pnpm@11.1.3"

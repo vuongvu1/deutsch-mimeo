@@ -8,12 +8,12 @@
   transform: translateY(-4px);
 }
 
-.userCard[data-variant='mi'] {
+.userCard[data-variant="mi"] {
   background: linear-gradient(160deg, var(--pink-a3), var(--color-panel-solid));
   border-color: var(--pink-a7);
 }
 
-.userCard[data-variant='meo'] {
+.userCard[data-variant="meo"] {
   background: linear-gradient(160deg, var(--sky-a3), var(--color-panel-solid));
   border-color: var(--sky-a7);
 }
@@ -29,11 +29,11 @@
   user-select: none;
 }
 
-.userCard[data-variant='mi'] .userAvatar {
+.userCard[data-variant="mi"] .userAvatar {
   border-color: var(--pink-a8);
 }
 
-.userCard[data-variant='meo'] .userAvatar {
+.userCard[data-variant="meo"] .userAvatar {
   border-color: var(--sky-a8);
 }
 

@@ -17,12 +17,12 @@
   background: var(--gray-a3);
 }
 
-.row[data-variant='mi'] {
+.row[data-variant="mi"] {
   box-shadow: inset 3px 0 0 var(--pink-a7);
   padding-left: var(--space-3);
 }
 
-.row[data-variant='meo'] {
+.row[data-variant="meo"] {
   box-shadow: inset 3px 0 0 var(--sky-a7);
   padding-left: var(--space-3);
 }

@@ -1,5 +1,20 @@
-import { BookmarkFilledIcon, BookmarkIcon, SpeakerLoudIcon, SpeakerOffIcon } from '@radix-ui/react-icons'
-import { Badge, Box, Card, Container, Flex, IconButton, Select, Text, Tooltip } from '@radix-ui/themes'
+import {
+  BookmarkFilledIcon,
+  BookmarkIcon,
+  SpeakerLoudIcon,
+  SpeakerOffIcon,
+} from '@radix-ui/react-icons'
+import {
+  Badge,
+  Box,
+  Card,
+  Container,
+  Flex,
+  IconButton,
+  Select,
+  Text,
+  Tooltip,
+} from '@radix-ui/themes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
@@ -7,13 +22,13 @@ import { Navigate, useParams } from 'react-router-dom'
 import { ProgressBar } from '@/components/ProgressBar'
 import { SavedWordsDialog } from '@/components/SavedWordsDialog'
 import { TopBar } from '@/components/TopBar'
+import type { VocabPack, VocabWord } from '@/data/vocab'
+import { DEFAULT_PACK_ID, SAVED_PACK_ID, VOCAB_PACKS, VOCAB_PACKS_BY_ID } from '@/data/vocab'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
 import { useMatchSession } from '@/hooks/useMatchSession'
-import { useSaveWord, useSavedWords, useUnsaveWord } from '@/hooks/useSavedWords'
+import { useSavedWords, useSaveWord, useUnsaveWord } from '@/hooks/useSavedWords'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
-import { DEFAULT_PACK_ID, SAVED_PACK_ID, VOCAB_PACKS, VOCAB_PACKS_BY_ID } from '@/data/vocab'
-import type { VocabPack, VocabWord } from '@/data/vocab'
 import {
   isMuted,
   playGoalReached,
@@ -71,10 +86,7 @@ export function VocabGamePage() {
   const { userId } = useParams<{ userId: string }>()
   const userQuery = useUser(userId as UserId | undefined)
   const challenge = useChallengeBySlug('vocab').data
-  const todayQuery = useTodaySecondsForChallenge(
-    userId as UserId | undefined,
-    challenge?.id,
-  )
+  const todayQuery = useTodaySecondsForChallenge(userId as UserId | undefined, challenge?.id)
   // Snapshot the baseline once so flush()'s invalidate-then-refetch
   // doesn't compound with roundsInSession.
   const baselineRef = useRef<number | null>(null)
@@ -145,10 +157,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
   const savedWords = savedWordsQuery.data ?? []
   const saveWord = useSaveWord()
   const unsaveWord = useUnsaveWord()
-  const savedSet = useMemo(
-    () => new Set(savedWords.map((w) => w.de)),
-    [savedWords],
-  )
+  const savedSet = useMemo(() => new Set(savedWords.map((w) => w.de)), [savedWords])
 
   const pack: VocabPack = useMemo(() => {
     if (packId === SAVED_PACK_ID) {
@@ -198,14 +207,12 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
     return buildTiles(words, roundSeedRef.current)
   }, [pack])
 
-  // Reset board when pack changes (or on mount).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: drawNextRound depends on pack via closure
   useEffect(() => {
     poolRef.current = shuffle(pack.words)
     setTiles(drawNextRound())
     setSelectedId(null)
     setWrongIds(new Set())
-    // drawNextRound depends on pack via closure
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pack.id])
 
   // Redeal when the round is cleared.
@@ -267,9 +274,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
 
       if (selected.pairKey === tile.pairKey) {
         setTiles((prev) =>
-          prev.map((p) =>
-            p.id === selected.id || p.id === tile.id ? { ...p, removed: true } : p,
-          ),
+          prev.map((p) => (p.id === selected.id || p.id === tile.id ? { ...p, removed: true } : p)),
         )
         setSelectedId(null)
         playMatch()

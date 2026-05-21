@@ -184,7 +184,8 @@ export const en = {
       speak: 'Pronounce',
       remove: 'Remove',
       emptyPackTitle: 'No saved words yet',
-      emptyPackHint: 'Pick another pack first, tap the bookmark on German tiles, then come back here.',
+      emptyPackHint:
+        'Pick another pack first, tap the bookmark on German tiles, then come back here.',
     },
   },
   heatmap: {

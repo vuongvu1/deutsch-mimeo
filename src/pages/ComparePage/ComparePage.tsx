@@ -5,11 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Heatmap } from '@/components/Heatmap'
 import { TopBar } from '@/components/TopBar'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
-import {
-  useComparisonStats,
-  useDailyTotalsRange,
-  type ComparisonStats,
-} from '@/hooks/useStats'
+import { type ComparisonStats, useComparisonStats, useDailyTotalsRange } from '@/hooks/useStats'
 import { daysAgoLocalDate, formatMinutes, formatSeconds, todayLocalDate } from '@/lib/dates'
 import { formatChallengeValue } from '@/lib/format'
 import { paths } from '@/routes/paths'
@@ -333,4 +329,3 @@ function HeatmapPair({
     </Flex>
   )
 }
-

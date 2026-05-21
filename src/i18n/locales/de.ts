@@ -109,7 +109,8 @@ export const de = {
     alreadyAdded: 'Schon in Bibliothek',
     addNCta: '{{count}} Videos hinzufügen',
     confirmDelete: '„{{title}}" löschen?',
-    deleteWarning: 'Das Video wird endgültig entfernt. Diese Aktion kann nicht rückgängig gemacht werden.',
+    deleteWarning:
+      'Das Video wird endgültig entfernt. Diese Aktion kann nicht rückgängig gemacht werden.',
     markWatched: 'Als gesehen markieren',
     unmarkWatched: 'Als ungesehen markieren',
     dropHere: 'Hier ablegen',
@@ -184,7 +185,8 @@ export const de = {
       speak: 'Aussprechen',
       remove: 'Entfernen',
       emptyPackTitle: 'Noch keine gemerkten Wörter',
-      emptyPackHint: 'Wähle zuerst ein anderes Paket, tippe das Lesezeichen an deutschen Karten — und komm dann hierher zurück.',
+      emptyPackHint:
+        'Wähle zuerst ein anderes Paket, tippe das Lesezeichen an deutschen Karten — und komm dann hierher zurück.',
     },
   },
   heatmap: {

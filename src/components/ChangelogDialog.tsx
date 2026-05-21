@@ -1,15 +1,7 @@
-import {
-  Badge,
-  Button,
-  Dialog,
-  Flex,
-  Heading,
-  ScrollArea,
-  Text,
-} from '@radix-ui/themes'
+import { Badge, Button, Dialog, Flex, Heading, ScrollArea, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 
-import { changelog, type ChangelogEntryType } from '@/lib/changelog'
+import { type ChangelogEntryType, changelog } from '@/lib/changelog'
 
 const TYPE_COLORS: Record<ChangelogEntryType, 'green' | 'amber' | 'blue' | 'gray'> = {
   feature: 'green',
@@ -46,12 +38,7 @@ export function ChangelogDialog({ open, onOpenChange }: Props) {
                 </Flex>
                 {v.entries.map((entry, idx) => (
                   <Text key={idx} as="div" size="2">
-                    <Badge
-                      color={TYPE_COLORS[entry.type]}
-                      variant="soft"
-                      size="1"
-                      mr="2"
-                    >
+                    <Badge color={TYPE_COLORS[entry.type]} variant="soft" size="1" mr="2">
                       {t(`changelog.types.${entry.type}`)}
                     </Badge>
                     {entry[lang]}

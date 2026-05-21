@@ -113,12 +113,11 @@ export function useSessionTracker({ userId, challengeId, videoId, enabled }: Arg
     }
   }, [enabled, flush])
 
-  // Final flush on unmount.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: final flush on unmount only
   useEffect(() => {
     return () => {
       void flush()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handlePlay = useCallback(async () => {

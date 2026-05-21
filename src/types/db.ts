@@ -62,4 +62,3 @@ export interface SavedWordRow {
   note: string | null
   created_at: string
 }
-

@@ -14,8 +14,7 @@ const PIPER_VOICE_FILENAMES = new Set([
   'de_DE-thorsten-medium.onnx',
   'de_DE-thorsten-medium.onnx.json',
 ])
-const PIPER_MIRROR_BASE =
-  'https://raw.githubusercontent.com/vuongvu1/deutsch-mimeo/main/voices/'
+const PIPER_MIRROR_BASE = 'https://raw.githubusercontent.com/vuongvu1/deutsch-mimeo/main/voices/'
 
 function patchPiperVoiceFetch(): void {
   if (typeof window === 'undefined') return
@@ -25,11 +24,7 @@ function patchPiperVoiceFetch(): void {
   const original = window.fetch.bind(window)
   window.fetch = (input, init) => {
     const url =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : input.url
+      typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
     const filename = url.slice(url.lastIndexOf('/') + 1)
     if (!PIPER_VOICE_FILENAMES.has(filename)) return original(input, init)
     const rewritten = PIPER_MIRROR_BASE + filename

@@ -102,7 +102,7 @@ export const changelog: ChangelogVersion[] = [
       {
         type: 'improvement',
         de: 'Piper-Stimme lädt jetzt sofort im Hintergrund, sobald die App geöffnet ist — beim Erreichen des Vokabelspiels ist sie häufiger schon einsatzbereit.',
-        en: 'Piper voice now starts loading in the background as soon as the app opens, so it\'s more often ready by the time you reach the vocab game.',
+        en: "Piper voice now starts loading in the background as soon as the app opens, so it's more often ready by the time you reach the vocab game.",
       },
     ],
   },
@@ -140,7 +140,7 @@ export const changelog: ChangelogVersion[] = [
       {
         type: 'feature',
         de: 'Kinomodus im Player — vergrößert das Video, dimmt den Hintergrund und zeigt die heutigen Minuten als schwebendes Overlay. Schalter neben Autoplay, Klick auf den Hintergrund oder Escape beendet ihn.',
-        en: 'Movie mode in the player — enlarges the video, dims the background and shows today\'s minutes as a floating overlay. Switch next to autoplay; click backdrop or press Escape to exit.',
+        en: "Movie mode in the player — enlarges the video, dims the background and shows today's minutes as a floating overlay. Switch next to autoplay; click backdrop or press Escape to exit.",
       },
       {
         type: 'improvement',

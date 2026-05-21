@@ -10,7 +10,7 @@
   transform: translateY(-2px);
 }
 
-.item[data-watched='true'] {
+.item[data-watched="true"] {
   opacity: 0.7;
 }
 

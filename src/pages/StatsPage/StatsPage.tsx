@@ -62,11 +62,18 @@ export function StatsPage() {
             {t('stats.listening')}
           </Heading>
           <Grid columns={{ initial: '2', sm: '3' }} gap="3" mb="6">
-            <Stat label={t('stats.today')} value={formatMinutes(listenStats.todaySeconds)} accent={listenStats.goalCompleteToday} />
+            <Stat
+              label={t('stats.today')}
+              value={formatMinutes(listenStats.todaySeconds)}
+              accent={listenStats.goalCompleteToday}
+            />
             <Stat label={t('stats.last7')} value={formatMinutes(listenStats.weekSeconds)} />
             <Stat label={t('stats.last30')} value={formatMinutes(listenStats.monthSeconds)} />
             <Stat label={t('stats.allTime')} value={formatMinutes(listenStats.allTimeSeconds)} />
-            <Stat label={t('stats.longest')} value={formatSeconds(listenStats.longestSessionSeconds)} />
+            <Stat
+              label={t('stats.longest')}
+              value={formatSeconds(listenStats.longestSessionSeconds)}
+            />
             <Stat label={t('stats.activeVideos')} value={`${listenStats.activeVideoCount}`} />
             <Stat
               label={t('stats.watchedVideos')}

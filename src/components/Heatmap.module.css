@@ -42,7 +42,7 @@
   visibility: hidden;
 }
 
-.weekdayLabel[data-show='true'] {
+.weekdayLabel[data-show="true"] {
   visibility: visible;
 }
 
@@ -60,25 +60,25 @@
   border: 1px solid transparent;
 }
 
-.cell[data-level='-1'] {
+.cell[data-level="-1"] {
   background: transparent;
   border-color: var(--gray-a3);
   opacity: 0.4;
 }
 
-.cell[data-level='0'] {
+.cell[data-level="0"] {
   background: var(--gray-a3);
 }
-.cell[data-level='1'] {
+.cell[data-level="1"] {
   background: var(--amber-a4);
 }
-.cell[data-level='2'] {
+.cell[data-level="2"] {
   background: var(--amber-a7);
 }
-.cell[data-level='3'] {
+.cell[data-level="3"] {
   background: var(--amber-a10);
 }
-.cell[data-level='4'] {
+.cell[data-level="4"] {
   background: var(--green-9);
 }
 

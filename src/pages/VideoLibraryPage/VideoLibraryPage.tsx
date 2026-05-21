@@ -45,8 +45,8 @@ import {
   extractYouTubeId,
   fetchPlaylistItems,
   fetchYouTubeTitle,
-  youtubeThumbUrl,
   type PlaylistVideo,
+  youtubeThumbUrl,
 } from '@/lib/youtube'
 import { paths } from '@/routes/paths'
 import type { UserId, UserRow, VideoRow } from '@/types/db'
@@ -122,11 +122,7 @@ export function VideoLibraryPage() {
             ))}
           </Flex>
           {activeTotalPages > 1 ? (
-            <Pagination
-              page={activeCurPage}
-              totalPages={activeTotalPages}
-              onPage={setActivePage}
-            />
+            <Pagination page={activeCurPage} totalPages={activeTotalPages} onPage={setActivePage} />
           ) : null}
         </>
       )}
@@ -517,9 +513,7 @@ function VideoItem({
                   color={isWatched ? 'gray' : 'green'}
                   onClick={onToggleWatched}
                   aria-label={
-                    isWatched
-                      ? t('videoLibrary.unmarkWatched')
-                      : t('videoLibrary.markWatched')
+                    isWatched ? t('videoLibrary.unmarkWatched') : t('videoLibrary.markWatched')
                   }
                 >
                   {isWatched ? <ResetIcon /> : <CheckIcon />}

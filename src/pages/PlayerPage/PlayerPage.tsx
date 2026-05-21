@@ -167,8 +167,7 @@ function PlayerScreen({
   }, [movieMode])
 
   const upcoming = useMemo(
-    () =>
-      (videosQuery.data ?? []).filter((v) => v.id !== video.id && !v.watched_at),
+    () => (videosQuery.data ?? []).filter((v) => v.id !== video.id && !v.watched_at),
     [videosQuery.data, video.id],
   )
 
@@ -218,11 +217,7 @@ function PlayerScreen({
 
   return (
     <Container size="3" px={{ initial: '4', sm: '5' }} py={{ initial: '5', sm: '6' }}>
-      <TopBar
-        back={{ to: paths.videoLibrary(user.id) }}
-        title={video.title}
-        emoji={user.emoji}
-      />
+      <TopBar back={{ to: paths.videoLibrary(user.id) }} title={video.title} emoji={user.emoji} />
 
       {movieMode ? (
         <Box
@@ -429,11 +424,7 @@ function PlaylistItem({
       <Card asChild variant="surface" className={styles.playlistItem}>
         <Link to={paths.player(userId, video.id)} state={{ autoplay: true }}>
           <Flex align="center" gap="3">
-            <img
-              className={styles.playlistThumb}
-              src={youtubeThumbUrl(video.youtube_id)}
-              alt=""
-            />
+            <img className={styles.playlistThumb} src={youtubeThumbUrl(video.youtube_id)} alt="" />
             <Text
               as="div"
               size="2"
