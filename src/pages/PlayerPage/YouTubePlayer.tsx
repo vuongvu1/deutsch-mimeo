@@ -1,21 +1,48 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useImperativeHandle, useRef } from 'react'
 
 import { loadYouTubeApi } from '@/lib/youtube'
+
+export interface YouTubePlayerHandle {
+  getCurrentTime: () => number | null
+}
 
 interface Props {
   youtubeId: string
   autoplay?: boolean
+  startSeconds?: number
   onPlay: () => void
   onPauseOrEnd: () => void
   onEnded?: () => void
+  ref?: React.Ref<YouTubePlayerHandle>
 }
 
-export function YouTubePlayer({ youtubeId, autoplay, onPlay, onPauseOrEnd, onEnded }: Props) {
+export function YouTubePlayer({
+  youtubeId,
+  autoplay,
+  startSeconds,
+  onPlay,
+  onPauseOrEnd,
+  onEnded,
+  ref,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<YT.Player | null>(null)
   const onPlayRef = useRef(onPlay)
   const onPauseOrEndRef = useRef(onPauseOrEnd)
   const onEndedRef = useRef(onEnded)
+  // startSeconds is read once on mount; later updates must NOT destroy the player.
+  const startSecondsRef = useRef(startSeconds)
+
+  useImperativeHandle(ref, () => ({
+    getCurrentTime: () => {
+      try {
+        const t = playerRef.current?.getCurrentTime()
+        return typeof t === 'number' && Number.isFinite(t) ? t : null
+      } catch {
+        return null
+      }
+    },
+  }))
 
   useEffect(() => {
     onPlayRef.current = onPlay
@@ -26,6 +53,8 @@ export function YouTubePlayer({ youtubeId, autoplay, onPlay, onPauseOrEnd, onEnd
   useEffect(() => {
     let cancelled = false
     let player: YT.Player | null = null
+    const initialStart = startSecondsRef.current
+    const start = initialStart && initialStart > 0 ? Math.floor(initialStart) : undefined
     void loadYouTubeApi().then((YTApi) => {
       if (cancelled || !containerRef.current) return
       player = new YTApi.Player(containerRef.current, {
@@ -35,6 +64,7 @@ export function YouTubePlayer({ youtubeId, autoplay, onPlay, onPauseOrEnd, onEnd
           modestbranding: 1,
           playsinline: 1,
           ...(autoplay ? { autoplay: 1 } : {}),
+          ...(start !== undefined ? { start } : {}),
         },
         events: {
           onStateChange: (e) => {

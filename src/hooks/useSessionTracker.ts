@@ -10,6 +10,7 @@ interface Args {
   challengeId: string
   videoId: string
   enabled: boolean
+  getCurrentVideoTime?: () => number | null
 }
 
 interface State {
@@ -26,8 +27,16 @@ const FLUSH_EVERY_TICKS = 10 // flush to DB every 10s of play
  *
  * Returns helpers the player calls on YouTube state-change events.
  */
-export function useSessionTracker({ userId, challengeId, videoId, enabled }: Args) {
+export function useSessionTracker({
+  userId,
+  challengeId,
+  videoId,
+  enabled,
+  getCurrentVideoTime,
+}: Args) {
   const qc = useQueryClient()
+  const getCurrentVideoTimeRef = useRef(getCurrentVideoTime)
+  getCurrentVideoTimeRef.current = getCurrentVideoTime
   const [state, setState] = useState<State>({
     sessionId: null,
     sessionSeconds: 0,
@@ -72,6 +81,19 @@ export function useSessionTracker({ userId, challengeId, videoId, enabled }: Arg
         .update({ seconds, updated_at: new Date().toISOString() })
         .eq('id', id)
       if (error) console.error('Failed to flush session', error)
+
+      const t = getCurrentVideoTimeRef.current?.()
+      if (typeof t === 'number' && Number.isFinite(t) && t >= 0) {
+        const { error: posError } = await supabase
+          .from('videos')
+          .update({ last_position_seconds: Math.floor(t) })
+          .eq('id', videoId)
+        if (posError) console.error('Failed to flush video position', posError)
+        // Don't invalidate ['video', videoId] here — it would refetch into the
+        // mounted PlayerScreen, change YouTubePlayer.startSeconds, and destroy
+        // the player mid-playback. The next mount refetches anyway (staleTime=0).
+      }
+
       // Refresh dependent queries so progress UI stays in sync.
       qc.invalidateQueries({ queryKey: ['today-seconds', userId, challengeId] })
       qc.invalidateQueries({ queryKey: ['stats', userId] })
@@ -81,7 +103,7 @@ export function useSessionTracker({ userId, challengeId, videoId, enabled }: Arg
       flushingRef.current = false
       ticksSinceFlushRef.current = 0
     }
-  }, [qc, userId, challengeId])
+  }, [qc, userId, challengeId, videoId])
 
   // 1-second tick while playing.
   useEffect(() => {

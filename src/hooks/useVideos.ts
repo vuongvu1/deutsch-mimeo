@@ -134,7 +134,10 @@ export function useSetVideoWatched() {
     mutationFn: async (input: { id: string; user_id: UserId; watched: boolean }) => {
       const { error } = await supabase
         .from('videos')
-        .update({ watched_at: input.watched ? new Date().toISOString() : null })
+        .update({
+          watched_at: input.watched ? new Date().toISOString() : null,
+          ...(input.watched ? { last_position_seconds: 0 } : {}),
+        })
         .eq('id', input.id)
       if (error) throw error
       return input

@@ -14,6 +14,17 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.9.2',
+    date: '2026-05-24',
+    entries: [
+      {
+        type: 'feature',
+        de: 'Hör-Challenge: Videos merken sich jetzt deine Wiedergabe-Position. Wenn du pausierst und später zurückkommst, startet das Video automatisch genau dort, wo du aufgehört hast. Nach dem Anschauen oder manuellem Abhaken springt die Position wieder auf den Anfang.',
+        en: 'Listen challenge: videos now remember your playback position. Pause partway through and the player resumes at the same second when you come back. Position resets to the start once you finish a video or manually mark it as watched.',
+      },
+    ],
+  },
+  {
     version: '0.9.1',
     date: '2026-05-20',
     entries: [

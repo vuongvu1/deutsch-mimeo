@@ -44,7 +44,7 @@ import { paths } from '@/routes/paths'
 import type { ChallengeRow, UserId, UserRow, VideoRow } from '@/types/db'
 
 import styles from './PlayerPage.module.css'
-import { YouTubePlayer } from './YouTubePlayer'
+import { YouTubePlayer, type YouTubePlayerHandle } from './YouTubePlayer'
 
 const PAGE_SIZE = 10
 const AUTO_NEXT_STORAGE_KEY = 'mimeo:autoNext'
@@ -119,11 +119,13 @@ function PlayerScreen({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const playerRef = useRef<YouTubePlayerHandle>(null)
   const tracker = useSessionTracker({
     userId: user.id,
     challengeId: challenge.id,
     videoId: video.id,
     enabled: true,
+    getCurrentVideoTime: () => playerRef.current?.getCurrentTime() ?? null,
   })
   const setWatched = useSetVideoWatched()
   const reorder = useReorderVideos()
@@ -249,8 +251,10 @@ function PlayerScreen({
       <Box className={styles.playerSlot} mb="5">
         <Box className={`${styles.playerBox} ${movieMode ? styles.playerBoxMovie : ''}`}>
           <YouTubePlayer
+            ref={playerRef}
             youtubeId={video.youtube_id}
             autoplay={autoplay}
+            startSeconds={video.last_position_seconds}
             onPlay={tracker.handlePlay}
             onPauseOrEnd={tracker.handlePauseOrEnd}
             onEnded={handleEnded}
