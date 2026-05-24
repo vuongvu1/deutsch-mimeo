@@ -14,6 +14,17 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.9.3',
+    date: '2026-05-24',
+    entries: [
+      {
+        type: 'feature',
+        de: '5 neue B1-Wortpakete: Gesellschaft & Politik, Gesundheit & Körper, Umwelt & Natur, Gefühle & Persönlichkeit, Medien & Technik. „Alle Wörter" zeigt jetzt häufiger fortgeschrittene Vokabeln (10 % A1, 25 % A2, 65 % B1) statt einfacher Grundwörter.',
+        en: '5 new B1 word packs: Society & Politics, Health & Body, Environment & Nature, Feelings & Personality, Media & Technology. "All words" now surfaces advanced vocabulary much more often (10% A1, 25% A2, 65% B1) instead of repeating the easy basics.',
+      },
+    ],
+  },
+  {
     version: '0.9.2',
     date: '2026-05-24',
     entries: [

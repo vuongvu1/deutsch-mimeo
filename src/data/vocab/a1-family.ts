@@ -2,6 +2,7 @@ import type { VocabPack } from './index'
 
 export const a1Family: VocabPack = {
   id: 'a1-family',
+  level: 'A1',
   words: [
     { de: 'die Familie', en: 'family' },
     { de: 'die Mutter', en: 'mother' },

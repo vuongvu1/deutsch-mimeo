@@ -2,6 +2,7 @@ import type { VocabPack } from './index'
 
 export const a1Travel: VocabPack = {
   id: 'a1-travel',
+  level: 'A1',
   words: [
     { de: 'das Auto', en: 'car' },
     { de: 'der Bus', en: 'bus' },

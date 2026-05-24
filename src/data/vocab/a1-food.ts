@@ -2,6 +2,7 @@ import type { VocabPack } from './index'
 
 export const a1Food: VocabPack = {
   id: 'a1-food',
+  level: 'A1',
   words: [
     { de: 'das Brot', en: 'bread' },
     { de: 'das Brötchen', en: 'bread roll' },

@@ -2,6 +2,7 @@ import type { VocabPack } from './index'
 
 export const a2Work: VocabPack = {
   id: 'a2-work',
+  level: 'A2',
   words: [
     { de: 'die Arbeit', en: 'work' },
     { de: 'der Job', en: 'job' },

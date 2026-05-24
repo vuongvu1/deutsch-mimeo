@@ -2,6 +2,7 @@ import type { VocabPack } from './index'
 
 export const a1Basics: VocabPack = {
   id: 'a1-basics',
+  level: 'A1',
   words: [
     { de: 'ich', en: 'I' },
     { de: 'du', en: 'you' },

@@ -23,7 +23,13 @@ import { ProgressBar } from '@/components/ProgressBar'
 import { SavedWordsDialog } from '@/components/SavedWordsDialog'
 import { TopBar } from '@/components/TopBar'
 import type { VocabPack, VocabWord } from '@/data/vocab'
-import { DEFAULT_PACK_ID, SAVED_PACK_ID, VOCAB_PACKS, VOCAB_PACKS_BY_ID } from '@/data/vocab'
+import {
+  DEFAULT_PACK_ID,
+  LEVEL_TARGETS,
+  SAVED_PACK_ID,
+  VOCAB_PACKS,
+  VOCAB_PACKS_BY_ID,
+} from '@/data/vocab'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
 import { useMatchSession } from '@/hooks/useMatchSession'
 import { useSavedWords, useSaveWord, useUnsaveWord } from '@/hooks/useSavedWords'
@@ -65,6 +71,31 @@ function shuffle<T>(arr: readonly T[]): T[] {
     ;[out[i], out[j]] = [out[j], out[i]]
   }
   return out
+}
+
+// Efraimidis-Spirakis weighted shuffle: key = -ln(U) / weight, sort ascending.
+// Higher weight => smaller expected key => earlier position.
+function weightedShuffle<T>(arr: readonly T[], weight: (item: T) => number): T[] {
+  return arr
+    .map((item) => ({ item, key: -Math.log(Math.random()) / Math.max(weight(item), 1e-9) }))
+    .sort((a, b) => a.key - b.key)
+    .map((x) => x.item)
+}
+
+function makeLevelWeight(
+  words: readonly VocabWord[],
+  fallback: VocabPack['level'],
+): (w: VocabWord) => number {
+  const counts: Record<string, number> = {}
+  for (const w of words) {
+    const lv = w.level ?? fallback
+    counts[lv] = (counts[lv] ?? 0) + 1
+  }
+  return (w) => {
+    const lv = w.level ?? fallback
+    const target = LEVEL_TARGETS[lv] ?? 0
+    return target / Math.max(counts[lv] ?? 0, 1)
+  }
 }
 
 function buildTiles(words: readonly VocabWord[], seed: number): Tile[] {
@@ -161,7 +192,11 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
 
   const pack: VocabPack = useMemo(() => {
     if (packId === SAVED_PACK_ID) {
-      return { id: SAVED_PACK_ID, words: savedWords.map((w) => ({ de: w.de, en: w.en })) }
+      return {
+        id: SAVED_PACK_ID,
+        level: 'A1',
+        words: savedWords.map((w) => ({ de: w.de, en: w.en })),
+      }
     }
     return VOCAB_PACKS_BY_ID[packId] ?? VOCAB_PACKS[0]
   }, [packId, savedWords])
@@ -197,19 +232,27 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
   const [wrongIds, setWrongIds] = useState<Set<string>>(new Set())
   const [roundDoneFlash, setRoundDoneFlash] = useState(false)
 
+  const levelWeight = useMemo(() => makeLevelWeight(pack.words, pack.level), [pack])
+
+  const reshufflePool = useCallback(
+    (): VocabWord[] =>
+      pack.id === 'all' ? weightedShuffle(pack.words, levelWeight) : shuffle(pack.words),
+    [pack, levelWeight],
+  )
+
   const drawNextRound = useCallback((): Tile[] => {
     if (poolRef.current.length < ROUND_SIZE) {
-      poolRef.current = shuffle(pack.words)
+      poolRef.current = reshufflePool()
     }
     const words = poolRef.current.slice(0, ROUND_SIZE)
     poolRef.current = poolRef.current.slice(ROUND_SIZE)
     roundSeedRef.current += 1
     return buildTiles(words, roundSeedRef.current)
-  }, [pack])
+  }, [reshufflePool])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: drawNextRound depends on pack via closure
   useEffect(() => {
-    poolRef.current = shuffle(pack.words)
+    poolRef.current = reshufflePool()
     setTiles(drawNextRound())
     setSelectedId(null)
     setWrongIds(new Set())
