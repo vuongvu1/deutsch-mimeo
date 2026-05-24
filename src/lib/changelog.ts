@@ -18,6 +18,11 @@ export const changelog: ChangelogVersion[] = [
     date: '2026-05-24',
     entries: [
       {
+        type: 'improvement',
+        de: 'Änderungsliste lädt jetzt erst beim Öffnen (mit Lade-Spinner während des Nachladens) — die Einträge sind aus dem Haupt-Bundle gewandert, damit die App beim ersten Aufruf etwas schneller startet.',
+        en: 'Changelog content is now loaded on demand (with a loading spinner while the chunk fetches) — entries no longer ship in the main bundle, so first page load is a touch faster.',
+      },
+      {
         type: 'feature',
         de: '5 neue B1-Wortpakete: Gesellschaft & Politik, Gesundheit & Körper, Umwelt & Natur, Gefühle & Persönlichkeit, Medien & Technik. „Alle Wörter" zeigt jetzt häufiger fortgeschrittene Vokabeln (10 % A1, 25 % A2, 65 % B1) statt einfacher Grundwörter.',
         en: '5 new B1 word packs: Society & Politics, Health & Body, Environment & Nature, Feelings & Personality, Media & Technology. "All words" now surfaces advanced vocabulary much more often (10% A1, 25% A2, 65% B1) instead of repeating the easy basics.',

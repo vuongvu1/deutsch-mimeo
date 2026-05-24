@@ -12,24 +12,27 @@ import {
   Button,
   Callout,
   Container,
+  Dialog,
   Flex,
   Heading,
   IconButton,
   Select,
+  Spinner,
   Tooltip,
 } from '@radix-ui/themes'
-import { type ReactNode, useState } from 'react'
+import { lazy, type ReactNode, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
-import { ChangelogDialog } from '@/components/ChangelogDialog'
 import { useClearSessions, useResetData } from '@/hooks/useResetData'
 import { useUpdateAvailable } from '@/hooks/useUpdateAvailable'
-import { changelog } from '@/lib/changelog'
+import { APP_VERSION } from '@/lib/appVersion'
 import { paths } from '@/routes/paths'
 import { useAppearance } from '@/theme/ThemeProvider'
 
-const APP_VERSION = changelog[0]?.version ?? '0.0.0'
+const ChangelogDialog = lazy(() =>
+  import('@/components/ChangelogDialog').then((m) => ({ default: m.ChangelogDialog })),
+)
 
 export function AppHeader() {
   const { t, i18n } = useTranslation()
@@ -38,6 +41,7 @@ export function AppHeader() {
   const isAdmin = searchParams.get('admin') === 'true'
   const updateAvailable = useUpdateAvailable()
   const [changelogOpen, setChangelogOpen] = useState(false)
+  const [changelogMounted, setChangelogMounted] = useState(false)
 
   const currentLang = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'de'
   const themeTooltip = appearance === 'dark' ? t('header.themeLight') : t('header.themeDark')
@@ -85,18 +89,35 @@ export function AppHeader() {
                   {appearance === 'dark' ? <SunIcon /> : <MoonIcon />}
                 </IconButton>
               </Tooltip>
-              <Tooltip content={t('header.changelog')}>
-                <Button
-                  variant="soft"
-                  color="gray"
-                  size="2"
-                  onClick={() => setChangelogOpen(true)}
-                  aria-label={t('header.changelog')}
-                >
-                  <RocketIcon />v{APP_VERSION}
-                </Button>
-              </Tooltip>
-              <ChangelogDialog open={changelogOpen} onOpenChange={setChangelogOpen} />
+              <Dialog.Root open={changelogOpen} onOpenChange={setChangelogOpen}>
+                <Tooltip content={t('header.changelog')}>
+                  <Button
+                    variant="soft"
+                    color="gray"
+                    size="2"
+                    onClick={() => {
+                      setChangelogMounted(true)
+                      setChangelogOpen(true)
+                    }}
+                    aria-label={t('header.changelog')}
+                  >
+                    <RocketIcon />v{APP_VERSION}
+                  </Button>
+                </Tooltip>
+                {changelogMounted ? (
+                  <Suspense
+                    fallback={
+                      <Dialog.Content maxWidth="520px">
+                        <Flex align="center" justify="center" py="8">
+                          <Spinner size="3" />
+                        </Flex>
+                      </Dialog.Content>
+                    }
+                  >
+                    <ChangelogDialog />
+                  </Suspense>
+                ) : null}
+              </Dialog.Root>
               {isAdmin ? (
                 <>
                   <DestructiveAction
