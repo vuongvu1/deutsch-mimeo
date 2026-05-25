@@ -78,6 +78,11 @@ export const changelog: ChangelogVersion[] = [
         en: 'Listening: "Generate a different text" now drops you back to the filter screen instead of immediately regenerating with the previous settings — adjust level / length / question count, then hit Start.',
       },
       {
+        type: 'fix',
+        de: 'Startseite: Der Live-Punkt „Hört Hörverstehen" erscheint jetzt auch während der Audiowiedergabe und beim Beantworten — nicht erst nach dem Absenden. Wir markieren die Person ab dem ersten Generieren als aktiv und halten den Status während der ganzen Runde auf der anderen Person sichtbar.',
+        en: 'Home page: the live "Doing listening comprehension" dot now shows during audio playback and while answering — not just after submit. We mark the user as active from the moment they start generating, and keep the status visible to the other user throughout the round.',
+      },
+      {
         type: 'improvement',
         de: 'Gemini-Aufrufe laufen über einen Cloudflare Worker (Schlüssel als Worker-Secret, nicht im Browser).',
         en: 'Gemini calls go through a Cloudflare Worker (key lives as a Worker secret, not in the browser bundle).',

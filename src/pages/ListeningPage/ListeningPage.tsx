@@ -23,13 +23,14 @@ import {
   Text,
   Tooltip,
 } from '@radix-ui/themes'
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
 import { ProgressBar } from '@/components/ProgressBar'
 import { TopBar } from '@/components/TopBar'
-import { useChallengeBySlug } from '@/hooks/useChallenges'
+import { LISTENING_CHALLENGE_ID, useChallengeBySlug } from '@/hooks/useChallenges'
 import {
   type GenerateInput,
   useGenerateListeningExercise,
@@ -52,6 +53,7 @@ import {
   subscribeLongFormProgress,
   subscribeLongFormState,
 } from '@/lib/longFormSpeech'
+import { supabase } from '@/lib/supabase'
 import { paths } from '@/routes/paths'
 import type { ListeningExercise, ListeningLevel, UserId } from '@/types/db'
 
@@ -197,6 +199,57 @@ function Game({ user, goal, todaySeconds }: GameProps) {
       cancelLongForm()
     }
   }, [])
+
+  // Liveness for the home-page "is doing X" badge. useUsersTodayStatus only
+  // considers a session "active" if its updated_at is within the last 45 s,
+  // and our listening submit doesn't write any session row until the user
+  // taps Submit. So while they're actually listening or answering — the
+  // moment we most want the badge to show — there's nothing for it to see.
+  // Mirror what useMatchSession does for vocab: drop a seconds=0 row on
+  // first engagement, then keep touching its updated_at while engaged.
+  const qc = useQueryClient()
+  const livenessSessionIdRef = useRef<string | null>(null)
+  const isLive =
+    phase.kind === 'loading' || phase.kind === 'listening' || phase.kind === 'answering'
+  useEffect(() => {
+    if (!isLive) return
+    let cancelled = false
+    const ping = async () => {
+      if (cancelled) return
+      try {
+        if (!livenessSessionIdRef.current) {
+          const { data, error } = await supabase
+            .from('sessions')
+            .insert({
+              user_id: user.id,
+              challenge_id: LISTENING_CHALLENGE_ID,
+              video_id: null,
+              seconds: 0,
+              local_date: todayLocalDate(),
+            })
+            .select('id')
+            .single()
+          if (cancelled || error || !data) return
+          livenessSessionIdRef.current = data.id
+        } else {
+          await supabase
+            .from('sessions')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', livenessSessionIdRef.current)
+          if (cancelled) return
+        }
+        qc.invalidateQueries({ queryKey: ['users-today-status'] })
+      } catch (err) {
+        console.warn('[listening] liveness ping failed', err)
+      }
+    }
+    void ping()
+    const timerId = window.setInterval(() => void ping(), 20_000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timerId)
+    }
+  }, [isLive, user.id, qc])
 
   const complete = todaySeconds >= goal
 

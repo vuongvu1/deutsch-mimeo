@@ -20,6 +20,7 @@ const USER_IMAGES = { mi: miImg, meo: meoImg } as const
 const CHALLENGE_EMOJI: Record<string, string> = {
   listen: '🎧',
   vocab: '🧠',
+  listening: '📻',
 }
 
 export function HomePage() {
