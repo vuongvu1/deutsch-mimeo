@@ -9,15 +9,23 @@
 -- The challenge id is pinned so it matches LISTENING_CHALLENGE_ID in the
 -- frontend (src/hooks/useChallenges.ts).
 
-insert into challenges (id, slug, title, description, daily_goal_seconds, sort_order) values
+-- Upsert by *id* so this is safe even if the pinned id already holds an
+-- older challenge row (e.g. the historical hidden "tagebuch" challenge that
+-- migration 0007 deactivated but didn't remove). We refresh slug + every
+-- other column from EXCLUDED so a stale row at this id gets repurposed
+-- in-place. The slug uniqueness constraint still protects against a second
+-- row claiming 'listening' separately.
+insert into challenges (id, slug, title, description, daily_goal_seconds, sort_order, active) values
   ('00000000-0000-4000-8000-000000000003', 'listening', 'Hörverstehen 1×/Tag',
    'Höre einen KI-generierten Text und beantworte die Fragen mit mehr als 50% richtig.',
-   1, 20)
-on conflict (slug) do update
-  set title              = excluded.title,
+   1, 20, true)
+on conflict (id) do update
+  set slug               = excluded.slug,
+      title              = excluded.title,
       description        = excluded.description,
       daily_goal_seconds = excluded.daily_goal_seconds,
-      sort_order         = excluded.sort_order;
+      sort_order         = excluded.sort_order,
+      active             = excluded.active;
 
 create table if not exists listening_rounds (
   id uuid primary key default gen_random_uuid(),
