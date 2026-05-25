@@ -15,17 +15,26 @@
 -- other column from EXCLUDED so a stale row at this id gets repurposed
 -- in-place. The slug uniqueness constraint still protects against a second
 -- row claiming 'listening' separately.
-insert into challenges (id, slug, title, description, daily_goal_seconds, sort_order, active) values
+--
+-- `activated_on = current_date` is critical: when repurposing a stale row,
+-- without this line the listening challenge would inherit the old row's
+-- activated_on (from when 'tagebuch' was first created), which would make
+-- `daily_completion` expect a listening session on every historical day
+-- and silently reset every "day complete" count. Setting it to today
+-- means only today-onwards days require listening — exactly the
+-- semantics migration 0007 introduced.
+insert into challenges (id, slug, title, description, daily_goal_seconds, sort_order, active, activated_on) values
   ('00000000-0000-4000-8000-000000000003', 'listening', 'Hörverstehen 1×/Tag',
    'Höre einen KI-generierten Text und beantworte die Fragen mit mehr als 50% richtig.',
-   1, 20, true)
+   1, 20, true, current_date)
 on conflict (id) do update
   set slug               = excluded.slug,
       title              = excluded.title,
       description        = excluded.description,
       daily_goal_seconds = excluded.daily_goal_seconds,
       sort_order         = excluded.sort_order,
-      active             = excluded.active;
+      active             = excluded.active,
+      activated_on       = excluded.activated_on;
 
 create table if not exists listening_rounds (
   id uuid primary key default gen_random_uuid(),
