@@ -15,6 +15,7 @@ import type { ChallengeRow, UserId, UserRow } from '@/types/db'
 const SLUG_TO_PATH: Record<string, ((u: UserId) => string) | undefined> = {
   listen: (u) => paths.videoLibrary(u),
   vocab: (u) => paths.vocabGame(u),
+  listening: (u) => paths.listening(u),
 }
 
 export function ChallengeListPage() {

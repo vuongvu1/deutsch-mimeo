@@ -24,6 +24,7 @@ import { lazy, type ReactNode, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
+import { VoicePicker } from '@/components/VoicePicker'
 import { useClearSessions, useResetData } from '@/hooks/useResetData'
 import { useUpdateAvailable } from '@/hooks/useUpdateAvailable'
 import { APP_VERSION } from '@/lib/appVersion'
@@ -84,6 +85,7 @@ export function AppHeader() {
                   <Select.Item value="en">🇬🇧 EN</Select.Item>
                 </Select.Content>
               </Select.Root>
+              <VoicePicker />
               <Tooltip content={themeTooltip}>
                 <IconButton variant="soft" onClick={toggle} aria-label={themeTooltip}>
                   {appearance === 'dark' ? <SunIcon /> : <MoonIcon />}

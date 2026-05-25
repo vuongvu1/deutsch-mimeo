@@ -20,6 +20,12 @@ export const de = {
     updateAvailable: 'Neue Version verfügbar — zum Aktualisieren klicken',
     clearSessions: 'Sessions löschen',
     reset: 'Alles zurücksetzen',
+    voiceLabel: 'Stimme',
+    voices: {
+      'de_DE-thorsten-medium': 'Thorsten',
+      'de_DE-eva_k-x_low': 'Eva',
+      'de_DE-kerstin-low': 'Kerstin',
+    },
   },
   changelog: {
     title: 'Was ist neu?',
@@ -54,6 +60,7 @@ export const de = {
     doing: {
       listen: 'Hört gerade',
       vocab: 'Übt Vokabeln',
+      listening: 'Hört Hörverstehen',
     },
     progress: '{{done}} / {{total}} Challenges',
     allDone: 'Heute alles geschafft!',
@@ -90,6 +97,11 @@ export const de = {
     vocab: {
       title: 'Vokabeln 10 Runden/Tag',
       description: 'Spiele das Match-Pairs-Spiel und schließe jeden Tag 10 volle Runden ab.',
+    },
+    listening: {
+      title: 'Hörverstehen 1×/Tag',
+      description:
+        'Höre einen KI-generierten Text und beantworte die Fragen mit mehr als 50 % richtig.',
     },
   },
   videoLibrary: {
@@ -199,5 +211,68 @@ export const de = {
     more: 'Mehr',
     weekdays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
     months: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+  },
+  listening: {
+    pageTitleEmoji: '🎧',
+    pageTitle: 'Hörverstehen',
+    today: 'Heute',
+    rounds_one: '{{count}} Runde',
+    rounds_other: '{{count}} Runden',
+    goalReached: '🎉 Tagesziel erreicht! Spiel ruhig weiter — alles zählt.',
+    setup: {
+      title: 'Neue Runde',
+      subtitle: 'Wähle Niveau, Länge und Anzahl der Fragen — die KI erstellt einen passenden Text.',
+      level: 'Niveau',
+      length: 'Länge',
+      questions: 'Anzahl der Fragen',
+      minutes_one: '{{count}} Minute',
+      minutes_other: '{{count}} Minuten',
+      questionsValue_one: '{{count}} Frage',
+      questionsValue_other: '{{count}} Fragen',
+      startCta: 'Text generieren',
+      error: 'Konnte den Text nicht erstellen: {{reason}}',
+    },
+    levels: {
+      A1: 'A1 · Anfänger',
+      A2: 'A2 · Grundlegend',
+      B1: 'B1 · Mittelstufe',
+      B2: 'B2 · Fortgeschritten',
+      mix: 'Mix · A1–B2',
+    },
+    loading: {
+      title: 'Der Text wird erstellt …',
+      subtitle: 'Die KI schreibt einen Absatz und die Fragen — das kann ein paar Sekunden dauern.',
+    },
+    listening: {
+      title: 'Hör gut zu',
+      subtitle:
+        'Spiele den Text so oft ab, wie du willst. Das Transkript kannst du jederzeit einblenden.',
+      play: 'Abspielen',
+      pause: 'Pause',
+      preparing: 'Stimme wird vorbereitet …',
+      restart: 'Von vorn',
+      showTranscript: 'Transkript zeigen',
+      hideTranscript: 'Transkript verstecken',
+      hiddenHint: 'Transkript ist versteckt — versuche es zuerst ohne!',
+      ready: 'Ich bin bereit – Fragen anzeigen',
+      regenerate: 'Anderen Text generieren',
+      progress: 'Satz {{current}} von {{total}}',
+      buffering: '{{buffered}} von {{total}} bereit',
+    },
+    answering: {
+      title: 'Fragen',
+      replay: 'Noch mal hören',
+      submit: 'Antworten abschicken',
+      submitting: 'Wird ausgewertet …',
+    },
+    results: {
+      heading: 'Heute erledigt! 🎉',
+      passedHint: 'Stark — mehr als die Hälfte richtig.',
+      encourageHint: 'Schau dir die Erklärungen an — beim nächsten Mal weißt du noch mehr.',
+      explanationDe: 'Erklärung (DE)',
+      explanationEn: 'Erklärung (EN)',
+      newRound: 'Neue Runde (kostet einen KI-Aufruf)',
+      backToList: 'Zur Übersicht',
+    },
   },
 } as const

@@ -14,6 +14,77 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.10.0',
+    date: '2026-05-24',
+    entries: [
+      {
+        type: 'feature',
+        de: 'Neue Challenge „Hörverstehen 1×/Tag" — Niveau (A1–B2 oder Mix), Länge (1–5 Min) und Anzahl Fragen (5/10/15) wählen, die KI erstellt einen passenden deutschen Text plus Multiple-Choice-Fragen. Vorlesen, beliebig oft wiederholen, Transkript bei Bedarf einblenden — danach Antworten abschicken und zweisprachige Erklärungen lesen. Mehr als 50 % richtig = Tageschallenge erledigt.',
+        en: 'New "Listening 1×/day" challenge — pick level (A1–B2 or mix), length (1–5 min) and number of questions (5/10/15); the AI generates a German paragraph plus multiple-choice questions. Play it back as often as you like, reveal the transcript when you need it, then submit and read bilingual explanations. More than 50% correct ticks the day\'s challenge.',
+      },
+      {
+        type: 'improvement',
+        de: 'Hörverstehen nutzt jetzt die warme Thorsten-Stimme aus dem Vokabelspiel statt der Systemstimme. Sätze werden im Hintergrund vorgerendert: der Text spielt nach ~3–5 s an und läuft dann lückenlos durch, während die nächsten Sätze synthetisiert werden.',
+        en: 'Listening exercises now use the warm Thorsten voice from the vocab game instead of the system voice. Sentences pre-render in the background — audio starts in ~3–5s and plays through seamlessly while the next sentences synthesize.',
+      },
+      {
+        type: 'feature',
+        de: 'Stimmen-Auswahl im Header: Thorsten (männlich), Eva (weiblich, klein und schnell) oder Kerstin (weiblich, ruhig). Die Auswahl wird pro Browser gespeichert und gilt sowohl im Vokabelspiel als auch beim Hörverstehen.',
+        en: 'Voice picker in the header: Thorsten (male), Eva (female, small and fast) or Kerstin (female, calm). Choice is per-browser and applies to both the vocab game and the listening exercise.',
+      },
+      {
+        type: 'improvement',
+        de: 'Hörverstehen spart KI-Aufrufe: der Text wird pro Tag und pro Person nur einmal generiert. Nach dem Aktualisieren bleibt der gleiche Text. Wer den Text wirklich neu erzeugen will, kann „Anderen Text generieren" tippen.',
+        en: 'Listening saves AI calls: each user gets one generated text per day. Refreshing keeps the same text. If you really want a different one, tap "Generate a different text".',
+      },
+      {
+        type: 'improvement',
+        de: 'Hörverstehen: schon das Abschicken zählt für den Tag — die 50-%-Hürde ist weg. Score und Erklärungen sind weiterhin zu sehen, sie steuern aber nicht mehr, ob der Tag erledigt ist.',
+        en: 'Listening: just submitting counts the day now — the 50% gate is gone. You still see your score and the explanations, but they no longer decide whether the day is complete.',
+      },
+      {
+        type: 'improvement',
+        de: 'Hörverstehen: der Fortschrittsbalken läuft jetzt flüssig (statt nur am Satzende zu springen) und der aktuelle Satz wird im sichtbaren Transkript hervorgehoben — bei langen Texten scrollt er auch von selbst ins Sichtfeld.',
+        en: 'Listening: progress bar now animates smoothly (instead of jumping at sentence boundaries) and the active sentence is highlighted in the visible transcript — it also auto-scrolls into view for longer texts.',
+      },
+      {
+        type: 'fix',
+        de: 'Stimmen-Auswahl: Eva und Kerstin haben mit „JSON parse error" abgestürzt, weil die Sprachdateien lokal noch nicht ausgeliefert wurden. Während der Entwicklung serviert der Vite-Server jetzt /voices/ aus dem lokalen Repo, sodass alle drei Stimmen sofort funktionieren.',
+        en: 'Voice picker: Eva and Kerstin crashed with a "JSON parse error" because the voice files weren\'t being served locally. The Vite dev server now serves /voices/ from the repo, so all three voices work immediately in development.',
+      },
+      {
+        type: 'fix',
+        de: 'Stimmen-Auswahl: Ein einmaliger Fehlversuch hatte 404-HTML in den OPFS-Cache geschrieben, der danach jeden weiteren Versuch zum Absturz brachte. Beim Start räumen wir die betroffenen Cache-Einträge auf, damit die Stimme frisch geladen wird.',
+        en: 'Voice picker: a one-off failed load had cached the 404 HTML page in OPFS, which then crashed every subsequent attempt. We now evict the affected cache entries on startup so the voice loads fresh.',
+      },
+      {
+        type: 'fix',
+        de: 'Eva und Kerstin haben mitten im Absatz Sätze übersprungen, weil ihr Modell eine ältere kleinere Phoneme-Tabelle verwendet (130 statt 256 Symbolen) — der Phonemizer produzierte für seltene Laute IDs außerhalb des Wertebereichs und die ONNX-Inferenz brach ab. Wir filtern die zu großen IDs jetzt weg, bevor sie ins Modell gehen. Eva und Kerstin sprechen wieder durchgängig; einzelne Akzente / Zahlen klingen evtl. etwas flacher.',
+        en: 'Eva and Kerstin used to skip sentences mid-paragraph because their model ships with a smaller phoneme table (130 vs 256 symbols) — the phonemizer emitted out-of-range IDs for rarer sounds and the ONNX inference crashed. We now filter the out-of-range IDs before they hit the model. Eva and Kerstin speak continuously again; rare emphasis / digit handling may sound slightly flatter.',
+      },
+      {
+        type: 'fix',
+        de: 'Stimmen-Auswahl: Ein Stimmenwechsel hat erst nach einem Reload gewirkt — die TTS-Bibliothek verwendet intern eine Singleton-Instanz, sodass das erste geladene Modell hängen blieb. Wir setzen die Instanz jetzt zurück, damit die neue Stimme sofort beim nächsten Abspielen verwendet wird.',
+        en: "Voice picker: switching voice didn't take effect until a page refresh — the TTS library caches a singleton instance so the first-loaded model stuck around. We now reset that instance, so the new voice is used on the very next play.",
+      },
+      {
+        type: 'improvement',
+        de: 'Hörverstehen: die aktuelle Auswahl (Niveau · Länge · Fragenanzahl) ist jetzt während des gesamten Durchlaufs als Badges sichtbar — so weißt du immer, welche Einstellungen für den laufenden Text gelten.',
+        en: 'Listening: the active selection (level · length · question count) now stays visible as badges throughout the round, so you always know which settings the current text was generated with.',
+      },
+      {
+        type: 'improvement',
+        de: 'Hörverstehen: „Anderen Text generieren" bringt dich jetzt erst zur Filterauswahl zurück, statt sofort einen neuen Text mit den alten Einstellungen zu erzeugen — du kannst Niveau, Länge oder Fragenzahl anpassen und dann erneut starten.',
+        en: 'Listening: "Generate a different text" now drops you back to the filter screen instead of immediately regenerating with the previous settings — adjust level / length / question count, then hit Start.',
+      },
+      {
+        type: 'improvement',
+        de: 'Gemini-Aufrufe laufen über einen Cloudflare Worker (Schlüssel als Worker-Secret, nicht im Browser).',
+        en: 'Gemini calls go through a Cloudflare Worker (key lives as a Worker secret, not in the browser bundle).',
+      },
+    ],
+  },
+  {
     version: '0.9.3',
     date: '2026-05-24',
     entries: [

@@ -2,6 +2,7 @@ import type { ChallengeRow } from '@/types/db'
 
 export const LISTEN_CHALLENGE_ID = '00000000-0000-4000-8000-000000000001'
 export const VOCAB_CHALLENGE_ID = '00000000-0000-4000-8000-000000000002'
+export const LISTENING_CHALLENGE_ID = '00000000-0000-4000-8000-000000000003'
 
 const CHALLENGES: readonly ChallengeRow[] = [
   {
@@ -22,6 +23,17 @@ const CHALLENGES: readonly ChallengeRow[] = [
     daily_goal_seconds: 10,
     active: true,
     sort_order: 10,
+    created_at: '1970-01-01T00:00:00.000Z',
+  },
+  {
+    id: LISTENING_CHALLENGE_ID,
+    slug: 'listening',
+    title: 'Hörverstehen 1×/Tag',
+    description:
+      'Höre einen KI-generierten Text und beantworte die Fragen mit mehr als 50% richtig.',
+    daily_goal_seconds: 1,
+    active: true,
+    sort_order: 20,
     created_at: '1970-01-01T00:00:00.000Z',
   },
 ]

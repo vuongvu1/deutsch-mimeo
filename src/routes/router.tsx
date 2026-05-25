@@ -18,6 +18,9 @@ const StatsPage = lazy(() => import('@/pages/StatsPage').then((m) => ({ default:
 const VocabGamePage = lazy(() =>
   import('@/pages/VocabGamePage').then((m) => ({ default: m.VocabGamePage })),
 )
+const ListeningPage = lazy(() =>
+  import('@/pages/ListeningPage').then((m) => ({ default: m.ListeningPage })),
+)
 const ComparePage = lazy(() =>
   import('@/pages/ComparePage').then((m) => ({ default: m.ComparePage })),
 )
@@ -52,6 +55,7 @@ export const router = createBrowserRouter([
       { path: routePatterns.videoLibrary, element: <VideoLibraryPage /> },
       { path: routePatterns.player, element: <PlayerPage /> },
       { path: routePatterns.vocabGame, element: <VocabGamePage /> },
+      { path: routePatterns.listening, element: <ListeningPage /> },
       { path: routePatterns.stats, element: <StatsPage /> },
       { path: routePatterns.compare, element: <ComparePage /> },
       { path: '*', element: <Navigate to="/" replace /> },
