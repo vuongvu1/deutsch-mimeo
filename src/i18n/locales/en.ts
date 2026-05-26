@@ -68,16 +68,15 @@ export const en = {
   activityLog: {
     verb: 'listened to',
     verbVocab: 'played',
+    verbListening: 'practiced',
     vocabTitle: 'vocabulary',
+    listeningTitle: 'listening comprehension',
     empty: 'No activity yet — hit play on a video to get started.',
     deletedVideo: '(deleted video)',
   },
   comparison: {
     todayListened: 'Listened today',
     todayVocab: 'Vocab today',
-    weekListened: '7-day listened',
-    weekTotal: '7-day total',
-    weekVocab: '7-day vocab',
     daysComplete: 'Days complete',
     totalCompleted: 'Challenges complete',
     fullStatsCta: 'Show full stats',

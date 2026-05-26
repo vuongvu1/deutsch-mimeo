@@ -67,22 +67,6 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
       format: vocabFmt,
     },
     {
-      id: 'week-listen',
-      label: t('comparison.weekListened'),
-      icon: '🔥',
-      miValue: ld.mi.weekSeconds,
-      meoValue: ld.meo.weekSeconds,
-      format: formatMinutes,
-    },
-    {
-      id: 'week-vocab',
-      label: t('comparison.weekVocab'),
-      icon: '📚',
-      miValue: vd.mi.weekSeconds,
-      meoValue: vd.meo.weekSeconds,
-      format: vocabFmt,
-    },
-    {
       id: 'days-complete',
       label: t('comparison.daysComplete'),
       icon: '💯',

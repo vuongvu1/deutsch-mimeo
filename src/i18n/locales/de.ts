@@ -68,16 +68,15 @@ export const de = {
   activityLog: {
     verb: 'hörte',
     verbVocab: 'spielte',
+    verbListening: 'übte',
     vocabTitle: 'Vokabeln',
+    listeningTitle: 'Hörverstehen',
     empty: 'Noch keine Aktivität — starte ein Video, um loszulegen.',
     deletedVideo: '(gelöschtes Video)',
   },
   comparison: {
     todayListened: 'Heute gehört',
     todayVocab: 'Heute Vokabeln',
-    weekListened: '7-Tage gehört',
-    weekTotal: '7-Tage Total',
-    weekVocab: '7-Tage Vokabeln',
     daysComplete: 'Tage komplett',
     totalCompleted: 'Challenges komplett',
     fullStatsCta: 'Alle Stats anzeigen',

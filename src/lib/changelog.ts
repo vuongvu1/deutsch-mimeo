@@ -14,6 +14,22 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.10.1',
+    date: '2026-05-26',
+    entries: [
+      {
+        type: 'fix',
+        de: 'Letzte Aktivität: Hörverstehen-Einträge wurden als „(gelöschtes Video)" mit „0 Min" angezeigt, weil sie ohne Video gespeichert werden. Sie erscheinen jetzt als „… übte Hörverstehen · 1 Runde".',
+        en: 'Recent activity: Hörverstehen entries used to show up as "(deleted video) · 0 min" because they have no video attached. They now read "… practiced listening comprehension · 1 round".',
+      },
+      {
+        type: 'improvement',
+        de: 'Startseite-Vergleich: die Zeilen „7-Tage gehört" und „7-Tage Vokabeln" sind aus der Übersicht entfernt — alle Wochenwerte bleiben weiterhin auf der „Alle Stats"-Seite sichtbar.',
+        en: 'Home compare: the "7-day listened" and "7-day vocab" rows have been removed from the at-a-glance table — the full weekly numbers still live on the "Full stats" page.',
+      },
+    ],
+  },
+  {
     version: '0.10.0',
     date: '2026-05-24',
     entries: [

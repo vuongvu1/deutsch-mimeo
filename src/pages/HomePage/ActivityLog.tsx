@@ -2,7 +2,7 @@ import { Box, Card, Flex, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
-import { VOCAB_CHALLENGE_ID } from '@/hooks/useChallenges'
+import { LISTENING_CHALLENGE_ID, VOCAB_CHALLENGE_ID } from '@/hooks/useChallenges'
 import { useRecentSessions } from '@/hooks/useStats'
 import { formatRelativeTime } from '@/lib/dates'
 import { formatChallengeValue } from '@/lib/format'
@@ -40,15 +40,25 @@ export function ActivityLog() {
       <Flex direction="column">
         {entries.map((e, idx) => {
           const isVocab = e.challenge_id === VOCAB_CHALLENGE_ID
-          const verb = isVocab ? t('activityLog.verbVocab') : t('activityLog.verb')
+          const isListening = e.challenge_id === LISTENING_CHALLENGE_ID
+          const verb = isVocab
+            ? t('activityLog.verbVocab')
+            : isListening
+              ? t('activityLog.verbListening')
+              : t('activityLog.verb')
           const title = isVocab
             ? t('activityLog.vocabTitle')
-            : (e.video_title ?? t('activityLog.deletedVideo'))
+            : isListening
+              ? t('activityLog.listeningTitle')
+              : (e.video_title ?? t('activityLog.deletedVideo'))
           const value = isVocab
             ? formatChallengeValue('vocab', e.seconds, t)
-            : formatChallengeValue('listen', e.seconds, t)
+            : isListening
+              ? formatChallengeValue('listening', e.seconds, t)
+              : formatChallengeValue('listen', e.seconds, t)
           const when = formatRelativeTime(e.updated_at, i18n.language)
-          const linkTo = !isVocab && e.video_id ? paths.player(e.user_id, e.video_id) : null
+          const linkTo =
+            !isVocab && !isListening && e.video_id ? paths.player(e.user_id, e.video_id) : null
           const row = (
             <Flex align="center" gap="3" py="2" className={styles.row} data-variant={e.user_id}>
               <Text size="4" aria-hidden style={{ lineHeight: 1 }}>
