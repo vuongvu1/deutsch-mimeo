@@ -18,6 +18,11 @@ export const changelog: ChangelogVersion[] = [
     date: '2026-05-26',
     entries: [
       {
+        type: 'chore',
+        de: 'Hörverstehen nutzt jetzt Gemini 2.5 Flash-Lite statt 2.5 Flash, um Tokens zu sparen. Falls die Textqualität oder die Ablenker spürbar schwächer werden, lässt sich das in einer Zeile zurückdrehen.',
+        en: 'Listening exercises now use Gemini 2.5 Flash-Lite instead of 2.5 Flash to cut token cost. If text quality or distractors feel noticeably weaker, it\'s a one-line revert.',
+      },
+      {
         type: 'fix',
         de: 'Letzte Aktivität: Hörverstehen-Einträge wurden als „(gelöschtes Video)" mit „0 Min" angezeigt, weil sie ohne Video gespeichert werden. Sie erscheinen jetzt als „… übte Hörverstehen · 1 Runde".',
         en: 'Recent activity: Hörverstehen entries used to show up as "(deleted video) · 0 min" because they have no video attached. They now read "… practiced listening comprehension · 1 round".',

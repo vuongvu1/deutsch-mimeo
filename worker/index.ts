@@ -83,7 +83,7 @@ function buildPrompt(level: Level, words: number, questions: number): string {
 async function callGemini(env: Env, body: GenerateRequest): Promise<ListeningExercise> {
   const targetWords = body.targetMinutes * WORDS_PER_MINUTE
   const prompt = buildPrompt(body.level, targetWords, body.numQuestions)
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${env.GEMINI_API_KEY}`
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
