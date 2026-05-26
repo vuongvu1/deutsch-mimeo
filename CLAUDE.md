@@ -69,7 +69,7 @@ src/
 │   │                      playlist URL parser + Data API playlistItems fetcher
 │   └── dates              local-date helpers, formatSeconds, formatMinutes
 ├── pages/              one folder per page, with .module.css colocated
-│   ├── HomePage           user picker + ComparisonPanel
+│   ├── HomePage           user picker + ComparisonPanel (live status) + ActivityLog (recent activity)
 │   ├── ChallengeListPage  today's challenges with progress bars
 │   ├── VideoLibraryPage   add/list videos, oEmbed title fetch
 │   ├── PlayerPage         YouTube embed + counter + live "today total"
@@ -110,12 +110,16 @@ PlayerPage shows two stats: "this session" (= `sessionSeconds`) and "today total
 
 ## Adding a new challenge (the easy path)
 
+> When you add a new challenge (a "task"), the **HomePage must be updated in the same change** — steps 7 and 8 below are non-optional. A new challenge that's invisible on the landing page isn't shipped.
+
 1. Insert a row in `challenges` (`slug`, `title`, `description`, `daily_goal_seconds`, `sort_order`) — also mirror it in the seeded `CHALLENGES` array in `src/hooks/useChallenges.ts` with a pinned UUID so the frontend has a stable id to write `sessions.challenge_id` against
 2. The challenge appears automatically on `ChallengeListPage` with progress bar
 3. `daily_completion` view starts gating "day complete" on this new challenge from its `activated_on` date onwards. The column defaults to `current_date`, so inserting a row today means only today-and-later days require the new challenge — historical "complete" days stay intact.
 4. To wire a clickable destination, add an entry to `SLUG_TO_PATH` in `ChallengeListPage.tsx` and build the page(s)
 5. Add a branch in `formatChallengeValue` (`src/lib/format.ts`) if "1 second = 1 unit" isn't the right display for the new counter
 6. Drop `listening.*` / `vocab.*`-style copy into both `src/i18n/locales/de.ts` and `en.ts`
+7. **HomePage — live status:** extend `src/pages/HomePage/ComparisonPanel.tsx` to surface the new challenge in the Mi-vs-Meo table. Accept it via props (alongside `listenChallenge` / `vocabChallenge`), feed it through `useComparisonStats`, and push a new entry into the `categories` array (label + icon + Mi/Meo today values + formatter). HomePage (`src/pages/HomePage/HomePage.tsx`) is where the props get wired — pass the new challenge through there too. Without this step the side-by-side panel silently omits the challenge even though `daily_completion` already gates on it.
+8. **HomePage — recent activity:** add a branch in `src/pages/HomePage/ActivityLog.tsx` for the new `challenge_id` (mirror the existing `isVocab` / `isListening` switches): pick the right `verb`, `title`, and `value`, add i18n keys under `activityLog.*` in both `de.ts` and `en.ts`, and decide whether the row should link somewhere (video rows link to the player; vocab/listening rows are non-clickable). The feed already pulls from the generic `useRecentSessions` hook, so the work is purely presentational.
 
 ## Deployment
 
