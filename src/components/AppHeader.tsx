@@ -1,0 +1,239 @@
+import {
+  MoonIcon,
+  ResetIcon,
+  RocketIcon,
+  SunIcon,
+  TrashIcon,
+  UpdateIcon,
+} from '@radix-ui/react-icons'
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Callout,
+  Container,
+  Dialog,
+  Flex,
+  Heading,
+  IconButton,
+  Select,
+  Spinner,
+  Tooltip,
+} from '@radix-ui/themes'
+import { lazy, type ReactNode, Suspense, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link, useSearchParams } from 'react-router-dom'
+
+import { VoicePicker } from '@/components/VoicePicker'
+import { useClearSessions, useResetData } from '@/hooks/useResetData'
+import { useUpdateAvailable } from '@/hooks/useUpdateAvailable'
+import { APP_VERSION } from '@/lib/appVersion'
+import { paths } from '@/routes/paths'
+import { useAppearance } from '@/theme/ThemeProvider'
+
+const ChangelogDialog = lazy(() =>
+  import('@/components/ChangelogDialog').then((m) => ({ default: m.ChangelogDialog })),
+)
+
+export function AppHeader() {
+  const { t, i18n } = useTranslation()
+  const { appearance, toggle } = useAppearance()
+  const [searchParams] = useSearchParams()
+  const isAdmin = searchParams.get('admin') === 'true'
+  const updateAvailable = useUpdateAvailable()
+  const [changelogOpen, setChangelogOpen] = useState(false)
+  const [changelogMounted, setChangelogMounted] = useState(false)
+
+  const currentLang = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'de'
+  const themeTooltip = appearance === 'dark' ? t('header.themeLight') : t('header.themeDark')
+  const updateLabel = t('header.updateAvailable')
+
+  return (
+    <Box
+      asChild
+      style={{
+        borderBottom: '1px solid var(--gray-a4)',
+        background: 'var(--color-panel-solid)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+      }}
+    >
+      <header>
+        <Container size="3" px={{ initial: '4', sm: '5' }} py="3">
+          <Flex align="center" justify="between" gap="3">
+            <Heading asChild size="4" weight="bold">
+              <Link to={paths.home()}>🇩🇪 {t('header.appName')}</Link>
+            </Heading>
+            <Flex align="center" gap="2">
+              {updateAvailable ? (
+                <Tooltip content={updateLabel}>
+                  <IconButton
+                    variant="solid"
+                    color="green"
+                    onClick={() => window.location.reload()}
+                    aria-label={updateLabel}
+                  >
+                    <UpdateIcon />
+                  </IconButton>
+                </Tooltip>
+              ) : null}
+              <Select.Root value={currentLang} onValueChange={(v) => void i18n.changeLanguage(v)}>
+                <Select.Trigger variant="soft" aria-label={t('header.languageLabel')} />
+                <Select.Content>
+                  <Select.Item value="de">🇩🇪 DE</Select.Item>
+                  <Select.Item value="en">🇬🇧 EN</Select.Item>
+                </Select.Content>
+              </Select.Root>
+              <VoicePicker />
+              <Tooltip content={themeTooltip}>
+                <IconButton variant="soft" onClick={toggle} aria-label={themeTooltip}>
+                  {appearance === 'dark' ? <SunIcon /> : <MoonIcon />}
+                </IconButton>
+              </Tooltip>
+              <Dialog.Root open={changelogOpen} onOpenChange={setChangelogOpen}>
+                <Tooltip content={t('header.changelog')}>
+                  <Button
+                    variant="soft"
+                    color="gray"
+                    size="2"
+                    onClick={() => {
+                      setChangelogMounted(true)
+                      setChangelogOpen(true)
+                    }}
+                    aria-label={t('header.changelog')}
+                  >
+                    <RocketIcon />v{APP_VERSION}
+                  </Button>
+                </Tooltip>
+                {changelogMounted ? (
+                  <Suspense
+                    fallback={
+                      <Dialog.Content maxWidth="520px">
+                        <Flex align="center" justify="center" py="8">
+                          <Spinner size="3" />
+                        </Flex>
+                      </Dialog.Content>
+                    }
+                  >
+                    <ChangelogDialog />
+                  </Suspense>
+                ) : null}
+              </Dialog.Root>
+              {isAdmin ? (
+                <>
+                  <DestructiveAction
+                    triggerIcon={<ResetIcon />}
+                    triggerColor="amber"
+                    triggerLabel={t('header.clearSessions')}
+                    title={t('clearSessions.title')}
+                    body={t('clearSessions.body')}
+                    confirmCta={t('clearSessions.confirmCta')}
+                    inProgressLabel={t('clearSessions.inProgress')}
+                    errorFallback={t('clearSessions.error')}
+                    useMutationHook={useClearSessions}
+                  />
+                  <DestructiveAction
+                    triggerIcon={<TrashIcon />}
+                    triggerColor="red"
+                    triggerLabel={t('header.reset')}
+                    title={t('reset.title')}
+                    body={t('reset.body')}
+                    confirmCta={t('reset.confirmCta')}
+                    inProgressLabel={t('reset.inProgress')}
+                    errorFallback={t('reset.error')}
+                    useMutationHook={useResetData}
+                  />
+                </>
+              ) : null}
+            </Flex>
+          </Flex>
+        </Container>
+      </header>
+    </Box>
+  )
+}
+
+interface DestructiveActionProps {
+  triggerIcon: ReactNode
+  triggerColor: 'amber' | 'red'
+  triggerLabel: string
+  title: string
+  body: string
+  confirmCta: string
+  inProgressLabel: string
+  errorFallback: string
+  useMutationHook: typeof useResetData
+}
+
+function DestructiveAction({
+  triggerIcon,
+  triggerColor,
+  triggerLabel,
+  title,
+  body,
+  confirmCta,
+  inProgressLabel,
+  errorFallback,
+  useMutationHook,
+}: DestructiveActionProps) {
+  const { t } = useTranslation()
+  const mutation = useMutationHook()
+  const [open, setOpen] = useState(false)
+
+  const onConfirm = (e: React.MouseEvent) => {
+    e.preventDefault()
+    mutation.mutate(undefined, {
+      onSuccess: () => {
+        setOpen(false)
+        mutation.reset()
+      },
+    })
+  }
+
+  return (
+    <AlertDialog.Root
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o)
+        if (!o) mutation.reset()
+      }}
+    >
+      <Tooltip content={triggerLabel}>
+        <AlertDialog.Trigger>
+          <IconButton variant="soft" color={triggerColor} aria-label={triggerLabel}>
+            {triggerIcon}
+          </IconButton>
+        </AlertDialog.Trigger>
+      </Tooltip>
+      <AlertDialog.Content maxWidth="450px">
+        <AlertDialog.Title>{title}</AlertDialog.Title>
+        <AlertDialog.Description size="2">{body}</AlertDialog.Description>
+        {mutation.error ? (
+          <Box mt="3">
+            <Callout.Root color="red" size="1">
+              <Callout.Text>
+                {mutation.error instanceof Error ? mutation.error.message : errorFallback}
+              </Callout.Text>
+            </Callout.Root>
+          </Box>
+        ) : null}
+        <Flex gap="3" mt="4" justify="end">
+          <AlertDialog.Cancel>
+            <Button variant="soft" color="gray" disabled={mutation.isPending}>
+              {t('common.cancel')}
+            </Button>
+          </AlertDialog.Cancel>
+          <Button
+            variant="solid"
+            color={triggerColor}
+            disabled={mutation.isPending}
+            onClick={onConfirm}
+          >
+            {mutation.isPending ? inProgressLabel : confirmCta}
+          </Button>
+        </Flex>
+      </AlertDialog.Content>
+    </AlertDialog.Root>
+  )
+}

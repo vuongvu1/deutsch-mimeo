@@ -1,13 +1,57 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { cloudflare } from '@cloudflare/vite-plugin'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 
-import { cloudflare } from "@cloudflare/vite-plugin";
+const dropOnnxRuntimeWasm = (): Plugin => ({
+  name: 'drop-onnxruntime-wasm',
+  generateBundle(_options, bundle) {
+    for (const fileName of Object.keys(bundle)) {
+      if (/ort-wasm.*\.wasm$/.test(fileName)) {
+        delete bundle[fileName]
+      }
+    }
+  },
+})
 
-// https://vite.dev/config/
+// Serve the project-root /voices/ directory at /voices/* during dev so the
+// Piper TTS web fetch (rewritten to /voices/... when import.meta.env.DEV) hits
+// local files instead of raw.githubusercontent.com. In prod those files are
+// fetched from GitHub since they're too large (~60 MiB each) for CF Assets.
+//
+// enforce: 'pre' + middleware registered via the early hook ensures we run
+// ahead of @cloudflare/vite-plugin's worker handler, which would otherwise
+// route /voices/* through the Worker and 404 (Worker's ASSETS binding doesn't
+// know about /voices/).
+const serveVoices = (): Plugin => ({
+  name: 'serve-voices',
+  enforce: 'pre',
+  configureServer(server) {
+    const voicesDir = path.resolve(server.config.root, 'voices')
+    server.middlewares.use('/voices', (req, res, next) => {
+      const url = req.url ?? ''
+      const filename = url.replace(/^\//, '').split('?')[0]
+      if (!filename) return next()
+      const filepath = path.join(voicesDir, filename)
+      // Block path traversal.
+      if (!filepath.startsWith(voicesDir + path.sep)) return next()
+      if (!fs.existsSync(filepath)) return next()
+      res.setHeader(
+        'Content-Type',
+        filename.endsWith('.json') ? 'application/json' : 'application/octet-stream',
+      )
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+      fs.createReadStream(filepath).pipe(res)
+    })
+  },
+})
+
 export default defineConfig({
-  plugins: [react(), cloudflare()],
+  plugins: [serveVoices(), react(), cloudflare(), dropOnnxRuntimeWasm()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

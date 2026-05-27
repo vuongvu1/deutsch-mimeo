@@ -30,3 +30,16 @@ export function formatSeconds(total: number): string {
 export function formatMinutes(seconds: number): string {
   return `${Math.floor(Math.max(0, seconds) / 60)} min`
 }
+
+export function formatRelativeTime(date: string | Date, locale: string): string {
+  const then = typeof date === 'string' ? new Date(date) : date
+  const diffSec = Math.round((then.getTime() - Date.now()) / 1000)
+  const abs = Math.abs(diffSec)
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' })
+  if (abs < 60) return rtf.format(diffSec, 'second')
+  if (abs < 3600) return rtf.format(Math.round(diffSec / 60), 'minute')
+  if (abs < 86400) return rtf.format(Math.round(diffSec / 3600), 'hour')
+  if (abs < 86400 * 30) return rtf.format(Math.round(diffSec / 86400), 'day')
+  if (abs < 86400 * 365) return rtf.format(Math.round(diffSec / (86400 * 30)), 'month')
+  return rtf.format(Math.round(diffSec / (86400 * 365)), 'year')
+}

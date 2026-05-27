@@ -73,6 +73,8 @@ const YT_PATTERNS = [
   /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/, // /shorts/ID
 ]
 
+const PLAYLIST_PATTERN = /[?&]list=([a-zA-Z0-9_-]+)/
+
 export function extractYouTubeId(input: string): string | null {
   const trimmed = input.trim()
   if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed
@@ -81,6 +83,11 @@ export function extractYouTubeId(input: string): string | null {
     if (m) return m[1]
   }
   return null
+}
+
+export function extractPlaylistId(input: string): string | null {
+  const m = input.trim().match(PLAYLIST_PATTERN)
+  return m ? m[1] : null
 }
 
 interface OEmbedResponse {
@@ -103,4 +110,55 @@ export async function fetchYouTubeTitle(youtubeId: string): Promise<string | nul
 
 export function youtubeThumbUrl(youtubeId: string): string {
   return `https://i.ytimg.com/vi/${youtubeId}/mqdefault.jpg`
+}
+
+export interface PlaylistVideo {
+  youtubeId: string
+  title: string
+}
+
+interface PlaylistItemsResponse {
+  nextPageToken?: string
+  items: {
+    snippet?: {
+      title?: string
+      resourceId?: { videoId?: string }
+    }
+    status?: { privacyStatus?: string }
+  }[]
+}
+
+export async function fetchPlaylistItems(playlistId: string): Promise<PlaylistVideo[]> {
+  const key = import.meta.env.VITE_YOUTUBE_API_KEY
+  if (!key) {
+    throw new Error('VITE_YOUTUBE_API_KEY is not set')
+  }
+  const out: PlaylistVideo[] = []
+  let pageToken: string | undefined
+  do {
+    const params = new URLSearchParams({
+      part: 'snippet,status',
+      maxResults: '50',
+      playlistId,
+      key,
+    })
+    if (pageToken) params.set('pageToken', pageToken)
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${params}`)
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      throw new Error(`YouTube API ${res.status}: ${body || res.statusText}`)
+    }
+    const data = (await res.json()) as PlaylistItemsResponse
+    for (const item of data.items ?? []) {
+      const videoId = item.snippet?.resourceId?.videoId
+      const title = item.snippet?.title ?? ''
+      if (!videoId) continue
+      if (title === 'Private video' || title === 'Deleted video') continue
+      const privacy = item.status?.privacyStatus
+      if (privacy && privacy !== 'public' && privacy !== 'unlisted') continue
+      out.push({ youtubeId: videoId, title: title || `YouTube ${videoId}` })
+    }
+    pageToken = data.nextPageToken
+  } while (pageToken)
+  return out
 }

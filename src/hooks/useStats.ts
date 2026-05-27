@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
+import { useChallenges } from '@/hooks/useChallenges'
 import { daysAgoLocalDate, todayLocalDate } from '@/lib/dates'
 import { supabase } from '@/lib/supabase'
 import type { ChallengeRow, UserId } from '@/types/db'
@@ -10,9 +11,11 @@ export interface UserStatsForChallenge {
   monthSeconds: number
   allTimeSeconds: number
   longestSessionSeconds: number
-  videoCount: number
+  activeVideoCount: number
+  watchedVideoCount: number
   goalCompleteToday: boolean
   daysCompleteAllChallenges: number
+  totalChallengesCompleted: number
   totalDistinctActiveDays: number
 }
 
@@ -49,19 +52,34 @@ async function fetchUserStats(
     if (s.local_date >= monthStart) monthSeconds += s.seconds
   }
 
-  // Days complete all challenges (uses view)
+  // Daily completion view: counts perfect days AND sums individual goal hits
   const completionRes = await supabase
     .from('daily_completion')
-    .select('local_date, all_complete')
+    .select('local_date, all_complete, completed_count')
     .eq('user_id', userId)
-    .eq('all_complete', true)
   if (completionRes.error) throw completionRes.error
+  const completionRows = completionRes.data ?? []
+  let daysCompleteAllChallenges = 0
+  let totalChallengesCompleted = 0
+  for (const row of completionRows) {
+    if (row.all_complete) daysCompleteAllChallenges += 1
+    totalChallengesCompleted += row.completed_count ?? 0
+  }
 
-  const videosRes = await supabase
-    .from('videos')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-  if (videosRes.error) throw videosRes.error
+  const [activeRes, watchedRes] = await Promise.all([
+    supabase
+      .from('videos')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .is('watched_at', null),
+    supabase
+      .from('videos')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .not('watched_at', 'is', null),
+  ])
+  if (activeRes.error) throw activeRes.error
+  if (watchedRes.error) throw watchedRes.error
 
   return {
     todaySeconds,
@@ -69,9 +87,11 @@ async function fetchUserStats(
     monthSeconds,
     allTimeSeconds,
     longestSessionSeconds,
-    videoCount: videosRes.count ?? 0,
+    activeVideoCount: activeRes.count ?? 0,
+    watchedVideoCount: watchedRes.count ?? 0,
     goalCompleteToday: todaySeconds >= challenge.daily_goal_seconds,
-    daysCompleteAllChallenges: completionRes.data?.length ?? 0,
+    daysCompleteAllChallenges,
+    totalChallengesCompleted,
     totalDistinctActiveDays: distinctActiveDays.size,
   }
 }
@@ -122,6 +142,138 @@ export function useTodaySecondsForChallenge(
       return (data ?? []).reduce((sum, s) => sum + s.seconds, 0)
     },
   })
+}
+
+export interface RecentSessionEntry {
+  id: string
+  user_id: UserId
+  challenge_id: string
+  video_id: string | null
+  seconds: number
+  started_at: string
+  updated_at: string
+  video_title: string | null
+  video_youtube_id: string | null
+}
+
+export function useRecentSessions(limit = 10) {
+  return useQuery({
+    queryKey: ['recent-sessions', limit],
+    queryFn: async (): Promise<RecentSessionEntry[]> => {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select(
+          'id, user_id, challenge_id, video_id, seconds, started_at, updated_at, videos(title, youtube_id)',
+        )
+        .gt('seconds', 0)
+        .order('updated_at', { ascending: false })
+        .limit(limit)
+      if (error) throw error
+      type Row = {
+        id: string
+        user_id: UserId
+        challenge_id: string
+        video_id: string | null
+        seconds: number
+        started_at: string
+        updated_at: string
+        videos:
+          | { title: string; youtube_id: string }
+          | { title: string; youtube_id: string }[]
+          | null
+      }
+      return (data ?? []).map((r: Row) => {
+        const v = Array.isArray(r.videos) ? (r.videos[0] ?? null) : r.videos
+        return {
+          id: r.id,
+          user_id: r.user_id,
+          challenge_id: r.challenge_id,
+          video_id: r.video_id,
+          seconds: r.seconds,
+          started_at: r.started_at,
+          updated_at: r.updated_at,
+          video_title: v?.title ?? null,
+          video_youtube_id: v?.youtube_id ?? null,
+        }
+      })
+    },
+  })
+}
+
+export interface UserTodayStatus {
+  completedCount: number
+  totalActive: number
+  allComplete: boolean
+  activeChallengeSlug: string | null
+}
+
+export interface UsersTodayStatus {
+  mi: UserTodayStatus
+  meo: UserTodayStatus
+}
+
+const ACTIVE_WINDOW_MS = 45_000
+
+interface TodaySessionRow {
+  user_id: UserId
+  challenge_id: string
+  seconds: number
+  updated_at: string
+}
+
+export function useUsersTodayStatus() {
+  const today = todayLocalDate()
+  const challenges = useChallenges().data
+  return useQuery({
+    queryKey: ['users-today-status', today],
+    refetchInterval: 15_000,
+    refetchIntervalInBackground: false,
+    queryFn: async (): Promise<UsersTodayStatus> => {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('user_id, challenge_id, seconds, updated_at')
+        .eq('local_date', today)
+      if (error) throw error
+      const rows = (data ?? []) as TodaySessionRow[]
+      return {
+        mi: computeTodayStatus('mi', rows, challenges),
+        meo: computeTodayStatus('meo', rows, challenges),
+      }
+    },
+  })
+}
+
+function computeTodayStatus(
+  userId: UserId,
+  rows: TodaySessionRow[],
+  challenges: ChallengeRow[],
+): UserTodayStatus {
+  const userRows = rows.filter((r) => r.user_id === userId)
+  const totals = new Map<string, number>()
+  for (const r of userRows) {
+    totals.set(r.challenge_id, (totals.get(r.challenge_id) ?? 0) + r.seconds)
+  }
+  const activeChallenges = challenges.filter((c) => c.active)
+  const totalActive = activeChallenges.length
+  let completedCount = 0
+  for (const c of activeChallenges) {
+    if ((totals.get(c.id) ?? 0) >= c.daily_goal_seconds) completedCount += 1
+  }
+  const now = Date.now()
+  let mostRecent: TodaySessionRow | null = null
+  for (const r of userRows) {
+    if (now - new Date(r.updated_at).getTime() > ACTIVE_WINDOW_MS) continue
+    if (!mostRecent || r.updated_at > mostRecent.updated_at) mostRecent = r
+  }
+  const activeChallengeSlug = mostRecent
+    ? (challenges.find((c) => c.id === mostRecent!.challenge_id)?.slug ?? null)
+    : null
+  return {
+    completedCount,
+    totalActive,
+    allComplete: totalActive > 0 && completedCount === totalActive,
+    activeChallengeSlug,
+  }
 }
 
 export function useDailyTotalsRange(

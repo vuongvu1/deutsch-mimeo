@@ -1,54 +1,125 @@
+import { CheckIcon } from '@radix-ui/react-icons'
+import { Card, Container, Flex, Grid, Heading, Section, Text } from '@radix-ui/themes'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
+import meoImg from '@/assets/meo.jpg'
+import miImg from '@/assets/mi.jpg'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
+import { type UserTodayStatus, useUsersTodayStatus } from '@/hooks/useStats'
 import { useUsers } from '@/hooks/useUsers'
 import { paths } from '@/routes/paths'
 import type { UserRow } from '@/types/db'
 
+import { ActivityLog } from './ActivityLog'
 import { ComparisonPanel } from './ComparisonPanel'
 import styles from './HomePage.module.css'
 
+const USER_IMAGES = { mi: miImg, meo: meoImg } as const
+
+const CHALLENGE_EMOJI: Record<string, string> = {
+  listen: '🎧',
+  vocab: '🧠',
+  listening: '📻',
+}
+
 export function HomePage() {
+  const { t } = useTranslation()
   const usersQuery = useUsers()
   const listenChallenge = useChallengeBySlug('listen')
+  const vocabChallenge = useChallengeBySlug('vocab')
+  const todayStatus = useUsersTodayStatus()
 
-  const users = usersQuery.data ?? []
-  const mi = users.find((u) => u.id === 'mi')
-  const meo = users.find((u) => u.id === 'meo')
+  const users = usersQuery.data
+  const mi = users.find((u) => u.id === 'mi')!
+  const meo = users.find((u) => u.id === 'meo')!
 
   return (
-    <div className="container">
-      <div className={styles.header}>
-        <div className={styles.brand}>
-          <span className={styles.brandEmoji}>🇩🇪</span>
-          <h1 className={styles.brandTitle}>Deutsch MiMeo</h1>
-        </div>
-        <p className="muted">Wer ist da?</p>
-      </div>
+    <Container size="3" px={{ initial: '4', sm: '5' }} py={{ initial: '5', sm: '6' }}>
+      <Flex direction="column" align="center" gap="2" mb="6">
+        <Heading size="8" weight="bold" align="center">
+          🇩🇪 {t('header.appName')}
+        </Heading>
+        <Text color="gray">{t('home.welcome')}</Text>
+      </Flex>
 
-      <div className={styles.userGrid}>
-        {mi ? <UserCard user={mi} variant="mi" /> : <UserSkeleton variant="mi" />}
-        {meo ? <UserCard user={meo} variant="meo" /> : <UserSkeleton variant="meo" />}
-      </div>
+      <Grid columns="2" gap={{ initial: '3', sm: '5' }} mb="7">
+        <UserCard user={mi} variant="mi" status={todayStatus.data?.mi} />
+        <UserCard user={meo} variant="meo" status={todayStatus.data?.meo} />
+      </Grid>
 
-      <section className={styles.comparison}>
-        <h2 className={styles.sectionTitle}>Heute · Vergleich</h2>
-        <ComparisonPanel challenge={listenChallenge.data ?? undefined} />
-      </section>
-    </div>
+      <Section size="1" pt="0">
+        <Heading size="4" mb="4" color="gray" weight="medium">
+          {t('home.todayCompare')}
+        </Heading>
+        <ComparisonPanel
+          listenChallenge={listenChallenge.data ?? undefined}
+          vocabChallenge={vocabChallenge.data ?? undefined}
+        />
+      </Section>
+
+      <Section size="1" pt="0">
+        <Heading size="4" mb="4" color="gray" weight="medium">
+          {t('home.recentActivity')}
+        </Heading>
+        <ActivityLog />
+      </Section>
+    </Container>
   )
 }
 
-function UserCard({ user, variant }: { user: UserRow; variant: 'mi' | 'meo' }) {
+function UserCard({
+  user,
+  variant,
+  status,
+}: {
+  user: UserRow
+  variant: 'mi' | 'meo'
+  status: UserTodayStatus | undefined
+}) {
+  const { t } = useTranslation()
+  const activeSlug = status?.activeChallengeSlug ?? null
   return (
-    <Link to={paths.challenges(user.id)} className={styles.userCard} data-variant={variant}>
-      <div className={styles.userEmoji}>{user.emoji}</div>
-      <div className={styles.userName}>{user.display_name}</div>
-      <div className={styles.userCta}>Los geht's →</div>
-    </Link>
+    <Card asChild size="4" variant="surface" className={styles.userCard} data-variant={variant}>
+      <Link to={paths.challenges(user.id)}>
+        <Flex direction="column" align="center" gap="3" py="3">
+          <img
+            className={styles.userAvatar}
+            src={USER_IMAGES[variant]}
+            alt={user.display_name}
+            draggable={false}
+          />
+          <Heading size={{ initial: '5', sm: '7' }} weight="bold">
+            {user.display_name}
+          </Heading>
+          {activeSlug ? (
+            <Flex align="center" gap="2" className={styles.liveBadge}>
+              <span className={styles.liveDot} aria-hidden />
+              <Text size="2" weight="medium">
+                {CHALLENGE_EMOJI[activeSlug] ?? '✨'} {t(`userCard.doing.${activeSlug}`)}
+              </Text>
+            </Flex>
+          ) : null}
+          {status && status.totalActive > 0 ? (
+            <Flex
+              align="center"
+              gap="2"
+              className={styles.progressBadge}
+              data-complete={status.allComplete || undefined}
+            >
+              {status.allComplete ? <CheckIcon className={styles.checkIcon} aria-hidden /> : null}
+              <Text size="2" weight={status.allComplete ? 'bold' : 'medium'}>
+                {status.allComplete
+                  ? t('userCard.allDone')
+                  : t('userCard.progress', {
+                      done: status.completedCount,
+                      total: status.totalActive,
+                    })}
+              </Text>
+            </Flex>
+          ) : null}
+        </Flex>
+      </Link>
+    </Card>
   )
-}
-
-function UserSkeleton({ variant }: { variant: 'mi' | 'meo' }) {
-  return <div className={styles.userCard} data-variant={variant} aria-hidden />
 }

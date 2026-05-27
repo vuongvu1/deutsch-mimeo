@@ -23,6 +23,9 @@ export interface VideoRow {
   youtube_id: string
   title: string
   note: string | null
+  watched_at: string | null
+  position: number
+  last_position_seconds: number
   created_at: string
 }
 
@@ -52,3 +55,46 @@ export interface DailyCompletionRow {
   completed_count: number
 }
 
+export interface SavedWordRow {
+  id: string
+  user_id: UserId
+  de: string
+  en: string
+  note: string | null
+  created_at: string
+}
+
+export type ListeningLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'mix'
+
+export interface ListeningQuestion {
+  q: string
+  options: string[]
+  correctIndex: number
+  explanationDe: string
+  explanationEn: string
+}
+
+export interface ListeningExercise {
+  transcript: string
+  questions: ListeningQuestion[]
+}
+
+export interface ListeningRoundInsert {
+  user_id: UserId
+  challenge_id: string
+  local_date: string
+  level: ListeningLevel
+  target_minutes: number
+  num_questions: number
+  transcript: string
+  questions: ListeningQuestion[]
+  answers: number[]
+  score: number
+  max_score: number
+  passed: boolean
+}
+
+export interface ListeningRoundRow extends ListeningRoundInsert {
+  id: string
+  created_at: string
+}

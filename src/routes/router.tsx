@@ -1,18 +1,64 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { Container, Flex, Spinner } from '@radix-ui/themes'
+import { lazy, Suspense } from 'react'
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 
-import { ChallengeListPage } from '@/pages/ChallengeListPage'
+import { AppHeader } from '@/components/AppHeader'
 import { HomePage } from '@/pages/HomePage'
-import { PlayerPage } from '@/pages/PlayerPage'
-import { StatsPage } from '@/pages/StatsPage'
-import { VideoLibraryPage } from '@/pages/VideoLibraryPage'
 
 import { routePatterns } from './paths'
 
+const ChallengeListPage = lazy(() =>
+  import('@/pages/ChallengeListPage').then((m) => ({ default: m.ChallengeListPage })),
+)
+const VideoLibraryPage = lazy(() =>
+  import('@/pages/VideoLibraryPage').then((m) => ({ default: m.VideoLibraryPage })),
+)
+const PlayerPage = lazy(() => import('@/pages/PlayerPage').then((m) => ({ default: m.PlayerPage })))
+const StatsPage = lazy(() => import('@/pages/StatsPage').then((m) => ({ default: m.StatsPage })))
+const VocabGamePage = lazy(() =>
+  import('@/pages/VocabGamePage').then((m) => ({ default: m.VocabGamePage })),
+)
+const ListeningPage = lazy(() =>
+  import('@/pages/ListeningPage').then((m) => ({ default: m.ListeningPage })),
+)
+const ComparePage = lazy(() =>
+  import('@/pages/ComparePage').then((m) => ({ default: m.ComparePage })),
+)
+
+function PageLoader() {
+  return (
+    <Container size="3" px={{ initial: '4', sm: '5' }} py="6">
+      <Flex justify="center" py="6">
+        <Spinner size="3" />
+      </Flex>
+    </Container>
+  )
+}
+
+function AppLayout() {
+  return (
+    <>
+      <AppHeader />
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
+    </>
+  )
+}
+
 export const router = createBrowserRouter([
-  { path: routePatterns.home, element: <HomePage /> },
-  { path: routePatterns.challenges, element: <ChallengeListPage /> },
-  { path: routePatterns.videoLibrary, element: <VideoLibraryPage /> },
-  { path: routePatterns.player, element: <PlayerPage /> },
-  { path: routePatterns.stats, element: <StatsPage /> },
-  { path: '*', element: <Navigate to="/" replace /> },
+  {
+    element: <AppLayout />,
+    children: [
+      { path: routePatterns.home, element: <HomePage /> },
+      { path: routePatterns.challenges, element: <ChallengeListPage /> },
+      { path: routePatterns.videoLibrary, element: <VideoLibraryPage /> },
+      { path: routePatterns.player, element: <PlayerPage /> },
+      { path: routePatterns.vocabGame, element: <VocabGamePage /> },
+      { path: routePatterns.listening, element: <ListeningPage /> },
+      { path: routePatterns.stats, element: <StatsPage /> },
+      { path: routePatterns.compare, element: <ComparePage /> },
+      { path: '*', element: <Navigate to="/" replace /> },
+    ],
+  },
 ])
