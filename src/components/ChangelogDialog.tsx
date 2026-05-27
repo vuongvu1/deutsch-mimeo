@@ -11,8 +11,7 @@ const TYPE_COLORS: Record<ChangelogEntryType, 'green' | 'amber' | 'blue' | 'gray
 }
 
 export function ChangelogDialog() {
-  const { t, i18n } = useTranslation()
-  const lang: 'en' | 'de' = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'de'
+  const { t } = useTranslation()
 
   return (
     <Dialog.Content maxWidth="520px">
@@ -35,7 +34,7 @@ export function ChangelogDialog() {
                   <Badge color={TYPE_COLORS[entry.type]} variant="soft" size="1" mr="2">
                     {t(`changelog.types.${entry.type}`)}
                   </Badge>
-                  {entry[lang]}
+                  {entry.text}
                 </Text>
               ))}
             </Flex>
