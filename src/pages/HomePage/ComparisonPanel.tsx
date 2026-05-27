@@ -132,8 +132,9 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
 
 function CategoryRow({ category }: { category: Category }) {
   const { miValue, meoValue, format, icon, label } = category
-  const miWins = miValue > meoValue
-  const meoWins = meoValue > miValue
+  const tied = miValue === meoValue && miValue > 0
+  const miWins = miValue > meoValue || tied
+  const meoWins = meoValue > miValue || tied
   return (
     <Table.Row>
       <Table.RowHeaderCell>

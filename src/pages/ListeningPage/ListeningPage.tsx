@@ -805,7 +805,7 @@ function AnsweringCard({
             >
               <Flex direction="column" gap="2">
                 {q.options.map((opt, oi) => (
-                  <Text as="label" size="2" key={oi}>
+                  <Text as="label" size="2" key={oi} style={{ cursor: 'var(--cursor-radio)' }}>
                     <Flex gap="2" align="center">
                       <RadioGroup.Item value={String(oi)} />
                       <span>{opt}</span>

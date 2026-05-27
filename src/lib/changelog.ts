@@ -20,6 +20,14 @@ export const changelog: ChangelogVersion[] = [
         type: 'improvement',
         text: 'Default voice is now Kerstin instead of Thorsten. Existing picks are preserved.',
       },
+      {
+        type: 'fix',
+        text: 'Listening answer labels now show pointer cursor on hover.',
+      },
+      {
+        type: 'improvement',
+        text: 'Compare tables award the crown to both users when their numbers tie.',
+      },
     ],
   },
   {
