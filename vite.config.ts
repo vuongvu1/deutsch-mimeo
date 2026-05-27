@@ -50,7 +50,6 @@ const serveVoices = (): Plugin => ({
   },
 })
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [serveVoices(), react(), cloudflare(), dropOnnxRuntimeWasm()],
   resolve: {

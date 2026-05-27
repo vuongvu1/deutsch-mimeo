@@ -33,6 +33,6 @@ dist-ssr
 supabase/.temp/
 
 # wrangler / cloudflare
-.wrangler/
-.dev.vars
-.dev.vars.*
+.wrangler
+.dev.vars*
+!.dev.vars.example
