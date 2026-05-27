@@ -19,7 +19,7 @@ export const AVAILABLE_VOICES: readonly VoiceMeta[] = [
   { id: 'de_DE-kerstin-low', gender: 'female' },
 ]
 
-const DEFAULT_VOICE_ID: PiperVoiceId = 'de_DE-thorsten-medium'
+const DEFAULT_VOICE_ID: PiperVoiceId = 'de_DE-kerstin-low'
 const VOICE_IDS = new Set<string>(AVAILABLE_VOICES.map((v) => v.id))
 
 // piper-tts-web@1.0.4 hardcodes the voice URL to huggingface.co/diffusionstudio/piper-voices,

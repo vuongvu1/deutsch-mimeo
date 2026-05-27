@@ -14,6 +14,17 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.10.2',
+    date: '2026-05-27',
+    entries: [
+      {
+        type: 'improvement',
+        de: 'Standard-Stimme ist jetzt Kerstin (ruhig, weiblich) statt Thorsten. Wer bereits eine andere Stimme ausgewählt hat, behält seine Auswahl — es ändert sich nur, was neu eingerichtete Browser oder Profile beim ersten Besuch hören.',
+        en: 'Default voice is now Kerstin (calm, female) instead of Thorsten. Existing picks are kept — this only changes what fresh browsers or profiles hear on first visit.',
+      },
+    ],
+  },
+  {
     version: '0.10.1',
     date: '2026-05-26',
     entries: [
