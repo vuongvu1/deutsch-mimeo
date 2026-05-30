@@ -7,6 +7,7 @@ import {
 } from '@radix-ui/react-icons'
 import {
   AlertDialog,
+  Badge,
   Box,
   Button,
   Callout,
@@ -38,6 +39,7 @@ import {
   useVideo,
   useVideos,
 } from '@/hooks/useVideos'
+import { CHEAT_MULTIPLIER, getStoredCheat, parseCheatParam, setStoredCheat } from '@/lib/cheat'
 import { formatMinutes, formatSeconds } from '@/lib/dates'
 import { youtubeThumbUrl } from '@/lib/youtube'
 import { paths } from '@/routes/paths'
@@ -119,13 +121,19 @@ function PlayerScreen({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const playerRef = useRef<YouTubePlayerHandle>(null)
+  const cheatParam = parseCheatParam(location.search)
+  const [cheat, setCheat] = useState<boolean>(() =>
+    cheatParam !== null ? cheatParam : getStoredCheat(),
+  )
   const tracker = useSessionTracker({
     userId: user.id,
     challengeId: challenge.id,
     videoId: video.id,
     enabled: true,
     getCurrentVideoTime: () => playerRef.current?.getCurrentTime() ?? null,
+    secondsPerTick: cheat ? CHEAT_MULTIPLIER : 1,
   })
   const setWatched = useSetVideoWatched()
   const reorder = useReorderVideos()
@@ -154,6 +162,11 @@ function PlayerScreen({
   useEffect(() => {
     window.sessionStorage.setItem(TAB_SECONDS_STORAGE_KEY, String(tabSessionSeconds))
   }, [tabSessionSeconds])
+  useEffect(() => {
+    if (cheatParam === null) return
+    setStoredCheat(cheatParam)
+    setCheat(cheatParam)
+  }, [cheatParam])
   useEffect(() => {
     if (!movieMode) return
     const prevOverflow = document.body.style.overflow
@@ -219,7 +232,20 @@ function PlayerScreen({
 
   return (
     <Container size="3" px={{ initial: '4', sm: '5' }} py={{ initial: '5', sm: '6' }}>
-      <TopBar back={{ to: paths.videoLibrary(user.id) }} title={video.title} emoji={user.emoji} />
+      <TopBar
+        back={{ to: paths.videoLibrary(user.id) }}
+        title={video.title}
+        emoji={user.emoji}
+        rightSlot={
+          cheat ? (
+            <Tooltip content={t('cheat.tooltip')}>
+              <Badge color="amber" variant="solid" radius="full" size="2">
+                😎 {t('cheat.badge')}
+              </Badge>
+            </Tooltip>
+          ) : undefined
+        }
+      />
 
       {movieMode ? (
         <Box

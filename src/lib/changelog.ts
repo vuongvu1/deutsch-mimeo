@@ -13,6 +13,16 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.11.0',
+    date: '2026-05-31',
+    entries: [
+      {
+        type: 'feature',
+        text: 'Cheat mode (?cheat=true) counts listen time 2× for busy days.',
+      },
+    ],
+  },
+  {
     version: '0.10.2',
     date: '2026-05-27',
     entries: [
@@ -128,7 +138,7 @@ export const changelog: ChangelogVersion[] = [
       },
       {
         type: 'improvement',
-        text: 'Challenges track activation date; new challenges don\'t erase historical day-complete counts.',
+        text: "Challenges track activation date; new challenges don't erase historical day-complete counts.",
       },
     ],
   },

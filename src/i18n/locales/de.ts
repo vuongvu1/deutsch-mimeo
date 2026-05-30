@@ -141,6 +141,11 @@ export const de = {
     movieMode: 'Kinomodus',
     exitMovieMode: 'Kinomodus beenden',
   },
+  cheat: {
+    badge: 'Cheat 2×',
+    tooltip:
+      'Cheat-Modus aktiv: Der Timer zählt doppelt — 30-Min-Ziel in 15 Minuten. Tab schließen oder ?cheat=false öffnen zum Deaktivieren.',
+  },
   stats: {
     pageTitle: 'Stats',
     listening: '🎧 Hören',

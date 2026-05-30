@@ -140,6 +140,11 @@ export const en = {
     movieMode: 'Movie mode',
     exitMovieMode: 'Exit movie mode',
   },
+  cheat: {
+    badge: 'Cheat 2×',
+    tooltip:
+      'Cheat mode on: the timer counts double — 30-min goal in 15 minutes. Close the tab or open ?cheat=false to turn it off.',
+  },
   stats: {
     pageTitle: 'Stats',
     listening: '🎧 Listening',

@@ -11,6 +11,8 @@ interface Args {
   videoId: string
   enabled: boolean
   getCurrentVideoTime?: () => number | null
+  // Seconds credited per real second of playback. >1 = cheat mode.
+  secondsPerTick?: number
 }
 
 interface State {
@@ -33,10 +35,13 @@ export function useSessionTracker({
   videoId,
   enabled,
   getCurrentVideoTime,
+  secondsPerTick = 1,
 }: Args) {
   const qc = useQueryClient()
   const getCurrentVideoTimeRef = useRef(getCurrentVideoTime)
   getCurrentVideoTimeRef.current = getCurrentVideoTime
+  const secondsPerTickRef = useRef(secondsPerTick)
+  secondsPerTickRef.current = secondsPerTick
   const [state, setState] = useState<State>({
     sessionId: null,
     sessionSeconds: 0,
@@ -109,7 +114,7 @@ export function useSessionTracker({
   useEffect(() => {
     if (!enabled || !state.isPlaying) return
     const interval = window.setInterval(() => {
-      setState((s) => ({ ...s, sessionSeconds: s.sessionSeconds + 1 }))
+      setState((s) => ({ ...s, sessionSeconds: s.sessionSeconds + secondsPerTickRef.current }))
       ticksSinceFlushRef.current += 1
       if (ticksSinceFlushRef.current >= FLUSH_EVERY_TICKS) {
         void flush()
