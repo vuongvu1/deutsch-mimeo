@@ -77,6 +77,7 @@ export const de = {
   comparison: {
     todayListened: 'Heute gehört',
     todayVocab: 'Heute Vokabeln',
+    todayListeningCorrect: 'Heute richtig',
     daysComplete: 'Tage komplett',
     totalCompleted: 'Challenges komplett',
     fullStatsCta: 'Alle Stats anzeigen',
