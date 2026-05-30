@@ -139,6 +139,7 @@ export const de = {
     playlistEmpty: 'Keine weiteren Videos.',
     autoplay: 'Autoplay',
     movieMode: 'Kinomodus',
+    watchTogether: 'Zusammen schauen',
     exitMovieMode: 'Kinomodus beenden',
   },
   cheat: {

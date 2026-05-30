@@ -29,6 +29,7 @@ import { Pagination } from '@/components/Pagination'
 import { ProgressBar } from '@/components/ProgressBar'
 import { TopBar } from '@/components/TopBar'
 import { useChallengeBySlug } from '@/hooks/useChallenges'
+import { usePartnerSession } from '@/hooks/usePartnerSession'
 import { useSessionTracker } from '@/hooks/useSessionTracker'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
@@ -52,6 +53,7 @@ const PAGE_SIZE = 10
 const AUTO_NEXT_STORAGE_KEY = 'mimeo:autoNext'
 const MOVIE_MODE_STORAGE_KEY = 'mimeo:movieMode'
 const TAB_SECONDS_STORAGE_KEY = 'mimeo:tabSessionSeconds'
+const WATCH_TOGETHER_STORAGE_KEY = 'mimeo:watchTogether'
 
 function getInitialAutoNext(): boolean {
   if (typeof window === 'undefined') return true
@@ -69,6 +71,11 @@ function getInitialTabBaseline(): number {
   if (typeof window === 'undefined') return 0
   const n = Number(window.sessionStorage.getItem(TAB_SECONDS_STORAGE_KEY))
   return Number.isFinite(n) && n > 0 ? n : 0
+}
+
+function getInitialWatchTogether(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.sessionStorage.getItem(WATCH_TOGETHER_STORAGE_KEY) === 'true'
 }
 
 export function PlayerPage() {
@@ -145,6 +152,18 @@ function PlayerScreen({
   const [movieMode, setMovieMode] = useState<boolean>(getInitialMovieMode)
   const [tabBaseline] = useState<number>(getInitialTabBaseline)
   const tabSessionSeconds = tabBaseline + tracker.sessionSeconds
+  const partnerId: UserId = user.id === 'mi' ? 'meo' : 'mi'
+  const partner = useUser(partnerId).data
+  const [watchTogether, setWatchTogether] = useState<boolean>(getInitialWatchTogether)
+  const partnerTodayQuery = useTodaySecondsForChallenge(partnerId, challenge.id)
+  const partnerBaselineRef = useRef<number | null>(null)
+  const partnerSession = usePartnerSession({
+    userId: partnerId,
+    challengeId: challenge.id,
+    videoId: video.id,
+    active: watchTogether && tracker.isPlaying,
+    secondsPerTick: cheat ? CHEAT_MULTIPLIER : 1,
+  })
   useEffect(() => {
     if (baselineRef.current === null && todayQuery.data !== undefined) {
       baselineRef.current = todayQuery.data
@@ -162,6 +181,14 @@ function PlayerScreen({
   useEffect(() => {
     window.sessionStorage.setItem(TAB_SECONDS_STORAGE_KEY, String(tabSessionSeconds))
   }, [tabSessionSeconds])
+  useEffect(() => {
+    window.sessionStorage.setItem(WATCH_TOGETHER_STORAGE_KEY, watchTogether ? 'true' : 'false')
+  }, [watchTogether])
+  useEffect(() => {
+    if (partnerBaselineRef.current === null && partnerTodayQuery.data !== undefined) {
+      partnerBaselineRef.current = partnerTodayQuery.data
+    }
+  }, [partnerTodayQuery.data])
   useEffect(() => {
     if (cheatParam === null) return
     setStoredCheat(cheatParam)
@@ -195,6 +222,9 @@ function PlayerScreen({
   const liveToday = baseline + tracker.sessionSeconds
   const goal = challenge.daily_goal_seconds
   const complete = liveToday >= goal
+  const partnerBaseline = partnerBaselineRef.current ?? 0
+  const partnerLiveToday = partnerBaseline + partnerSession.sessionSeconds
+  const partnerComplete = partnerLiveToday >= goal
 
   const handleEnded = () => {
     if (!video.watched_at) {
@@ -256,21 +286,42 @@ function PlayerScreen({
       ) : null}
 
       {movieMode ? (
-        <Box className={styles.movieStats}>
-          <Text size="2" style={{ flexShrink: 0, color: 'rgba(255, 255, 255, 0.7)' }}>
-            {t('player.todayTotal')}
-          </Text>
-          <Box className={styles.movieStatsBar}>
-            <ProgressBar value={liveToday} max={goal} complete={complete} />
-          </Box>
-          <Flex align="baseline" gap="1" style={{ flexShrink: 0 }}>
-            <Text size="3" weight="bold" style={{ color: 'white' }}>
-              {formatMinutes(liveToday)}
-            </Text>
-            <Text size="1" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-              / {formatMinutes(goal)}
-            </Text>
-          </Flex>
+        <Box
+          className={styles.movieStats}
+          style={
+            watchTogether
+              ? { flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem' }
+              : undefined
+          }
+        >
+          {watchTogether ? (
+            <>
+              <MovieStatRow emoji={user.emoji} today={liveToday} goal={goal} complete={complete} />
+              <MovieStatRow
+                emoji={partner?.emoji}
+                today={partnerLiveToday}
+                goal={goal}
+                complete={partnerComplete}
+              />
+            </>
+          ) : (
+            <>
+              <Text size="2" style={{ flexShrink: 0, color: 'rgba(255, 255, 255, 0.7)' }}>
+                {t('player.todayTotal')}
+              </Text>
+              <Box className={styles.movieStatsBar}>
+                <ProgressBar value={liveToday} max={goal} complete={complete} />
+              </Box>
+              <Flex align="baseline" gap="1" style={{ flexShrink: 0 }}>
+                <Text size="3" weight="bold" style={{ color: 'white' }}>
+                  {formatMinutes(liveToday)}
+                </Text>
+                <Text size="1" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                  / {formatMinutes(goal)}
+                </Text>
+              </Flex>
+            </>
+          )}
         </Box>
       ) : null}
 
@@ -304,17 +355,31 @@ function PlayerScreen({
           <Text size="2" color="gray">
             {t('player.todayTotal')}
           </Text>
-          <Flex align="baseline" gap="2" mt="1">
-            <Text size="7" weight="bold">
-              {formatMinutes(liveToday)}
-            </Text>
-            <Text size="3" color="gray">
-              / {formatMinutes(goal)}
-            </Text>
-          </Flex>
-          <Box mt="3">
-            <ProgressBar value={liveToday} max={goal} complete={complete} />
-          </Box>
+          {watchTogether ? (
+            <Flex direction="column" gap="3" mt="2">
+              <TodayProgress emoji={user.emoji} today={liveToday} goal={goal} complete={complete} />
+              <TodayProgress
+                emoji={partner?.emoji}
+                today={partnerLiveToday}
+                goal={goal}
+                complete={partnerComplete}
+              />
+            </Flex>
+          ) : (
+            <>
+              <Flex align="baseline" gap="2" mt="1">
+                <Text size="7" weight="bold">
+                  {formatMinutes(liveToday)}
+                </Text>
+                <Text size="3" color="gray">
+                  / {formatMinutes(goal)}
+                </Text>
+              </Flex>
+              <Box mt="3">
+                <ProgressBar value={liveToday} max={goal} complete={complete} />
+              </Box>
+            </>
+          )}
         </Card>
       </Grid>
 
@@ -333,7 +398,7 @@ function PlayerScreen({
             ({upcoming.length})
           </Text>
         </Heading>
-        <Flex align="center" gap="4">
+        <Flex align="center" gap="4" wrap="wrap">
           <Text as="label" size="2" color="gray" style={{ cursor: 'var(--cursor-switch)' }}>
             <Flex align="center" gap="2">
               <Switch
@@ -354,6 +419,17 @@ function PlayerScreen({
                 aria-label={t('player.movieMode')}
               />
               {t('player.movieMode')}
+            </Flex>
+          </Text>
+          <Text as="label" size="2" color="gray" style={{ cursor: 'var(--cursor-switch)' }}>
+            <Flex align="center" gap="2">
+              <Switch
+                color="amber"
+                checked={watchTogether}
+                onCheckedChange={setWatchTogether}
+                aria-label={t('player.watchTogether')}
+              />
+              {t('player.watchTogether')}
             </Flex>
           </Text>
         </Flex>
@@ -555,5 +631,67 @@ function PlaylistItem({
         </AlertDialog.Content>
       </AlertDialog.Root>
     </>
+  )
+}
+
+function TodayProgress({
+  emoji,
+  today,
+  goal,
+  complete,
+}: {
+  emoji?: string
+  today: number
+  goal: number
+  complete: boolean
+}) {
+  return (
+    <Box>
+      <Flex align="baseline" gap="2">
+        <Text size="3" aria-hidden>
+          {emoji}
+        </Text>
+        <Text size="6" weight="bold">
+          {formatMinutes(today)}
+        </Text>
+        <Text size="2" color="gray">
+          / {formatMinutes(goal)}
+        </Text>
+      </Flex>
+      <Box mt="2">
+        <ProgressBar value={today} max={goal} complete={complete} />
+      </Box>
+    </Box>
+  )
+}
+
+function MovieStatRow({
+  emoji,
+  today,
+  goal,
+  complete,
+}: {
+  emoji?: string
+  today: number
+  goal: number
+  complete: boolean
+}) {
+  return (
+    <Flex align="center" gap="2" style={{ width: '100%' }}>
+      <Text size="2" aria-hidden style={{ flexShrink: 0 }}>
+        {emoji}
+      </Text>
+      <Box className={styles.movieStatsBar}>
+        <ProgressBar value={today} max={goal} complete={complete} />
+      </Box>
+      <Flex align="baseline" gap="1" style={{ flexShrink: 0 }}>
+        <Text size="2" weight="bold" style={{ color: 'white' }}>
+          {formatMinutes(today)}
+        </Text>
+        <Text size="1" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          / {formatMinutes(goal)}
+        </Text>
+      </Flex>
+    </Flex>
   )
 }
