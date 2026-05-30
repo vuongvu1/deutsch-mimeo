@@ -20,6 +20,10 @@ export const changelog: ChangelogVersion[] = [
         type: 'feature',
         text: 'Cheat mode (?cheat=true) counts listen time 2× for busy days.',
       },
+      {
+        type: 'feature',
+        text: 'Watch Together counts listen time for both users on one screen.',
+      },
     ],
   },
   {

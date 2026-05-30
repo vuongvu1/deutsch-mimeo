@@ -138,6 +138,7 @@ export const en = {
     playlistEmpty: 'No more videos.',
     autoplay: 'Autoplay',
     movieMode: 'Movie mode',
+    watchTogether: 'Watch together',
     exitMovieMode: 'Exit movie mode',
   },
   cheat: {
