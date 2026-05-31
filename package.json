@@ -24,16 +24,16 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-i18next": "^17.0.8",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.16.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
+    "@biomejs/biome": "^2.4.16",
     "@cloudflare/vite-plugin": "^1.39.0",
-    "@cloudflare/workers-types": "^4.20260526.1",
+    "@cloudflare/workers-types": "^4.20260530.1",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
-    "@typescript/native-preview": "7.0.0-dev.20260526.1",
+    "@typescript/native-preview": "7.0.0-dev.20260527.2",
     "@vitejs/plugin-react": "^6.0.2",
     "vite": "^8.0.14",
     "wrangler": "^4.95.0"
