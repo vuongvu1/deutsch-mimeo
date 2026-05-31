@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { useChallenges } from '@/hooks/useChallenges'
+import { LISTENING_CHALLENGE_ID, useChallenges } from '@/hooks/useChallenges'
 import { daysAgoLocalDate, todayLocalDate } from '@/lib/dates'
 import { supabase } from '@/lib/supabase'
 import type { ChallengeRow, UserId } from '@/types/db'
@@ -119,6 +119,32 @@ export function useComparisonStats(challenge: ChallengeRow | undefined) {
         fetchUserStats('meo', challenge!),
       ])
       return { mi, meo }
+    },
+  })
+}
+
+export interface ListeningCorrectTodayComparison {
+  mi: number
+  meo: number
+}
+
+export function useListeningCorrectTodayComparison() {
+  const today = todayLocalDate()
+  return useQuery({
+    queryKey: ['listening-correct-today', today],
+    queryFn: async (): Promise<ListeningCorrectTodayComparison> => {
+      const { data, error } = await supabase
+        .from('listening_rounds')
+        .select('user_id, score')
+        .eq('challenge_id', LISTENING_CHALLENGE_ID)
+        .eq('local_date', today)
+      if (error) throw error
+      const totals: ListeningCorrectTodayComparison = { mi: 0, meo: 0 }
+      for (const r of (data ?? []) as { user_id: UserId; score: number }[]) {
+        if (r.user_id === 'mi') totals.mi += r.score
+        else if (r.user_id === 'meo') totals.meo += r.score
+      }
+      return totals
     },
   })
 }

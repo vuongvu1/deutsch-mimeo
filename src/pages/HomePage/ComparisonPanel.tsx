@@ -3,7 +3,7 @@ import { Box, Button, Card, Flex, Table, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
-import { useComparisonStats } from '@/hooks/useStats'
+import { useComparisonStats, useListeningCorrectTodayComparison } from '@/hooks/useStats'
 import { formatMinutes } from '@/lib/dates'
 import { formatChallengeValue } from '@/lib/format'
 import { paths } from '@/routes/paths'
@@ -29,14 +29,17 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
   const { t } = useTranslation()
   const listen = useComparisonStats(listenChallenge)
   const vocab = useComparisonStats(vocabChallenge)
+  const listeningCorrect = useListeningCorrectTodayComparison()
 
   if (
     !listenChallenge ||
     !vocabChallenge ||
     listen.isLoading ||
     vocab.isLoading ||
+    listeningCorrect.isLoading ||
     !listen.data ||
-    !vocab.data
+    !vocab.data ||
+    !listeningCorrect.data
   ) {
     return (
       <Card>
@@ -47,6 +50,7 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
 
   const ld = listen.data
   const vd = vocab.data
+  const lc = listeningCorrect.data
   const vocabFmt = (n: number) => formatChallengeValue('vocab', n, t)
 
   const categories: Category[] = [
@@ -65,6 +69,14 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
       miValue: vd.mi.todaySeconds,
       meoValue: vd.meo.todaySeconds,
       format: vocabFmt,
+    },
+    {
+      id: 'today-listening-correct',
+      label: t('comparison.todayListeningCorrect'),
+      icon: '📻',
+      miValue: lc.mi,
+      meoValue: lc.meo,
+      format: (n) => `${n}`,
     },
     {
       id: 'days-complete',
