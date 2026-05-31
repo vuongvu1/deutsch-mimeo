@@ -414,22 +414,22 @@ function PlayerScreen({
             <Flex align="center" gap="2">
               <Switch
                 color="amber"
-                checked={movieMode}
-                onCheckedChange={setMovieMode}
-                aria-label={t('player.movieMode')}
+                checked={watchTogether}
+                onCheckedChange={setWatchTogether}
+                aria-label={t('player.watchTogether')}
               />
-              {t('player.movieMode')}
+              {t('player.watchTogether')}
             </Flex>
           </Text>
           <Text as="label" size="2" color="gray" style={{ cursor: 'var(--cursor-switch)' }}>
             <Flex align="center" gap="2">
               <Switch
                 color="amber"
-                checked={watchTogether}
-                onCheckedChange={setWatchTogether}
-                aria-label={t('player.watchTogether')}
+                checked={movieMode}
+                onCheckedChange={setMovieMode}
+                aria-label={t('player.movieMode')}
               />
-              {t('player.watchTogether')}
+              {t('player.movieMode')}
             </Flex>
           </Text>
         </Flex>
