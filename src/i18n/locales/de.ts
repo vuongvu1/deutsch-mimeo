@@ -225,6 +225,8 @@ export const de = {
     rounds_one: '{{count}} Runde',
     rounds_other: '{{count}} Runden',
     goalReached: '🎉 Tagesziel erreicht! Spiel ruhig weiter — alles zählt.',
+    richtig: 'Richtig',
+    falsch: 'Falsch',
     setup: {
       title: 'Neue Runde',
       subtitle: 'Wähle Niveau, Länge und Anzahl der Fragen — die KI erstellt einen passenden Text.',
@@ -237,13 +239,14 @@ export const de = {
       questionsValue_other: '{{count}} Fragen',
       startCta: 'Text generieren',
       error: 'Konnte den Text nicht erstellen: {{reason}}',
+      examMode: 'Prüfungsmodus',
+      examModeHint: 'Wie in der echten Prüfung: begrenzte Wiedergaben, Transkript erst am Ende.',
     },
     levels: {
       A1: 'A1 · Anfänger',
       A2: 'A2 · Grundlegend',
       B1: 'B1 · Mittelstufe',
       B2: 'B2 · Fortgeschritten',
-      mix: 'Mix · A1–B2',
     },
     loading: {
       title: 'Der Text wird erstellt …',
@@ -264,6 +267,10 @@ export const de = {
       regenerate: 'Anderen Text generieren',
       progress: 'Satz {{current}} von {{total}}',
       buffering: '{{buffered}} von {{total}} bereit',
+      examSubtitle:
+        'Prüfungsmodus: begrenzte Wiedergaben, kein Transkript. Hör so genau wie möglich zu.',
+      plays: 'Wiedergabe {{used}}/{{limit}}',
+      examTranscriptHidden: 'Im Prüfungsmodus erscheint das Transkript erst am Ende.',
     },
     answering: {
       title: 'Fragen',
@@ -277,6 +284,8 @@ export const de = {
       encourageHint: 'Schau dir die Erklärungen an — beim nächsten Mal weißt du noch mehr.',
       explanationDe: 'Erklärung (DE)',
       explanationEn: 'Erklärung (EN)',
+      transcript: 'Transkript',
+      goetheLine: 'Goethe-Bestehensgrenze: 60 %',
       newRound: 'Neue Runde (kostet einen KI-Aufruf)',
       backToList: 'Zur Übersicht',
     },

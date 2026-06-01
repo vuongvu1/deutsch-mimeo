@@ -3,7 +3,8 @@ interface Env {
   ASSETS: Fetcher
 }
 
-type Level = 'A1' | 'A2' | 'B1' | 'B2' | 'mix'
+type Level = 'A1' | 'A2' | 'B1' | 'B2'
+type QuestionType = 'richtig_falsch' | 'multiple_choice'
 
 interface GenerateRequest {
   level: Level
@@ -12,6 +13,7 @@ interface GenerateRequest {
 }
 
 interface ListeningQuestion {
+  type: QuestionType
   q: string
   options: string[]
   correctIndex: number
@@ -24,7 +26,7 @@ interface ListeningExercise {
   questions: ListeningQuestion[]
 }
 
-const VALID_LEVELS: ReadonlySet<string> = new Set(['A1', 'A2', 'B1', 'B2', 'mix'])
+const VALID_LEVELS: ReadonlySet<string> = new Set(['A1', 'A2', 'B1', 'B2'])
 const VALID_MINUTES: ReadonlySet<number> = new Set([1, 2, 3, 5])
 const VALID_QUESTIONS: ReadonlySet<number> = new Set([5, 10, 15])
 
@@ -40,6 +42,7 @@ const RESPONSE_SCHEMA = {
       items: {
         type: 'OBJECT',
         properties: {
+          type: { type: 'STRING', enum: ['richtig_falsch', 'multiple_choice'] },
           q: { type: 'STRING' },
           options: {
             type: 'ARRAY',
@@ -49,33 +52,86 @@ const RESPONSE_SCHEMA = {
           explanationDe: { type: 'STRING' },
           explanationEn: { type: 'STRING' },
         },
-        required: ['q', 'options', 'correctIndex', 'explanationDe', 'explanationEn'],
+        required: ['type', 'q', 'options', 'correctIndex', 'explanationDe', 'explanationEn'],
       },
     },
   },
   required: ['transcript', 'questions'],
 }
 
-function buildPrompt(level: Level, words: number, questions: number): string {
-  const levelLine =
-    level === 'mix'
-      ? 'a mix of CEFR levels A1 to B2 (varied difficulty across sentences)'
-      : `CEFR level ${level}`
+interface Blueprint {
+  // English description of the audio's text type for the chosen level.
+  textType: string
+  // Difficulty / vocabulary guidance.
+  difficulty: string
+  // Fraction of questions that should be richtig/falsch (the rest are 3-option MC).
+  rfRatio: number
+}
+
+// Each level mirrors the Goethe-Zertifikat "Hören" exam for that level, collapsed
+// to a single audio: the text type, difficulty and richtig-falsch ↔ multiple-choice
+// balance shift up the CEFR scale.
+const BLUEPRINTS: Record<Level, Blueprint> = {
+  A1: {
+    textType:
+      'a short public announcement, a voicemail, or a simple everyday dialogue between two people (if it is a dialogue, prefix each turn with a speaker label such as "Mann:", "Frau:")',
+    difficulty:
+      'Use only high-frequency everyday words and short present-tense sentences. The questions test concrete, literal facts (times, prices, places, names, simple actions).',
+    rfRatio: 2 / 3,
+  },
+  A2: {
+    textType:
+      'an everyday conversation, a phone message, or a short radio snippet or interview (if it is a dialogue, prefix each turn with a speaker label such as "Mann:", "Frau:")',
+    difficulty:
+      'Use common everyday vocabulary and simple connectors (weil, aber, dann, deshalb). The questions test facts plus simple opinions or intentions.',
+    rfRatio: 1 / 2,
+  },
+  B1: {
+    textType:
+      'an interview, a radio report, a short presentation (Vortrag), or a discussion on a familiar everyday topic (if it is a dialogue, prefix each turn with a speaker label such as "Moderator:", "Frau Bauer:")',
+    difficulty:
+      'Use a wider range of vocabulary with some abstraction; speakers express opinions and give reasons. The questions test main ideas, specific details, and light inference.',
+    rfRatio: 1 / 3,
+  },
+  B2: {
+    textType:
+      'an in-depth interview, a debate or discussion between two speakers, or a short lecture on an abstract or topical subject (if it is a dialogue, prefix each turn with a speaker label)',
+    difficulty:
+      'Use advanced vocabulary, argumentation and implicit meaning. The questions test detail, speaker attitude and opinion, implication, and overall gist.',
+    rfRatio: 1 / 5,
+  },
+}
+
+// Split N questions into richtig/falsch and multiple-choice counts, guaranteeing
+// rf + mc === total and at least one of each type for a genuine mix.
+function splitCounts(total: number, rfRatio: number): { rfCount: number; mcCount: number } {
+  const rfCount = Math.max(1, Math.min(total - 1, Math.round(total * rfRatio)))
+  return { rfCount, mcCount: total - rfCount }
+}
+
+function buildPrompt(level: Level, words: number, numQuestions: number): string {
+  const bp = BLUEPRINTS[level]
+  const { rfCount, mcCount } = splitCounts(numQuestions, bp.rfRatio)
   return [
-    'You are creating a German listening comprehension exercise for an adult learner.',
-    'Pick a varied everyday topic at random (daily life, work, travel, society, environment,',
-    'technology, culture, food, history, science, etc. — do not repeat common topics).',
-    `Write one short paragraph in German on that topic at ${levelLine},`,
-    `around ${words} words. Use natural prose: no bullet points, no headings, no lists,`,
-    'no numbered steps — just flowing sentences a listener can follow by ear.',
-    `Then create exactly ${questions} independent multiple-choice comprehension questions`,
-    'in German that test understanding of the paragraph. Each question must have exactly',
-    '4 options as German strings with one correct answer (correctIndex is 0–3) and three',
-    'plausible distractors that are closely related to the content (so a learner who only',
-    'half-listened could realistically pick them).',
-    'For each question, provide a one-sentence explanation in German (explanationDe) AND',
-    'a one-sentence explanation in English (explanationEn) describing why the correct',
-    'option is right and why the distractors are wrong.',
+    'You are creating a German listening comprehension exercise for an adult learner,',
+    `modelled on the Goethe-Zertifikat ${level} "Hören" (listening) exam.`,
+    `Write a German listening text in the style of ${bp.textType}.`,
+    'Pick a varied, realistic everyday topic at random (daily life, work, travel, society,',
+    'environment, technology, culture, food, health, etc.) — do not always reuse the same topic.',
+    `The text should be around ${words} words. Use natural spoken-style prose a listener can`,
+    'follow by ear: no headings, no bullet points, no numbered lists.',
+    bp.difficulty,
+    `Then create exactly ${numQuestions} comprehension questions about the text, in German,`,
+    'as a JSON array in the order a listener encounters the answers:',
+    `- exactly ${rfCount} of type "richtig_falsch": a statement about the text that is either`,
+    'true or false. For these, set options to exactly ["Richtig","Falsch"] and set correctIndex',
+    'to 0 when the statement is true (richtig) or 1 when it is false (falsch).',
+    `- exactly ${mcCount} of type "multiple_choice": a question with exactly 3 German answer`,
+    'options (correctIndex 0–2). The two distractors must be plausible and closely tied to the',
+    'content, so a learner who only half-listened could realistically pick them.',
+    'Mix the two question types throughout — do not group all of one type together.',
+    'For every question, provide a one-sentence explanation in German (explanationDe) AND a',
+    'one-sentence explanation in English (explanationEn) saying why the correct answer is right.',
     'Return ONLY the JSON matching the schema, with no surrounding prose.',
   ].join(' ')
 }
@@ -110,15 +166,27 @@ async function callGemini(env: Env, body: GenerateRequest): Promise<ListeningExe
     throw new Error('Gemini returned malformed JSON')
   }
   for (const q of parsed.questions) {
-    if (
-      typeof q.q !== 'string' ||
-      !Array.isArray(q.options) ||
-      q.options.length !== 4 ||
-      typeof q.correctIndex !== 'number' ||
-      q.correctIndex < 0 ||
-      q.correctIndex > 3
-    ) {
+    if (typeof q.q !== 'string' || typeof q.correctIndex !== 'number') {
       throw new Error('Gemini returned a malformed question')
+    }
+    if (q.type === 'richtig_falsch') {
+      // Normalise to the two canonical German labels; trust the 0/1 index.
+      q.options = ['Richtig', 'Falsch']
+      if (q.correctIndex !== 0 && q.correctIndex !== 1) {
+        throw new Error('Gemini returned a malformed richtig_falsch question')
+      }
+    } else {
+      // Treat anything that is not richtig_falsch as multiple choice and tolerate
+      // an off-by-one option count rather than failing the whole round.
+      q.type = 'multiple_choice'
+      if (
+        !Array.isArray(q.options) ||
+        q.options.length < 2 ||
+        q.correctIndex < 0 ||
+        q.correctIndex >= q.options.length
+      ) {
+        throw new Error('Gemini returned a malformed multiple_choice question')
+      }
     }
   }
   return parsed

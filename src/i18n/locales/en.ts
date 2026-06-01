@@ -224,6 +224,8 @@ export const en = {
     rounds_one: '{{count}} round',
     rounds_other: '{{count}} rounds',
     goalReached: '🎉 Daily goal hit! Keep practicing — it all counts.',
+    richtig: 'True',
+    falsch: 'False',
     setup: {
       title: 'New round',
       subtitle: 'Pick level, length, and number of questions — the AI builds a matching text.',
@@ -236,13 +238,14 @@ export const en = {
       questionsValue_other: '{{count}} questions',
       startCta: 'Generate text',
       error: "Couldn't generate the text: {{reason}}",
+      examMode: 'Exam mode',
+      examModeHint: 'Like the real exam: limited plays, transcript only at the end.',
     },
     levels: {
       A1: 'A1 · Beginner',
       A2: 'A2 · Elementary',
       B1: 'B1 · Intermediate',
       B2: 'B2 · Upper-intermediate',
-      mix: 'Mix · A1–B2',
     },
     loading: {
       title: 'Generating the text …',
@@ -262,6 +265,9 @@ export const en = {
       regenerate: 'Generate a different text',
       progress: 'Sentence {{current}} of {{total}}',
       buffering: '{{buffered}} of {{total}} ready',
+      examSubtitle: 'Exam mode: limited plays, no transcript. Listen as closely as you can.',
+      plays: 'Play {{used}}/{{limit}}',
+      examTranscriptHidden: 'In exam mode the transcript only appears at the end.',
     },
     answering: {
       title: 'Questions',
@@ -275,6 +281,8 @@ export const en = {
       encourageHint: "Read the explanations — you'll know more next time.",
       explanationDe: 'Explanation (DE)',
       explanationEn: 'Explanation (EN)',
+      transcript: 'Transcript',
+      goetheLine: 'Goethe pass mark: 60%',
       newRound: 'New round (uses one AI call)',
       backToList: 'Back to challenges',
     },

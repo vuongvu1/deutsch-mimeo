@@ -64,9 +64,12 @@ export interface SavedWordRow {
   created_at: string
 }
 
-export type ListeningLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'mix'
+export type ListeningLevel = 'A1' | 'A2' | 'B1' | 'B2'
+
+export type ListeningQuestionType = 'richtig_falsch' | 'multiple_choice'
 
 export interface ListeningQuestion {
+  type: ListeningQuestionType
   q: string
   options: string[]
   correctIndex: number

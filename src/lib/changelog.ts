@@ -13,6 +13,20 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.13.0',
+    date: '2026-06-02',
+    entries: [
+      {
+        type: 'feature',
+        text: 'Listening: Goethe-style true/false + choice tasks per level.',
+      },
+      {
+        type: 'feature',
+        text: 'Listening exam mode caps replays and hides the transcript.',
+      },
+    ],
+  },
+  {
     version: '0.12.0',
     date: '2026-06-01',
     entries: [
