@@ -29,7 +29,7 @@ export class TtsSession {
    * voice model (the constructor otherwise returns the existing instance
    * with just `voiceId` swapped). */
   static _instance: TtsSession | null
-  predict(text: string): Promise<Blob>
+  predict(text: string, opts?: { speed?: number }): Promise<Blob>
 }
 
 export const HF_BASE: string

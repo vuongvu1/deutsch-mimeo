@@ -295,7 +295,7 @@ const _TtsSession = class _TtsSession {
       await modelBlob.arrayBuffer()
     ));
   }
-  async predict(text) {
+  async predict(text, opts) {
     await this.waitReady;
     const input = JSON.stringify([{ text: text.trim() }]);
     const phonemeIds = await new Promise(async (resolve) => {
@@ -341,7 +341,13 @@ const _TtsSession = class _TtsSession {
     const speakerId = 0;
     const sampleRate = __privateGet(this, _modelConfig).audio.sample_rate;
     const noiseScale = __privateGet(this, _modelConfig).inference.noise_scale;
-    const lengthScale = __privateGet(this, _modelConfig).inference.length_scale;
+    // [mimeo patch] Honor a caller-supplied `speed` multiplier (1 = the voice's
+    // own default pace) by inverting it onto Piper's length_scale, which scales
+    // phoneme duration without touching pitch (larger = slower). Clamped so a
+    // stale/garbage stored value can't render degenerate audio. See voice-speed.
+    const baseLengthScale = __privateGet(this, _modelConfig).inference.length_scale;
+    const speed = opts && typeof opts.speed === "number" ? opts.speed : 1;
+    const lengthScale = baseLengthScale / Math.min(2, Math.max(0.5, speed));
     const noiseW = __privateGet(this, _modelConfig).inference.noise_w;
     const session = __privateGet(this, _ortSession);
     const feeds = {

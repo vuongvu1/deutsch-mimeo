@@ -18,6 +18,10 @@ export const changelog: ChangelogVersion[] = [
     entries: [
       {
         type: 'feature',
+        text: 'Adjustable voice speed in header; slower by default.',
+      },
+      {
+        type: 'feature',
         text: 'Listening: Goethe-style true/false + choice tasks per level.',
       },
       {

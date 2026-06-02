@@ -1,4 +1,11 @@
-import { getPiperSession, isMuted, pickGermanVoice, subscribeVoiceId } from '@/lib/sounds'
+import {
+  getPiperSession,
+  getSpeechRate,
+  isMuted,
+  pickGermanVoice,
+  subscribeSpeechRate,
+  subscribeVoiceId,
+} from '@/lib/sounds'
 import type * as piperTTS from '@/vendor/piperWeb/piperWeb.js'
 
 export type SpeechState = 'idle' | 'loading' | 'speaking' | 'paused'
@@ -122,11 +129,12 @@ let voiceSubscribed = false
 function ensureVoiceSubscription(): void {
   if (voiceSubscribed) return
   voiceSubscribed = true
-  subscribeVoiceId(() => {
-    // Piper session is invalidated on voice change; stop any in-flight playback
-    // so already-buffered audio in the old voice doesn't leak past the switch.
-    cancelLongForm()
-  })
+  // A voice change invalidates the Piper session; a speed change leaves it
+  // valid but makes already-buffered sentences play at the old pace. Either
+  // way, drop in-flight playback so nothing leaks past the switch mismatched.
+  const stop = () => cancelLongForm()
+  subscribeVoiceId(stop)
+  subscribeSpeechRate(stop)
 }
 
 // Split on .!?… while keeping the terminator with its sentence. Trailing
@@ -150,7 +158,7 @@ async function synthesizeSentence(
   ctx: AudioContext,
   text: string,
 ): Promise<AudioBuffer> {
-  const wav = await piperSession.predict(text)
+  const wav = await piperSession.predict(text, { speed: getSpeechRate() })
   return ctx.decodeAudioData(await wav.arrayBuffer())
 }
 
@@ -164,7 +172,7 @@ function speakViaWebSpeechFallback(text: string): void {
   synth.cancel()
   const utter = new SpeechSynthesisUtterance(text)
   utter.lang = 'de-DE'
-  utter.rate = 0.9
+  utter.rate = getSpeechRate()
   const voice = pickGermanVoice()
   if (voice) utter.voice = voice
   utter.onstart = () => {

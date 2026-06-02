@@ -26,6 +26,7 @@ export const de = {
       'de_DE-eva_k-x_low': 'Eva',
       'de_DE-kerstin-low': 'Kerstin',
     },
+    speedLabel: 'Tempo',
   },
   changelog: {
     title: 'Was ist neu?',

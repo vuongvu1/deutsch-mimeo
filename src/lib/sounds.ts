@@ -271,7 +271,7 @@ function speakViaWebSpeech(text: string): void {
   synth.cancel()
   const utter = new SpeechSynthesisUtterance(text)
   utter.lang = 'de-DE'
-  utter.rate = 0.9
+  utter.rate = currentRate
   const voice = pickGermanVoice()
   if (voice) utter.voice = voice
   synth.speak(utter)
@@ -344,6 +344,48 @@ function stopCurrentPiperSource(): void {
   }
 }
 
+const RATE_STORAGE_KEY = 'mimeo:voiceRate'
+
+export const SPEECH_RATES = [0.7, 0.85, 1, 1.15] as const
+export type SpeechRate = (typeof SPEECH_RATES)[number]
+const DEFAULT_RATE: SpeechRate = 0.85
+const RATE_VALUES = new Set<number>(SPEECH_RATES)
+
+let currentRate: SpeechRate = (() => {
+  if (typeof window === 'undefined') return DEFAULT_RATE
+  const stored = Number(window.localStorage.getItem(RATE_STORAGE_KEY))
+  return RATE_VALUES.has(stored) ? (stored as SpeechRate) : DEFAULT_RATE
+})()
+
+type RateListener = (rate: SpeechRate) => void
+const rateListeners = new Set<RateListener>()
+
+export function getSpeechRate(): SpeechRate {
+  return currentRate
+}
+
+export function subscribeSpeechRate(listener: RateListener): () => void {
+  rateListeners.add(listener)
+  return () => {
+    rateListeners.delete(listener)
+  }
+}
+
+// Rate changes don't touch the loaded ONNX model — only the per-call inference
+// scale — so there's no Piper session to invalidate (unlike setVoiceId). Just
+// stop any in-flight audio so the next utterance picks up the new pace.
+export function setSpeechRate(next: SpeechRate): void {
+  if (next === currentRate) return
+  if (!RATE_VALUES.has(next)) return
+  currentRate = next
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(RATE_STORAGE_KEY, String(next))
+    if (window.speechSynthesis) window.speechSynthesis.cancel()
+    stopCurrentPiperSource()
+  }
+  for (const l of rateListeners) l(next)
+}
+
 function startPiperInit(): Promise<piperTTS.TtsSession> {
   if (piperBroken) return Promise.reject(new Error('piper unavailable'))
   if (piperSessionPromise && piperSessionVoiceId === currentVoiceId) {
@@ -399,7 +441,7 @@ export async function getPiperSession(): Promise<piperTTS.TtsSession | null> {
 async function speakViaPiper(text: string, ctx: AudioContext, myId: number): Promise<void> {
   const session = await startPiperInit()
   if (muted || myId !== speakRequestId) return
-  const wav = await session.predict(text)
+  const wav = await session.predict(text, { speed: currentRate })
   if (muted || myId !== speakRequestId) return
   const buffer = await ctx.decodeAudioData(await wav.arrayBuffer())
   if (muted || myId !== speakRequestId) return

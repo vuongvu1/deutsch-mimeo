@@ -24,6 +24,7 @@ import { lazy, type ReactNode, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
+import { SpeedPicker } from '@/components/SpeedPicker'
 import { VoicePicker } from '@/components/VoicePicker'
 import { useClearSessions, useResetData } from '@/hooks/useResetData'
 import { useUpdateAvailable } from '@/hooks/useUpdateAvailable'
@@ -86,6 +87,7 @@ export function AppHeader() {
                 </Select.Content>
               </Select.Root>
               <VoicePicker />
+              <SpeedPicker />
               <Tooltip content={themeTooltip}>
                 <IconButton variant="soft" onClick={toggle} aria-label={themeTooltip}>
                   {appearance === 'dark' ? <SunIcon /> : <MoonIcon />}
