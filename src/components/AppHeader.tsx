@@ -41,7 +41,7 @@ export function AppHeader() {
   const { appearance, toggle } = useAppearance()
   const [searchParams] = useSearchParams()
   const isAdmin = searchParams.get('admin') === 'true'
-  const updateAvailable = useUpdateAvailable()
+  const { updateAvailable, applyUpdate } = useUpdateAvailable()
   const [changelogOpen, setChangelogOpen] = useState(false)
   const [changelogMounted, setChangelogMounted] = useState(false)
 
@@ -72,7 +72,7 @@ export function AppHeader() {
                   <IconButton
                     variant="solid"
                     color="green"
-                    onClick={() => window.location.reload()}
+                    onClick={applyUpdate}
                     aria-label={updateLabel}
                   >
                     <UpdateIcon />
