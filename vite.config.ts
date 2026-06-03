@@ -70,6 +70,22 @@ export default defineConfig({
         background_color: '#0d0f14',
         icons: [],
       },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.origin === 'https://cdn.jsdelivr.net',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'jsdelivr-wasm',
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
     }),
   ],
   resolve: {
