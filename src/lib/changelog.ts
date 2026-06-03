@@ -13,6 +13,16 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.14.0',
+    date: '2026-06-04',
+    entries: [
+      {
+        type: 'feature',
+        text: 'Installable PWA with offline app shell.',
+      },
+    ],
+  },
+  {
     version: '0.13.0',
     date: '2026-06-02',
     entries: [
