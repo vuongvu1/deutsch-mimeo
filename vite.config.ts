@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { cloudflare } from '@cloudflare/vite-plugin'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 const dropOnnxRuntimeWasm = (): Plugin => ({
   name: 'drop-onnxruntime-wasm',
@@ -51,7 +52,26 @@ const serveVoices = (): Plugin => ({
 })
 
 export default defineConfig({
-  plugins: [serveVoices(), react(), cloudflare(), dropOnnxRuntimeWasm()],
+  plugins: [
+    serveVoices(),
+    react(),
+    cloudflare(),
+    dropOnnxRuntimeWasm(),
+    VitePWA({
+      registerType: 'prompt',
+      injectRegister: false,
+      devOptions: { enabled: false },
+      manifest: {
+        name: 'Deutsch MiMeo',
+        short_name: 'MiMeo',
+        start_url: '/',
+        display: 'standalone',
+        theme_color: '#0d0f14',
+        background_color: '#0d0f14',
+        icons: [],
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
