@@ -9,6 +9,10 @@ export const en = {
     prev: 'Previous',
     next: 'Next',
     pageOf: 'Page {{page}} of {{total}}',
+    sound: {
+      mute: 'Mute sounds',
+      unmute: 'Unmute sounds',
+    },
   },
   header: {
     appName: 'Deutsch MiMeo',
@@ -193,10 +197,6 @@ export const en = {
     instructions: 'Tap a German word, then its English translation.',
     rounds_one: '{{count}} round',
     rounds_other: '{{count}} rounds',
-    sound: {
-      mute: 'Mute sounds',
-      unmute: 'Unmute sounds',
-    },
     saved: {
       title: 'Saved words',
       subtitle: 'Your personal vocab notebook — bookmarked while playing.',
@@ -259,6 +259,7 @@ export const en = {
       pause: 'Pause',
       preparing: 'Preparing voice …',
       restart: 'Restart',
+      mutedHint: 'Sound is off. Tap the speaker icon at the top right to turn it on.',
       showTranscript: 'Show transcript',
       hideTranscript: 'Hide transcript',
       hiddenHint: 'Transcript is hidden — try it ear-only first!',

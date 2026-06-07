@@ -6,6 +6,7 @@ import {
   PauseIcon,
   PlayIcon,
   ReloadIcon,
+  SpeakerOffIcon,
 } from '@radix-ui/react-icons'
 import {
   Badge,
@@ -29,6 +30,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
+import { MuteToggle } from '@/components/MuteToggle'
 import { ProgressBar } from '@/components/ProgressBar'
 import { TopBar } from '@/components/TopBar'
 import { LISTENING_CHALLENGE_ID, useChallengeBySlug } from '@/hooks/useChallenges'
@@ -54,6 +56,7 @@ import {
   subscribeLongFormProgress,
   subscribeLongFormState,
 } from '@/lib/longFormSpeech'
+import { isMuted, subscribeMute } from '@/lib/sounds'
 import { supabase } from '@/lib/supabase'
 import { paths } from '@/routes/paths'
 import type { ListeningExercise, ListeningLevel, UserId } from '@/types/db'
@@ -164,6 +167,7 @@ export function ListeningPage() {
         back={{ to: paths.challenges(user.id) }}
         title={t('listening.pageTitle')}
         emoji={t('listening.pageTitleEmoji')}
+        rightSlot={<MuteToggle />}
       />
       <Game user={user} goal={challenge.daily_goal_seconds} todaySeconds={todayQuery.data ?? 0} />
     </Container>
@@ -668,9 +672,11 @@ function ListeningCard({
   const [progress, setProgress] = useState<SpeechProgress | null>(() => getLongFormProgress())
   const [smoothPct, setSmoothPct] = useState<number>(0)
   const [showTranscript, setShowTranscript] = useState(false)
+  const [muted, setMutedState] = useState<boolean>(() => isMuted())
 
   useEffect(() => subscribeLongFormState(setSpeechState), [])
   useEffect(() => subscribeLongFormProgress(setProgress), [])
+  useEffect(() => subscribeMute(setMutedState), [])
 
   // Smooth progress: poll the per-sentence elapsed ratio on every frame and
   // feed it to the Radix progress bar so the fill animates continuously
@@ -801,6 +807,14 @@ function ListeningCard({
             </Button>
           )}
         </Flex>
+        {muted ? (
+          <Callout.Root color="amber" size="1">
+            <Callout.Icon>
+              <SpeakerOffIcon />
+            </Callout.Icon>
+            <Callout.Text>{t('listening.listening.mutedHint')}</Callout.Text>
+          </Callout.Root>
+        ) : null}
         {showProgress ? (
           <Box>
             <Flex justify="between" align="baseline" mb="1">

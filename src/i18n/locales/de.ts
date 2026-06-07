@@ -9,6 +9,10 @@ export const de = {
     prev: 'Vorherige',
     next: 'Nächste',
     pageOf: 'Seite {{page}} von {{total}}',
+    sound: {
+      mute: 'Töne aus',
+      unmute: 'Töne an',
+    },
   },
   header: {
     appName: 'Deutsch MiMeo',
@@ -194,10 +198,6 @@ export const de = {
     instructions: 'Tippe ein deutsches Wort, dann die passende Übersetzung.',
     rounds_one: '{{count}} Runde',
     rounds_other: '{{count}} Runden',
-    sound: {
-      mute: 'Töne aus',
-      unmute: 'Töne an',
-    },
     saved: {
       title: 'Gemerkte Wörter',
       subtitle: 'Deine persönliche Vokabel-Liste — getippt während des Spiels.',
@@ -261,6 +261,7 @@ export const de = {
       pause: 'Pause',
       preparing: 'Stimme wird vorbereitet …',
       restart: 'Von vorn',
+      mutedHint: 'Der Ton ist aus. Tippe oben rechts auf das Lautsprecher-Symbol, um ihn einzuschalten.',
       showTranscript: 'Transkript zeigen',
       hideTranscript: 'Transkript verstecken',
       hiddenHint: 'Transkript ist versteckt — versuche es zuerst ohne!',

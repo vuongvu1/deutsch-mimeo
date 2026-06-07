@@ -13,6 +13,20 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.14.1',
+    date: '2026-06-07',
+    entries: [
+      {
+        type: 'fix',
+        text: 'Listening: sound toggle so audio isn’t muted by vocab.',
+      },
+      {
+        type: 'improvement',
+        text: 'Listening: hint when sound is off so play isn’t silent.',
+      },
+    ],
+  },
+  {
     version: '0.14.0',
     date: '2026-06-04',
     entries: [

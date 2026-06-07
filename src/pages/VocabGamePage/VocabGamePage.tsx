@@ -1,24 +1,10 @@
-import {
-  BookmarkFilledIcon,
-  BookmarkIcon,
-  SpeakerLoudIcon,
-  SpeakerOffIcon,
-} from '@radix-ui/react-icons'
-import {
-  Badge,
-  Box,
-  Card,
-  Container,
-  Flex,
-  IconButton,
-  Select,
-  Text,
-  Tooltip,
-} from '@radix-ui/themes'
+import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons'
+import { Badge, Box, Card, Container, Flex, Select, Text, Tooltip } from '@radix-ui/themes'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 
+import { MuteToggle } from '@/components/MuteToggle'
 import { ProgressBar } from '@/components/ProgressBar'
 import { SavedWordsDialog } from '@/components/SavedWordsDialog'
 import { TopBar } from '@/components/TopBar'
@@ -35,16 +21,7 @@ import { useMatchSession } from '@/hooks/useMatchSession'
 import { useSavedWords, useSaveWord, useUnsaveWord } from '@/hooks/useSavedWords'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
-import {
-  isMuted,
-  playGoalReached,
-  playMatch,
-  playRoundDone,
-  playWrong,
-  setMuted,
-  speakGerman,
-  subscribeMute,
-} from '@/lib/sounds'
+import { playGoalReached, playMatch, playRoundDone, playWrong, speakGerman } from '@/lib/sounds'
 import { paths } from '@/routes/paths'
 import type { UserId } from '@/types/db'
 
@@ -426,26 +403,6 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
         </Box>
       )}
     </Flex>
-  )
-}
-
-function MuteToggle() {
-  const { t } = useTranslation()
-  const [muted, setMutedState] = useState<boolean>(() => isMuted())
-  useEffect(() => subscribeMute(setMutedState), [])
-  const label = muted ? t('vocab.sound.unmute') : t('vocab.sound.mute')
-  return (
-    <Tooltip content={label}>
-      <IconButton
-        variant="soft"
-        radius="full"
-        aria-label={label}
-        aria-pressed={muted}
-        onClick={() => setMuted(!muted)}
-      >
-        {muted ? <SpeakerOffIcon /> : <SpeakerLoudIcon />}
-      </IconButton>
-    </Tooltip>
   )
 }
 
