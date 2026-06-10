@@ -20,6 +20,10 @@ export const changelog: ChangelogVersion[] = [
         type: 'feature',
         text: 'Vokabeln: part of speech + example after each match.',
       },
+      {
+        type: 'improvement',
+        text: 'Hörverstehen: topics drawn from a 100-topic pool.',
+      },
     ],
   },
   {
