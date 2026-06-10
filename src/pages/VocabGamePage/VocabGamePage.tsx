@@ -1,5 +1,6 @@
 import { BookmarkFilledIcon, BookmarkIcon } from '@radix-ui/react-icons'
 import { Badge, Box, Card, Container, Flex, Select, Text, Tooltip } from '@radix-ui/themes'
+import type { ComponentProps } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
@@ -8,10 +9,11 @@ import { MuteToggle } from '@/components/MuteToggle'
 import { ProgressBar } from '@/components/ProgressBar'
 import { SavedWordsDialog } from '@/components/SavedWordsDialog'
 import { TopBar } from '@/components/TopBar'
-import type { VocabPack, VocabWord } from '@/data/vocab'
+import type { PartOfSpeech, VocabPack, VocabWord } from '@/data/vocab'
 import {
   DEFAULT_PACK_ID,
   LEVEL_TARGETS,
+  resolvePos,
   SAVED_PACK_ID,
   VOCAB_PACKS,
   VOCAB_PACKS_BY_ID,
@@ -30,6 +32,20 @@ import styles from './VocabGamePage.module.css'
 const ROUND_SIZE = 6
 const WRONG_FLASH_MS = 380
 const ROUND_DONE_FLASH_MS = 650
+
+type BadgeColor = ComponentProps<typeof Badge>['color']
+
+const POS_COLOR: Record<PartOfSpeech, BadgeColor> = {
+  noun: 'blue',
+  verb: 'grass',
+  adjective: 'orange',
+  adverb: 'purple',
+  pronoun: 'cyan',
+  number: 'gray',
+  preposition: 'amber',
+  conjunction: 'gray',
+  phrase: 'pink',
+}
 
 type TileKind = 'de' | 'en'
 
@@ -204,10 +220,12 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
 
   const poolRef = useRef<VocabWord[]>([])
   const roundSeedRef = useRef(0)
+  const wordByPairKeyRef = useRef<Map<string, VocabWord>>(new Map())
   const [tiles, setTiles] = useState<Tile[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [wrongIds, setWrongIds] = useState<Set<string>>(new Set())
   const [roundDoneFlash, setRoundDoneFlash] = useState(false)
+  const [lastMatch, setLastMatch] = useState<VocabWord | null>(null)
 
   const levelWeight = useMemo(() => makeLevelWeight(pack.words, pack.level), [pack])
 
@@ -224,7 +242,11 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
     const words = poolRef.current.slice(0, ROUND_SIZE)
     poolRef.current = poolRef.current.slice(ROUND_SIZE)
     roundSeedRef.current += 1
-    return buildTiles(words, roundSeedRef.current)
+    const seed = roundSeedRef.current
+    const map = new Map<string, VocabWord>()
+    words.forEach((w, i) => map.set(`${seed}-${i}`, w))
+    wordByPairKeyRef.current = map
+    return buildTiles(words, seed)
   }, [reshufflePool])
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: drawNextRound depends on pack via closure
@@ -233,6 +255,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
     setTiles(drawNextRound())
     setSelectedId(null)
     setWrongIds(new Set())
+    setLastMatch(null)
   }, [pack.id])
 
   // Redeal when the round is cleared.
@@ -297,6 +320,7 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
           prev.map((p) => (p.id === selected.id || p.id === tile.id ? { ...p, removed: true } : p)),
         )
         setSelectedId(null)
+        setLastMatch(wordByPairKeyRef.current.get(tile.pairKey) ?? null)
         playMatch()
         if (selected.kind === 'en') speakGerman(tile.text)
       } else {
@@ -402,7 +426,41 @@ function Game({ user, challengeId, goal, baselineToday, packId, onPackChange }: 
           ))}
         </Box>
       )}
+
+      {lastMatch ? <MatchReveal word={lastMatch} /> : null}
     </Flex>
+  )
+}
+
+function MatchReveal({ word }: { word: VocabWord }) {
+  const { t } = useTranslation()
+  const pos = resolvePos(word)
+  return (
+    <Card key={word.de} size="2" variant="surface" className={styles.reveal}>
+      <Flex direction="column" gap="2">
+        <Flex align="center" gap="2" wrap="wrap">
+          <Text size="3" color="green" weight="bold" aria-label={t('vocab.reveal.matched')}>
+            ✓
+          </Text>
+          {pos ? (
+            <Badge size="1" variant="soft" radius="full" color={POS_COLOR[pos]}>
+              {t(`vocab.pos.${pos}`)}
+            </Badge>
+          ) : null}
+          <Text size="3" weight="bold">
+            {word.de}
+          </Text>
+          <Text size="3" color="gray">
+            {word.en}
+          </Text>
+        </Flex>
+        {word.example ? (
+          <Text size="2" color="gray" className={styles.example}>
+            {word.example}
+          </Text>
+        ) : null}
+      </Flex>
+    </Card>
   )
 }
 

@@ -197,6 +197,20 @@ export const en = {
     instructions: 'Tap a German word, then its English translation.',
     rounds_one: '{{count}} round',
     rounds_other: '{{count}} rounds',
+    reveal: {
+      matched: 'Correct',
+    },
+    pos: {
+      noun: 'noun',
+      verb: 'verb',
+      adjective: 'adjective',
+      adverb: 'adverb',
+      pronoun: 'pronoun',
+      number: 'number',
+      preposition: 'preposition',
+      conjunction: 'conjunction',
+      phrase: 'phrase',
+    },
     saved: {
       title: 'Saved words',
       subtitle: 'Your personal vocab notebook — bookmarked while playing.',

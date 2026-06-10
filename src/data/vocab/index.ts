@@ -15,10 +15,34 @@ import { b1Society } from './b1-society'
 
 export type VocabLevel = 'A1' | 'A2' | 'B1'
 
+export type PartOfSpeech =
+  | 'noun'
+  | 'verb'
+  | 'adjective'
+  | 'adverb'
+  | 'pronoun'
+  | 'number'
+  | 'preposition'
+  | 'conjunction'
+  | 'phrase'
+
 export interface VocabWord {
   de: string
   en: string
   level?: VocabLevel
+  // Omitted for plain nouns — resolvePos() derives 'noun' from the der/die/das
+  // article. Only set explicitly for everything else (verbs, adjectives, …).
+  pos?: PartOfSpeech
+  // Short German example sentence using the word in context.
+  example?: string
+}
+
+const ARTICLE_RE = /^(der|die|das)\s/
+
+export function resolvePos(word: VocabWord): PartOfSpeech | undefined {
+  if (word.pos) return word.pos
+  if (ARTICLE_RE.test(word.de)) return 'noun'
+  return undefined
 }
 
 export interface VocabPack {

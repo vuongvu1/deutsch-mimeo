@@ -198,6 +198,20 @@ export const de = {
     instructions: 'Tippe ein deutsches Wort, dann die passende Übersetzung.',
     rounds_one: '{{count}} Runde',
     rounds_other: '{{count}} Runden',
+    reveal: {
+      matched: 'Richtig',
+    },
+    pos: {
+      noun: 'Nomen',
+      verb: 'Verb',
+      adjective: 'Adjektiv',
+      adverb: 'Adverb',
+      pronoun: 'Pronomen',
+      number: 'Zahlwort',
+      preposition: 'Präposition',
+      conjunction: 'Konjunktion',
+      phrase: 'Ausdruck',
+    },
     saved: {
       title: 'Gemerkte Wörter',
       subtitle: 'Deine persönliche Vokabel-Liste — getippt während des Spiels.',

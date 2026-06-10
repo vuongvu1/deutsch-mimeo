@@ -144,3 +144,28 @@
   font-weight: 700;
   padding: 1rem;
 }
+
+.reveal {
+  animation: revealIn 240ms ease;
+}
+
+.example {
+  font-style: italic;
+}
+
+@keyframes revealIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+  }
+}
