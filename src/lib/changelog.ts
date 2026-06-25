@@ -13,6 +13,16 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.17.0',
+    date: '2026-06-25',
+    entries: [
+      {
+        type: 'fix',
+        text: 'Listening: retry + fallback model when Gemini is busy.',
+      },
+    ],
+  },
+  {
     version: '0.16.0',
     date: '2026-06-24',
     entries: [

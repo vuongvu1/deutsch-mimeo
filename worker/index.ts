@@ -315,25 +315,55 @@ function buildPrompt(level: Level, words: number, numQuestions: number): string 
   ].join(' ')
 }
 
+// Tried in order: cheap model first, fall back to the bigger one only when the
+// cheap one keeps returning transient errors. Each model is retried with
+// exponential backoff before giving up on it.
+const GEMINI_MODELS = ['gemini-2.5-flash-lite', 'gemini-2.5-flash'] as const
+const RETRIES = 3
+
+// 429 (rate limit), 500/503 (overload) are temporary — Google explicitly says
+// to retry. Anything else (400 bad request, 401/403 auth) won't fix itself.
+function isTransient(status: number): boolean {
+  return status === 429 || status === 500 || status === 503
+}
+
+function geminiUrl(env: Env, model: string): string {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`
+}
+
 async function callGemini(env: Env, body: GenerateRequest): Promise<ListeningExercise> {
   const targetWords = body.targetMinutes * WORDS_PER_MINUTE
   const prompt = buildPrompt(body.level, targetWords, body.numQuestions)
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${env.GEMINI_API_KEY}`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: RESPONSE_SCHEMA,
-        temperature: 0.95,
-      },
-    }),
+  const payload = JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: RESPONSE_SCHEMA,
+      temperature: 0.95,
+    },
   })
-  if (!res.ok) {
-    const txt = await res.text()
-    throw new Error(`Gemini ${res.status}: ${txt.slice(0, 400)}`)
+
+  let res: Response | undefined
+  outer: for (const model of GEMINI_MODELS) {
+    for (let attempt = 0; attempt < RETRIES; attempt++) {
+      res = await fetch(geminiUrl(env, model), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+      })
+      if (res.ok) break outer
+      // Non-transient (bad request, auth) would fail identically on the fallback
+      // model and on a retry — bail out immediately and surface it.
+      if (!isTransient(res.status)) break outer
+      if (attempt < RETRIES - 1) {
+        await new Promise((r) => setTimeout(r, 500 * 2 ** attempt)) // 500ms, 1s
+      }
+    }
+    // This model exhausted its retries on transient errors — try the next one.
+  }
+  if (!res?.ok) {
+    const txt = res ? await res.text() : ''
+    throw new Error(`Gemini ${res?.status ?? 'no response'}: ${txt.slice(0, 400)}`)
   }
   const data = (await res.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
