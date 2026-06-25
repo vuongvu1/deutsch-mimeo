@@ -21,7 +21,6 @@ import {
   RadioGroup,
   Select,
   Spinner,
-  Switch,
   Text,
   Tooltip,
 } from '@radix-ui/themes'
@@ -67,25 +66,19 @@ const LEVELS: ListeningLevel[] = ['A1', 'A2', 'B1', 'B2']
 const MINUTES = [1, 2, 3, 5] as const
 const QUESTION_COUNTS = [5, 10, 15] as const
 
-// Goethe plays the audio once or twice depending on level/part; in exam mode we
-// cap the number of fresh playthroughs per round to match.
-const EXAM_PLAY_LIMIT: Record<ListeningLevel, number> = { A1: 2, A2: 2, B1: 2, B2: 1 }
-
 const STORAGE_PREFIX = 'mimeo:listening:'
 const lvKey = (u: UserId) => `${STORAGE_PREFIX}level:${u}`
 const mnKey = (u: UserId) => `${STORAGE_PREFIX}minutes:${u}`
 const qsKey = (u: UserId) => `${STORAGE_PREFIX}questions:${u}`
-const exKey = (u: UserId) => `${STORAGE_PREFIX}exam:${u}`
 
 type Phase =
   | { kind: 'setup'; error?: string }
   | { kind: 'loading' }
-  | { kind: 'listening'; exercise: ListeningExercise; selection: GenerateInput; examMode: boolean }
+  | { kind: 'listening'; exercise: ListeningExercise; selection: GenerateInput }
   | {
       kind: 'answering'
       exercise: ListeningExercise
       selection: GenerateInput
-      examMode: boolean
       answers: (number | null)[]
     }
   | {
@@ -105,16 +98,10 @@ function loadStored<T>(key: string, allowed: readonly T[], fallback: T): T {
   return (allowed as readonly unknown[]).includes(parsed) ? (parsed as T) : fallback
 }
 
-function loadExamMode(userId: UserId): boolean {
-  if (typeof window === 'undefined') return false
-  return window.localStorage.getItem(exKey(userId)) === '1'
-}
-
 interface DailyCache {
   date: string
   exercise: ListeningExercise
   selection: GenerateInput
-  examMode: boolean
   submitted?: {
     answers: number[]
     score: number
@@ -195,9 +182,6 @@ function Game({ user, goal, todaySeconds }: GameProps) {
   const [numQuestions, setNumQuestions] = useState<number>(() =>
     loadStored<number>(qsKey(user.id), QUESTION_COUNTS, 5),
   )
-  const [examMode, setExamMode] = useState<boolean>(() => loadExamMode(user.id))
-  // Fresh playthroughs used in the current round (only enforced in exam mode).
-  const [playsUsed, setPlaysUsed] = useState(0)
 
   // Initial phase: resume today's cached exercise if there is one.
   const [phase, setPhase] = useState<Phase>(() => {
@@ -217,7 +201,6 @@ function Game({ user, goal, todaySeconds }: GameProps) {
       kind: 'listening',
       exercise: cached.exercise,
       selection: cached.selection,
-      examMode: cached.examMode ?? false,
     }
   })
 
@@ -280,34 +263,16 @@ function Game({ user, goal, todaySeconds }: GameProps) {
 
   const complete = todaySeconds >= goal
 
-  // Replay cap for the active round. Outside exam mode the limit is infinite, so
-  // the counter is inert and free-replay behaviour is unchanged.
-  const activeExamMode =
-    phase.kind === 'listening' || phase.kind === 'answering' ? phase.examMode : false
-  const activeLevel =
-    phase.kind === 'listening' || phase.kind === 'answering' || phase.kind === 'results'
-      ? phase.selection.level
-      : level
-  const playsLimit = activeExamMode ? EXAM_PLAY_LIMIT[activeLevel] : Number.POSITIVE_INFINITY
-  const canPlay = playsUsed < playsLimit
-  function consumePlay(): boolean {
-    if (playsUsed >= playsLimit) return false
-    setPlaysUsed((n) => n + 1)
-    return true
-  }
-
   function start() {
     const selection: GenerateInput = { level, targetMinutes, numQuestions }
     window.localStorage.setItem(lvKey(user.id), level)
     window.localStorage.setItem(mnKey(user.id), String(targetMinutes))
     window.localStorage.setItem(qsKey(user.id), String(numQuestions))
-    window.localStorage.setItem(exKey(user.id), examMode ? '1' : '0')
     setPhase({ kind: 'loading' })
     generate.mutate(selection, {
       onSuccess: (exercise) => {
-        saveDailyCache(user.id, { date: todayLocalDate(), exercise, selection, examMode })
-        setPlaysUsed(1)
-        setPhase({ kind: 'listening', exercise, selection, examMode })
+        saveDailyCache(user.id, { date: todayLocalDate(), exercise, selection })
+        setPhase({ kind: 'listening', exercise, selection })
         speakLongForm(exercise.transcript)
       },
       onError: (err) => {
@@ -323,7 +288,6 @@ function Game({ user, goal, todaySeconds }: GameProps) {
   function regenerate() {
     cancelLongForm()
     clearDailyCache(user.id)
-    setPlaysUsed(0)
     setPhase({ kind: 'setup' })
   }
 
@@ -334,35 +298,33 @@ function Game({ user, goal, todaySeconds }: GameProps) {
       kind: 'answering',
       exercise: phase.exercise,
       selection: phase.selection,
-      examMode: phase.examMode,
       answers: new Array(phase.exercise.questions.length).fill(null),
     })
   }
 
   function backToListening() {
     if (phase.kind !== 'answering') return
-    if (phase.examMode && !canPlay) return
-    if (phase.examMode) setPlaysUsed((n) => n + 1)
     setPhase({
       kind: 'listening',
       exercise: phase.exercise,
       selection: phase.selection,
-      examMode: phase.examMode,
     })
     speakLongForm(phase.exercise.transcript)
   }
 
+  // Each answer locks on selection (can't be changed). Once the last question
+  // is answered the round ends automatically — there's no manual submit.
   function setAnswer(idx: number, value: number) {
     if (phase.kind !== 'answering') return
+    if (phase.answers[idx] != null) return
     const answers = [...phase.answers]
     answers[idx] = value
     setPhase({ ...phase, answers })
+    if (answers.every((a) => a != null)) submitRound(answers as number[])
   }
 
-  function doSubmit() {
+  function submitRound(finalAnswers: number[]) {
     if (phase.kind !== 'answering') return
-    if (phase.answers.some((a) => a == null)) return
-    const finalAnswers = phase.answers as number[]
     submit.mutate(
       {
         userId: user.id,
@@ -378,7 +340,6 @@ function Game({ user, goal, todaySeconds }: GameProps) {
             date: todayLocalDate(),
             exercise: phase.exercise,
             selection: phase.selection,
-            examMode: phase.examMode,
             submitted: { answers: finalAnswers, score: res.score, passed: res.passed },
           })
           setPhase({
@@ -397,7 +358,6 @@ function Game({ user, goal, todaySeconds }: GameProps) {
   function newRound() {
     cancelLongForm()
     clearDailyCache(user.id)
-    setPlaysUsed(0)
     setPhase({ kind: 'setup' })
   }
 
@@ -425,9 +385,7 @@ function Game({ user, goal, todaySeconds }: GameProps) {
               {t('listening.goalReached')}
             </Text>
           ) : null}
-          {currentSelection ? (
-            <SelectionSummary selection={currentSelection} examMode={activeExamMode} />
-          ) : null}
+          {currentSelection ? <SelectionSummary selection={currentSelection} /> : null}
         </Flex>
       </Card>
 
@@ -436,11 +394,9 @@ function Game({ user, goal, todaySeconds }: GameProps) {
           level={level}
           targetMinutes={targetMinutes}
           numQuestions={numQuestions}
-          examMode={examMode}
           onLevel={setLevel}
           onMinutes={setTargetMinutes}
           onQuestions={setNumQuestions}
-          onExamMode={setExamMode}
           onStart={start}
           error={phase.error}
         />
@@ -451,11 +407,6 @@ function Game({ user, goal, todaySeconds }: GameProps) {
       {phase.kind === 'listening' ? (
         <ListeningCard
           exercise={phase.exercise}
-          examMode={phase.examMode}
-          canPlay={canPlay}
-          playsUsed={playsUsed}
-          playsLimit={EXAM_PLAY_LIMIT[phase.selection.level]}
-          onConsumePlay={consumePlay}
           onReady={toAnswering}
           onRegenerate={regenerate}
         />
@@ -464,12 +415,9 @@ function Game({ user, goal, todaySeconds }: GameProps) {
       {phase.kind === 'answering' ? (
         <AnsweringCard
           exercise={phase.exercise}
-          examMode={phase.examMode}
           answers={phase.answers}
           onAnswer={setAnswer}
-          onSubmit={doSubmit}
           onBackToListening={backToListening}
-          replayDisabled={phase.examMode && !canPlay}
           onRegenerate={regenerate}
           submitting={submit.isPending}
         />
@@ -489,13 +437,7 @@ function Game({ user, goal, todaySeconds }: GameProps) {
   )
 }
 
-function SelectionSummary({
-  selection,
-  examMode,
-}: {
-  selection: GenerateInput
-  examMode: boolean
-}) {
+function SelectionSummary({ selection }: { selection: GenerateInput }) {
   const { t } = useTranslation()
   return (
     <Flex gap="2" wrap="wrap" mt="1">
@@ -508,11 +450,6 @@ function SelectionSummary({
       <Badge variant="soft" radius="full" color="gray">
         {t('listening.setup.questionsValue', { count: selection.numQuestions })}
       </Badge>
-      {examMode ? (
-        <Badge variant="soft" radius="full" color="amber">
-          {t('listening.setup.examMode')}
-        </Badge>
-      ) : null}
     </Flex>
   )
 }
@@ -521,11 +458,9 @@ interface SetupCardProps {
   level: ListeningLevel
   targetMinutes: number
   numQuestions: number
-  examMode: boolean
   onLevel: (l: ListeningLevel) => void
   onMinutes: (m: number) => void
   onQuestions: (n: number) => void
-  onExamMode: (v: boolean) => void
   onStart: () => void
   error: string | undefined
 }
@@ -534,11 +469,9 @@ function SetupCard({
   level,
   targetMinutes,
   numQuestions,
-  examMode,
   onLevel,
   onMinutes,
   onQuestions,
-  onExamMode,
   onStart,
   error,
 }: SetupCardProps) {
@@ -610,17 +543,6 @@ function SetupCard({
             </Select.Root>
           </Box>
         </Flex>
-        <Text as="label" size="2" color="gray" style={{ cursor: 'var(--cursor-switch)' }}>
-          <Flex align="center" gap="2">
-            <Switch
-              color="amber"
-              checked={examMode}
-              onCheckedChange={onExamMode}
-              aria-label={t('listening.setup.examMode')}
-            />
-            {t('listening.setup.examMode')}
-          </Flex>
-        </Text>
         <Button size="3" onClick={onStart}>
           {t('listening.setup.startCta')}
         </Button>
@@ -648,30 +570,16 @@ function LoadingCard() {
 
 interface ListeningCardProps {
   exercise: ListeningExercise
-  examMode: boolean
-  canPlay: boolean
-  playsUsed: number
-  playsLimit: number
-  onConsumePlay: () => boolean
   onReady: () => void
   onRegenerate: () => void
 }
 
-function ListeningCard({
-  exercise,
-  examMode,
-  canPlay,
-  playsUsed,
-  playsLimit,
-  onConsumePlay,
-  onReady,
-  onRegenerate,
-}: ListeningCardProps) {
+function ListeningCard({ exercise, onReady, onRegenerate }: ListeningCardProps) {
   const { t } = useTranslation()
   const [speechState, setSpeechState] = useState<SpeechState>(() => getLongFormState())
   const [progress, setProgress] = useState<SpeechProgress | null>(() => getLongFormProgress())
   const [smoothPct, setSmoothPct] = useState<number>(0)
-  const [showTranscript, setShowTranscript] = useState(false)
+  const [showTranscript, setShowTranscript] = useState(true)
   const [muted, setMutedState] = useState<boolean>(() => isMuted())
 
   useEffect(() => subscribeLongFormState(setSpeechState), [])
@@ -706,7 +614,6 @@ function ListeningCard({
       resumeLongForm()
       return
     }
-    if (!onConsumePlay()) return
     speakLongForm(exercise.transcript)
   }
 
@@ -715,7 +622,6 @@ function ListeningCard({
   }
 
   function restart() {
-    if (!onConsumePlay()) return
     cancelLongForm()
     speakLongForm(exercise.transcript)
   }
@@ -756,7 +662,7 @@ function ListeningCard({
       <Flex direction="column" gap="4">
         <Heading size="4">{t('listening.listening.title')}</Heading>
         <Text size="2" color="gray">
-          {examMode ? t('listening.listening.examSubtitle') : t('listening.listening.subtitle')}
+          {t('listening.listening.subtitle')}
         </Text>
         <Flex gap="2" align="center" wrap="wrap">
           <Tooltip content={primaryLabel}>
@@ -765,7 +671,7 @@ function ListeningCard({
               variant="solid"
               radius="full"
               onClick={playing ? pause : play}
-              disabled={loading || (!playing && speechState !== 'paused' && !canPlay)}
+              disabled={loading}
               aria-label={primaryLabel}
             >
               {loading ? <Spinner /> : playing ? <PauseIcon /> : <PlayIcon />}
@@ -777,35 +683,25 @@ function ListeningCard({
               variant="soft"
               radius="full"
               onClick={restart}
-              disabled={loading || !canPlay}
+              disabled={loading}
               aria-label={t('listening.listening.restart')}
             >
               <ReloadIcon />
             </IconButton>
           </Tooltip>
-          {examMode ? (
-            <Badge color="amber" variant="soft" radius="full">
-              {t('listening.listening.plays', {
-                used: Math.min(playsUsed, playsLimit),
-                limit: playsLimit,
-              })}
-            </Badge>
-          ) : null}
           <Box flexGrow="1" />
-          {examMode ? null : (
-            <Button
-              variant="soft"
-              onClick={() => setShowTranscript((v) => !v)}
-              aria-pressed={showTranscript}
-            >
-              {showTranscript ? <EyeNoneIcon /> : <EyeOpenIcon />}
-              <span style={{ marginLeft: 6 }}>
-                {showTranscript
-                  ? t('listening.listening.hideTranscript')
-                  : t('listening.listening.showTranscript')}
-              </span>
-            </Button>
-          )}
+          <Button
+            variant="soft"
+            onClick={() => setShowTranscript((v) => !v)}
+            aria-pressed={showTranscript}
+          >
+            {showTranscript ? <EyeNoneIcon /> : <EyeOpenIcon />}
+            <span style={{ marginLeft: 6 }}>
+              {showTranscript
+                ? t('listening.listening.hideTranscript')
+                : t('listening.listening.showTranscript')}
+            </span>
+          </Button>
         </Flex>
         {muted ? (
           <Callout.Root color="amber" size="1">
@@ -836,13 +732,7 @@ function ListeningCard({
             <ProgressBar value={progressValue} max={100} />
           </Box>
         ) : null}
-        {examMode ? (
-          <Box className={styles.transcriptHiddenHint}>
-            <Text size="2" color="gray">
-              {t('listening.listening.examTranscriptHidden')}
-            </Text>
-          </Box>
-        ) : showTranscript ? (
+        {showTranscript ? (
           <Box className={styles.transcriptBox}>
             <Text size="3" as="p" style={{ lineHeight: 1.6 }}>
               {sentences.map((s, i) => (
@@ -879,30 +769,23 @@ function ListeningCard({
 
 interface AnsweringCardProps {
   exercise: ListeningExercise
-  examMode: boolean
   answers: (number | null)[]
   onAnswer: (questionIdx: number, value: number) => void
-  onSubmit: () => void
   onBackToListening: () => void
-  replayDisabled: boolean
   onRegenerate: () => void
   submitting: boolean
 }
 
 function AnsweringCard({
   exercise,
-  examMode,
   answers,
   onAnswer,
-  onSubmit,
   onBackToListening,
-  replayDisabled,
   onRegenerate,
   submitting,
 }: AnsweringCardProps) {
   const { t } = useTranslation()
-  const [showTranscript, setShowTranscript] = useState(false)
-  const allAnswered = useMemo(() => answers.every((a) => a != null), [answers])
+  const [showTranscript, setShowTranscript] = useState(true)
 
   return (
     <Flex direction="column" gap="4">
@@ -911,25 +794,23 @@ function AnsweringCard({
           <Flex justify="between" align="center" wrap="wrap" gap="3">
             <Heading size="4">{t('listening.answering.title')}</Heading>
             <Flex gap="2" wrap="wrap">
-              <Button variant="soft" onClick={onBackToListening} disabled={replayDisabled}>
+              <Button variant="soft" onClick={onBackToListening}>
                 <ReloadIcon /> {t('listening.answering.replay')}
               </Button>
-              {examMode ? null : (
-                <Button variant="soft" onClick={() => setShowTranscript((v) => !v)}>
-                  {showTranscript ? <EyeNoneIcon /> : <EyeOpenIcon />}
-                  <span style={{ marginLeft: 6 }}>
-                    {showTranscript
-                      ? t('listening.listening.hideTranscript')
-                      : t('listening.listening.showTranscript')}
-                  </span>
-                </Button>
-              )}
+              <Button variant="soft" onClick={() => setShowTranscript((v) => !v)}>
+                {showTranscript ? <EyeNoneIcon /> : <EyeOpenIcon />}
+                <span style={{ marginLeft: 6 }}>
+                  {showTranscript
+                    ? t('listening.listening.hideTranscript')
+                    : t('listening.listening.showTranscript')}
+                </span>
+              </Button>
               <Button variant="soft" color="gray" onClick={onRegenerate}>
                 {t('listening.listening.regenerate')}
               </Button>
             </Flex>
           </Flex>
-          {!examMode && showTranscript ? (
+          {showTranscript ? (
             <Box className={styles.transcriptBox}>
               <Text size="2" as="p" style={{ lineHeight: 1.6 }}>
                 {exercise.transcript}
@@ -941,34 +822,75 @@ function AnsweringCard({
       {exercise.questions.map((q, idx) => {
         const isRf = q.type === 'richtig_falsch'
         const opts = isRf ? [t('listening.richtig'), t('listening.falsch')] : q.options
+        const picked = answers[idx]
+        const answered = picked != null
         return (
           <Card key={idx} size="3" variant="surface">
             <Flex direction="column" gap="3">
               <Heading size="3" weight="medium">
                 {idx + 1}. {q.q}
               </Heading>
-              <RadioGroup.Root
-                value={answers[idx] == null ? '' : String(answers[idx])}
-                onValueChange={(v) => onAnswer(idx, Number(v))}
-              >
-                <Flex direction={isRf ? 'row' : 'column'} gap={isRf ? '5' : '2'} wrap="wrap">
-                  {opts.map((opt, oi) => (
-                    <Text as="label" size="2" key={oi} style={{ cursor: 'var(--cursor-radio)' }}>
-                      <Flex gap="2" align="center">
-                        <RadioGroup.Item value={String(oi)} />
-                        <span>{opt}</span>
-                      </Flex>
+              {answered ? (
+                <>
+                  <Flex direction="column" gap="1">
+                    {opts.map((opt, oi) => {
+                      const isPicked = oi === picked
+                      const isAnswer = oi === q.correctIndex
+                      const cls = [
+                        styles.optionRow,
+                        isAnswer ? styles.optionCorrect : '',
+                        isPicked && !isAnswer ? styles.optionWrong : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')
+                      return (
+                        <Box key={oi} className={cls}>
+                          <Text size="2">
+                            {isAnswer ? '✓ ' : isPicked ? '✗ ' : '  '}
+                            {opt}
+                          </Text>
+                        </Box>
+                      )
+                    })}
+                  </Flex>
+                  <Box className={styles.explanationBox}>
+                    <Text size="2" weight="medium" color="gray" as="div" mb="1">
+                      {t('listening.results.explanationDe')}
                     </Text>
-                  ))}
-                </Flex>
-              </RadioGroup.Root>
+                    <Text size="2" as="p">
+                      {q.explanationDe}
+                    </Text>
+                  </Box>
+                </>
+              ) : (
+                <RadioGroup.Root
+                  value=""
+                  onValueChange={(v) => onAnswer(idx, Number(v))}
+                >
+                  <Flex direction={isRf ? 'row' : 'column'} gap={isRf ? '5' : '2'} wrap="wrap">
+                    {opts.map((opt, oi) => (
+                      <Text as="label" size="2" key={oi} style={{ cursor: 'var(--cursor-radio)' }}>
+                        <Flex gap="2" align="center">
+                          <RadioGroup.Item value={String(oi)} />
+                          <span>{opt}</span>
+                        </Flex>
+                      </Text>
+                    ))}
+                  </Flex>
+                </RadioGroup.Root>
+              )}
             </Flex>
           </Card>
         )
       })}
-      <Button size="3" onClick={onSubmit} disabled={!allAnswered || submitting}>
-        {submitting ? t('listening.answering.submitting') : t('listening.answering.submit')}
-      </Button>
+      {submitting ? (
+        <Flex align="center" justify="center" gap="2" py="2">
+          <Spinner />
+          <Text size="2" color="gray">
+            {t('listening.answering.submitting')}
+          </Text>
+        </Flex>
+      ) : null}
     </Flex>
   )
 }

@@ -253,8 +253,6 @@ export const en = {
       questionsValue_other: '{{count}} questions',
       startCta: 'Generate text',
       error: "Couldn't generate the text: {{reason}}",
-      examMode: 'Exam mode',
-      examModeHint: 'Like the real exam: limited plays, transcript only at the end.',
     },
     levels: {
       A1: 'A1 · Beginner',
@@ -281,14 +279,10 @@ export const en = {
       regenerate: 'Generate a different text',
       progress: 'Sentence {{current}} of {{total}}',
       buffering: '{{buffered}} of {{total}} ready',
-      examSubtitle: 'Exam mode: limited plays, no transcript. Listen as closely as you can.',
-      plays: 'Play {{used}}/{{limit}}',
-      examTranscriptHidden: 'In exam mode the transcript only appears at the end.',
     },
     answering: {
       title: 'Questions',
       replay: 'Listen again',
-      submit: 'Submit answers',
       submitting: 'Scoring …',
     },
     results: {

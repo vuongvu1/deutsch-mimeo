@@ -254,8 +254,6 @@ export const de = {
       questionsValue_other: '{{count}} Fragen',
       startCta: 'Text generieren',
       error: 'Konnte den Text nicht erstellen: {{reason}}',
-      examMode: 'Prüfungsmodus',
-      examModeHint: 'Wie in der echten Prüfung: begrenzte Wiedergaben, Transkript erst am Ende.',
     },
     levels: {
       A1: 'A1 · Anfänger',
@@ -283,15 +281,10 @@ export const de = {
       regenerate: 'Anderen Text generieren',
       progress: 'Satz {{current}} von {{total}}',
       buffering: '{{buffered}} von {{total}} bereit',
-      examSubtitle:
-        'Prüfungsmodus: begrenzte Wiedergaben, kein Transkript. Hör so genau wie möglich zu.',
-      plays: 'Wiedergabe {{used}}/{{limit}}',
-      examTranscriptHidden: 'Im Prüfungsmodus erscheint das Transkript erst am Ende.',
     },
     answering: {
       title: 'Fragen',
       replay: 'Noch mal hören',
-      submit: 'Antworten abschicken',
       submitting: 'Wird ausgewertet …',
     },
     results: {
