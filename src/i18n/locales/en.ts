@@ -252,7 +252,7 @@ export const en = {
       questionsValue_one: '{{count}} question',
       questionsValue_other: '{{count}} questions',
       startCta: 'Generate text',
-      error: "Couldn't generate the text: {{reason}}",
+      error: "Not reachable right now — tap “Generate text” again in a moment. ({{reason}})",
     },
     levels: {
       A1: 'A1 · Beginner',

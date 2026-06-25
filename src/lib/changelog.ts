@@ -20,6 +20,10 @@ export const changelog: ChangelogVersion[] = [
         type: 'fix',
         text: 'Listening: retry + fallback model when Gemini is busy.',
       },
+      {
+        type: 'improvement',
+        text: 'Listening: clearer “try again” message on generation fail.',
+      },
     ],
   },
   {

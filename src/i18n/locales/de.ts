@@ -253,7 +253,7 @@ export const de = {
       questionsValue_one: '{{count}} Frage',
       questionsValue_other: '{{count}} Fragen',
       startCta: 'Text generieren',
-      error: 'Konnte den Text nicht erstellen: {{reason}}',
+      error: 'Gerade nicht erreichbar — bitte gleich nochmal auf „Text generieren" tippen. ({{reason}})',
     },
     levels: {
       A1: 'A1 · Anfänger',
