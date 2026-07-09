@@ -13,6 +13,16 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.17.1',
+    date: '2026-07-09',
+    entries: [
+      {
+        type: 'chore',
+        text: 'Upgrade to TypeScript 7.0 (native compiler).',
+      },
+    ],
+  },
+  {
     version: '0.17.0',
     date: '2026-06-25',
     entries: [

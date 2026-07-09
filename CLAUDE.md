@@ -20,7 +20,7 @@ Personal German-learning challenge tracker for **two users** (Mi 🐷 and Meo �
 
 ## Tech stack
 
-- **Vite 8** + **React 19** + **TypeScript** (tsgo / tsc 6) — `pnpm dev/build/typecheck/preview`
+- **Vite 8** + **React 19** + **TypeScript 7** (native `tsc`, the Go-based compiler — `typescript@^7`, no more `@typescript/native-preview`) — `pnpm dev/build/typecheck/preview`
 - **Supabase** Postgres for persistence; project URL + publishable key in `.env.local` (gitignored)
 - **TanStack React Query v5** for server state — no global state library
 - **React Router v7** with createBrowserRouter
