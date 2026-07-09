@@ -18,7 +18,7 @@ export const changelog: ChangelogVersion[] = [
     entries: [
       {
         type: 'improvement',
-        text: 'Listening challenge no longer required for a complete day.',
+        text: 'Listen 30 min challenge no longer required for a complete day.',
       },
     ],
   },

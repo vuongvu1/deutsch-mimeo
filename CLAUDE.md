@@ -14,7 +14,7 @@ Personal German-learning challenge tracker for **two users** (Mi 🐷 and Meo �
   - **Hörverstehen 1×/Tag** (AI-generated German listening paragraph + multiple-choice questions; one *passed* round (>50% correct) ticks the day's checkmark)
 - Listen-counter ticks **only while the YouTube IFrame Player reports `PLAYING`** — pause = pause counter
 - Day boundary = device-local midnight (`local_date` column on `sessions`)
-- A "day complete" = ALL active **required** challenges met their daily goal (computed by SQL view, so adding new challenges Just Works). Challenges can be marked `optional` — Hörverstehen is optional: it tracks progress and shows its own checkmark but doesn't gate "day complete"
+- A "day complete" = ALL active **required** challenges met their daily goal (computed by SQL view, so adding new challenges Just Works). Challenges can be marked `optional` — Listen 30 min is optional: it tracks progress and shows its own checkmark but doesn't gate "day complete"
 - No streak — just a count of days where every challenge was complete
 - Home page shows side-by-side comparison of Mi vs Meo with category winners (👑)
 
@@ -44,7 +44,7 @@ Schema in `supabase/migrations/0001_init.sql`. Run it in Supabase Studio → SQL
 
 Views:
 - `daily_challenge_totals` — sum of seconds per (user, challenge, date)
-- `daily_completion` — for any (user, date) where there was activity, computes `all_complete = bool_and(total >= goal)` across active challenges where `activated_on <= local_date`. The `activated_on` gate stops a newly-added challenge from retroactively turning every prior "complete" day incomplete; days before a challenge existed only need the older challenges done. Challenges with `optional = true` (currently `listening`, since `0010_optional_listening.sql`) don't gate `all_complete` but still count in `completed_count`; the client-side mirror (`computeTodayStatus` in `useStats.ts`) also skips optional challenges, so the HomePage/ChallengeList "x / y" badge counts required challenges only.
+- `daily_completion` — for any (user, date) where there was activity, computes `all_complete = bool_and(total >= goal)` across active challenges where `activated_on <= local_date`. The `activated_on` gate stops a newly-added challenge from retroactively turning every prior "complete" day incomplete; days before a challenge existed only need the older challenges done. Challenges with `optional = true` (currently `listen`, since `0010_optional_listen.sql`) don't gate `all_complete` but still count in `completed_count`; the client-side mirror (`computeTodayStatus` in `useStats.ts`) also skips optional challenges, so the HomePage/ChallengeList "x / y" badge counts required challenges only.
 
 RLS: enabled on all tables, single policy `"anon all"` granting full access to the `anon` role. This is intentional for a personal app with no auth.
 
@@ -160,7 +160,7 @@ Pushes to `main` auto-redeploy via the Cloudflare ↔ GitHub integration; PRs ge
 
 ## Setup recap (for fresh clone)
 
-1. Run every file in `supabase/migrations/` in Supabase Studio → SQL Editor (in filename order). `0001_init.sql` is the base; each later migration is idempotent. The latest is `0010_optional_listening.sql` (`challenges.optional` flag; listening no longer gates "day complete").
+1. Run every file in `supabase/migrations/` in Supabase Studio → SQL Editor (in filename order). `0001_init.sql` is the base; each later migration is idempotent. The latest is `0010_optional_listen.sql` (`challenges.optional` flag; the listen 30 min challenge no longer gates "day complete").
 2. `pnpm install && pnpm dev`
 3. Create `.dev.vars` at the repo root with `GEMINI_API_KEY="…"` to enable the listening challenge locally (the Cloudflare Vite plugin picks it up automatically). For production: `wrangler secret put GEMINI_API_KEY`.
 4. Visit http://localhost:5173

@@ -2,7 +2,7 @@
 --
 -- Run this in Supabase Studio → SQL Editor → New query.
 --
--- The listening (Hörverstehen) challenge becomes optional: it still tracks
+-- The listen (30 min YouTube) challenge becomes optional: it still tracks
 -- progress and counts toward completed_count, but a day is "all complete"
 -- once every *required* challenge hits its goal.
 
@@ -10,8 +10,7 @@ alter table challenges
   add column if not exists optional boolean not null default false;
 
 update challenges
-   set optional = true
- where slug = 'listening';
+   set optional = (slug = 'listen');
 
 create or replace view daily_completion as
 with user_dates as (
