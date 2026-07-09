@@ -13,6 +13,7 @@ export interface ChallengeRow {
   description: string | null
   daily_goal_seconds: number
   active: boolean
+  optional: boolean
   sort_order: number
   created_at: string
 }

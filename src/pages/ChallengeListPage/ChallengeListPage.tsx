@@ -88,9 +88,16 @@ function ChallengeCard({ challenge, user }: { challenge: ChallengeRow; user: Use
     <>
       <Flex justify="between" align="start" gap="3" mb="3">
         <Box minWidth="0">
-          <Heading size="4" weight="bold" mb="1">
-            {title}
-          </Heading>
+          <Flex align="center" gap="2" mb="1">
+            <Heading size="4" weight="bold">
+              {title}
+            </Heading>
+            {challenge.optional ? (
+              <Badge color="gray" variant="soft" radius="full">
+                Optional
+              </Badge>
+            ) : null}
+          </Flex>
           {description ? (
             <Text size="2" color="gray">
               {description}
