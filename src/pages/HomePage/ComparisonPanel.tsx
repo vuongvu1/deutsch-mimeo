@@ -14,6 +14,7 @@ import styles from './ComparisonPanel.module.css'
 interface Props {
   listenChallenge: ChallengeRow | undefined
   vocabChallenge: ChallengeRow | undefined
+  recallChallenge: ChallengeRow | undefined
 }
 
 interface Category {
@@ -25,20 +26,24 @@ interface Category {
   format: (n: number) => string
 }
 
-export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
+export function ComparisonPanel({ listenChallenge, vocabChallenge, recallChallenge }: Props) {
   const { t } = useTranslation()
   const listen = useComparisonStats(listenChallenge)
   const vocab = useComparisonStats(vocabChallenge)
+  const recall = useComparisonStats(recallChallenge)
   const listeningCorrect = useListeningCorrectTodayComparison()
 
   if (
     !listenChallenge ||
     !vocabChallenge ||
+    !recallChallenge ||
     listen.isLoading ||
     vocab.isLoading ||
+    recall.isLoading ||
     listeningCorrect.isLoading ||
     !listen.data ||
     !vocab.data ||
+    !recall.data ||
     !listeningCorrect.data
   ) {
     return (
@@ -50,8 +55,10 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
 
   const ld = listen.data
   const vd = vocab.data
+  const rd = recall.data
   const lc = listeningCorrect.data
   const vocabFmt = (n: number) => formatChallengeValue('vocab', n, t)
+  const recallFmt = (n: number) => formatChallengeValue('recall', n, t)
 
   const categories: Category[] = [
     {
@@ -77,6 +84,14 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge }: Props) {
       miValue: lc.mi,
       meoValue: lc.meo,
       format: (n) => `${n}`,
+    },
+    {
+      id: 'today-recall',
+      label: t('comparison.todayRecall'),
+      icon: '✍️',
+      miValue: rd.mi.todaySeconds,
+      meoValue: rd.meo.todaySeconds,
+      format: recallFmt,
     },
     {
       id: 'days-complete',

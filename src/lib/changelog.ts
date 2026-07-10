@@ -17,8 +17,16 @@ export const changelog: ChangelogVersion[] = [
     date: '2026-07-10',
     entries: [
       {
+        type: 'feature',
+        text: 'New Abfrage challenge: type your saved words from memory.',
+      },
+      {
         type: 'improvement',
         text: 'Listen 30 min challenge no longer required for a complete day.',
+      },
+      {
+        type: 'improvement',
+        text: 'Optional challenges are listed after required ones.',
       },
     ],
   },

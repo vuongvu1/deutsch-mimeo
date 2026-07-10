@@ -21,6 +21,7 @@ const CHALLENGE_EMOJI: Record<string, string> = {
   listen: '🎧',
   vocab: '🧠',
   listening: '📻',
+  recall: '✍️',
 }
 
 export function HomePage() {
@@ -28,6 +29,7 @@ export function HomePage() {
   const usersQuery = useUsers()
   const listenChallenge = useChallengeBySlug('listen')
   const vocabChallenge = useChallengeBySlug('vocab')
+  const recallChallenge = useChallengeBySlug('recall')
   const todayStatus = useUsersTodayStatus()
 
   const users = usersQuery.data
@@ -55,6 +57,7 @@ export function HomePage() {
         <ComparisonPanel
           listenChallenge={listenChallenge.data ?? undefined}
           vocabChallenge={vocabChallenge.data ?? undefined}
+          recallChallenge={recallChallenge.data ?? undefined}
         />
       </Section>
 

@@ -3,6 +3,7 @@ import type { ChallengeRow } from '@/types/db'
 export const LISTEN_CHALLENGE_ID = '00000000-0000-4000-8000-000000000001'
 export const VOCAB_CHALLENGE_ID = '00000000-0000-4000-8000-000000000002'
 export const LISTENING_CHALLENGE_ID = '00000000-0000-4000-8000-000000000003'
+export const RECALL_CHALLENGE_ID = '00000000-0000-4000-8000-000000000004'
 
 const CHALLENGES: readonly ChallengeRow[] = [
   {
@@ -39,7 +40,18 @@ const CHALLENGES: readonly ChallengeRow[] = [
     sort_order: 20,
     created_at: '1970-01-01T00:00:00.000Z',
   },
-]
+  {
+    id: RECALL_CHALLENGE_ID,
+    slug: 'recall',
+    title: 'Abfrage 10 Wörter/Tag',
+    description: 'Tippe die deutsche Übersetzung deiner gemerkten Wörter — 10 richtige pro Tag.',
+    daily_goal_seconds: 10,
+    active: true,
+    optional: true,
+    sort_order: 30,
+    created_at: '1970-01-01T00:00:00.000Z',
+  },
+].sort((a, b) => Number(a.optional) - Number(b.optional) || a.sort_order - b.sort_order)
 
 const CHALLENGES_BY_SLUG: Record<string, ChallengeRow | undefined> = Object.fromEntries(
   CHALLENGES.map((c) => [c.slug, c]),

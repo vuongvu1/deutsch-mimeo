@@ -21,6 +21,7 @@ const VocabGamePage = lazy(() =>
 const ListeningPage = lazy(() =>
   import('@/pages/ListeningPage').then((m) => ({ default: m.ListeningPage })),
 )
+const RecallPage = lazy(() => import('@/pages/RecallPage').then((m) => ({ default: m.RecallPage })))
 const ComparePage = lazy(() =>
   import('@/pages/ComparePage').then((m) => ({ default: m.ComparePage })),
 )
@@ -56,6 +57,7 @@ export const router = createBrowserRouter([
       { path: routePatterns.player, element: <PlayerPage /> },
       { path: routePatterns.vocabGame, element: <VocabGamePage /> },
       { path: routePatterns.listening, element: <ListeningPage /> },
+      { path: routePatterns.recall, element: <RecallPage /> },
       { path: routePatterns.stats, element: <StatsPage /> },
       { path: routePatterns.compare, element: <ComparePage /> },
       { path: '*', element: <Navigate to="/" replace /> },
