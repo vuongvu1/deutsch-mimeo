@@ -62,6 +62,8 @@ export interface SavedWordRow {
   de: string
   en: string
   note: string | null
+  times_correct: number
+  times_wrong: number
   created_at: string
 }
 

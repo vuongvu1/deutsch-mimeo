@@ -2,7 +2,11 @@ import { Box, Card, Flex, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
-import { LISTENING_CHALLENGE_ID, VOCAB_CHALLENGE_ID } from '@/hooks/useChallenges'
+import {
+  LISTENING_CHALLENGE_ID,
+  RECALL_CHALLENGE_ID,
+  VOCAB_CHALLENGE_ID,
+} from '@/hooks/useChallenges'
 import { useRecentSessions } from '@/hooks/useStats'
 import { formatRelativeTime } from '@/lib/dates'
 import { formatChallengeValue } from '@/lib/format'
@@ -41,24 +45,33 @@ export function ActivityLog() {
         {entries.map((e, idx) => {
           const isVocab = e.challenge_id === VOCAB_CHALLENGE_ID
           const isListening = e.challenge_id === LISTENING_CHALLENGE_ID
+          const isRecall = e.challenge_id === RECALL_CHALLENGE_ID
           const verb = isVocab
             ? t('activityLog.verbVocab')
             : isListening
               ? t('activityLog.verbListening')
-              : t('activityLog.verb')
+              : isRecall
+                ? t('activityLog.verbRecall')
+                : t('activityLog.verb')
           const title = isVocab
             ? t('activityLog.vocabTitle')
             : isListening
               ? t('activityLog.listeningTitle')
-              : (e.video_title ?? t('activityLog.deletedVideo'))
+              : isRecall
+                ? t('activityLog.recallTitle')
+                : (e.video_title ?? t('activityLog.deletedVideo'))
           const value = isVocab
             ? formatChallengeValue('vocab', e.seconds, t)
             : isListening
               ? formatChallengeValue('listening', e.seconds, t)
-              : formatChallengeValue('listen', e.seconds, t)
+              : isRecall
+                ? formatChallengeValue('recall', e.seconds, t)
+                : formatChallengeValue('listen', e.seconds, t)
           const when = formatRelativeTime(e.updated_at, i18n.language)
           const linkTo =
-            !isVocab && !isListening && e.video_id ? paths.player(e.user_id, e.video_id) : null
+            !isVocab && !isListening && !isRecall && e.video_id
+              ? paths.player(e.user_id, e.video_id)
+              : null
           const row = (
             <Flex align="center" gap="3" py="2" className={styles.row} data-variant={e.user_id}>
               <Text size="4" aria-hidden style={{ lineHeight: 1 }}>

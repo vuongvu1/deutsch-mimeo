@@ -1,5 +1,5 @@
 import { CheckIcon } from '@radix-ui/react-icons'
-import { Badge, Box, Button, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
+import { Badge, Box, Button, Card, Container, Flex, Heading, Separator, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
@@ -16,6 +16,7 @@ const SLUG_TO_PATH: Record<string, ((u: UserId) => string) | undefined> = {
   listen: (u) => paths.videoLibrary(u),
   vocab: (u) => paths.vocabGame(u),
   listening: (u) => paths.listening(u),
+  recall: (u) => paths.recall(u),
 }
 
 export function ChallengeListPage() {
@@ -63,9 +64,24 @@ export function ChallengeListPage() {
       </Flex>
 
       <Flex direction="column" gap="3">
-        {challenges.map((c) => (
-          <ChallengeCard key={c.id} challenge={c} user={user} />
-        ))}
+        {challenges
+          .filter((c) => !c.optional)
+          .map((c) => (
+            <ChallengeCard key={c.id} challenge={c} user={user} />
+          ))}
+        {challenges.some((c) => c.optional) ? (
+          <Flex align="center" gap="3" mt="5" mb="2">
+            <Text size="3" weight="medium" color="gray">
+              Optional
+            </Text>
+            <Separator size="4" />
+          </Flex>
+        ) : null}
+        {challenges
+          .filter((c) => c.optional)
+          .map((c) => (
+            <ChallengeCard key={c.id} challenge={c} user={user} />
+          ))}
       </Flex>
     </Container>
   )
@@ -88,16 +104,9 @@ function ChallengeCard({ challenge, user }: { challenge: ChallengeRow; user: Use
     <>
       <Flex justify="between" align="start" gap="3" mb="3">
         <Box minWidth="0">
-          <Flex align="center" gap="2" mb="1">
-            <Heading size="4" weight="bold">
-              {title}
-            </Heading>
-            {challenge.optional ? (
-              <Badge color="gray" variant="soft" radius="full">
-                Optional
-              </Badge>
-            ) : null}
-          </Flex>
+          <Heading size="4" weight="bold" mb="1">
+            {title}
+          </Heading>
           {description ? (
             <Text size="2" color="gray">
               {description}

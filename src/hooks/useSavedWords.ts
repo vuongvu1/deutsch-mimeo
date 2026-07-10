@@ -68,3 +68,26 @@ export function useUnsaveWord() {
     },
   })
 }
+
+export function useBumpWordStat() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { word: SavedWordRow; field: 'times_correct' | 'times_wrong' }) => {
+      const { word, field } = input
+      const { error } = await supabase
+        .from('saved_words')
+        .update({ [field]: word[field] + 1 })
+        .eq('id', word.id)
+      if (error) throw error
+      return input
+    },
+    onMutate: ({ word, field }) => {
+      qc.setQueryData<SavedWordRow[]>(['saved-words', word.user_id], (rows) =>
+        rows?.map((r) => (r.id === word.id ? { ...r, [field]: r[field] + 1 } : r)),
+      )
+    },
+    onError: (error) => {
+      console.error('Failed to update saved word stats', error)
+    },
+  })
+}

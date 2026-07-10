@@ -142,10 +142,11 @@ Pushes to `main` auto-redeploy via the Cloudflare ↔ GitHub integration; PRs ge
 - `0332923` Add path aliasing for source directory in Vite config (ESM `fileURLToPath` style)
 - `088945f` Add CLAUDE.md with session context for future Claude sessions
 - (uncommitted) Add "Hörverstehen" listening-comprehension challenge: AI-generated paragraph + MCQ + bilingual explanations, backed by a Cloudflare Worker proxy to Gemini 2.5 Flash (`worker/index.ts`), `listening_rounds` history table (`supabase/migrations/0009_listening.sql`), and a new `ListeningPage` state machine
+- (uncommitted) Add "Abfrage" typed vocab-recall challenge: saved words resurface as typed active-recall quiz (10 correct/day, optional), weighted by miss ratio, backed by times_correct/times_wrong columns (supabase/migrations/0011_recall.sql), new RecallPage + HomePage wiring
 
 ## Open ideas (not started — pick what's next)
 
-- **Surface listening stats in `ComparisonPanel`, `ComparePage`, `StatsPage`** — currently only `listen` and `vocab` get rows / heatmaps; the listening challenge counts toward "day complete" but isn't shown in those compare tables
+- **Surface listening stats in `ComparisonPanel`, `ComparePage`, `StatsPage`** — currently only `listen` and `vocab` get heatmaps on StatsPage/ComparePage; listening and recall have no heatmap there (recall does have a ComparisonPanel row)
 - **Per-video session history** on the player page (last N sessions, aggregated per-video minutes)
 - **All-complete calendar** — different lens than the heatmap, gates on multi-challenge logic
 - **Gemini TTS** — swap the long-form Web Speech path for `gemini-2.5-flash` TTS bytes once voice quality matters enough to justify the quota cost
