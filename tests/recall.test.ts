@@ -1,7 +1,43 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { drawRecallBatch, isAnswerCorrect, normalizeAnswer, recallWeight } from '../src/lib/recall.ts'
+import {
+  drawRecallBatch,
+  findExampleMatch,
+  isAnswerCorrect,
+  normalizeAnswer,
+  recallWeight,
+} from '../src/lib/recall.ts'
+
+function matched(de: string, example: string): string | null {
+  const m = findExampleMatch(de, example)
+  return m ? example.slice(m.start, m.start + m.length) : null
+}
+
+test('findExampleMatch finds exact and case-folded occurrences', () => {
+  assert.equal(matched('Hund', 'Der Hund bellt.'), 'Hund')
+  assert.equal(matched('ich', 'Ich bin müde.'), 'Ich')
+  assert.equal(matched('der Hund', 'Der Hund bellt laut.'), 'Hund')
+  assert.equal(matched('nach Hause', 'Ich gehe nach Hause.'), 'nach Hause')
+})
+
+test('findExampleMatch highlights regular conjugated forms', () => {
+  assert.equal(matched('füttern', 'Ich füttere den Hund jeden Tag.'), 'füttere')
+  assert.equal(matched('gehen', 'Ich gehe in die Schule.'), 'gehe')
+  assert.equal(matched('kommen', 'Sie kommt um drei Uhr.'), 'kommt')
+  assert.equal(matched('sagen', 'Sie sagt guten Morgen.'), 'sagt')
+})
+
+test('findExampleMatch folds umlauts to catch vowel-shifted forms', () => {
+  assert.equal(matched('fahren', 'Er fährt nach München.'), 'fährt')
+  assert.equal(matched('schlafen', 'Das Kind schläft tief.'), 'schläft')
+})
+
+test('findExampleMatch returns null for irregular forms instead of guessing', () => {
+  assert.equal(matched('sein', 'Ich bin zu Hause.'), null)
+  assert.equal(matched('geben', 'Er gibt mir das Buch.'), null)
+  assert.equal(matched('wissen', 'Ich weiß die Antwort.'), null)
+})
 
 test('normalizeAnswer folds case, whitespace, ß and umlauts', () => {
   assert.equal(normalizeAnswer('  Straße  '), 'strasse')
