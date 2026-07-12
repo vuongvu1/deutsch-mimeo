@@ -13,6 +13,28 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.19.0',
+    date: '2026-07-13',
+    entries: [
+      {
+        type: 'feature',
+        text: 'Recall reveal shows an example sentence, word underlined.',
+      },
+      {
+        type: 'feature',
+        text: 'Skip button in the recall quiz for words you don’t know.',
+      },
+      {
+        type: 'improvement',
+        text: 'Wrong recall answers show your typed answer for comparison.',
+      },
+      {
+        type: 'improvement',
+        text: 'Abfrage challenge is optional — no longer gates a complete day.',
+      },
+    ],
+  },
+  {
     version: '0.18.0',
     date: '2026-07-10',
     entries: [
