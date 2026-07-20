@@ -13,6 +13,16 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.19.1',
+    date: '2026-07-20',
+    entries: [
+      {
+        type: 'fix',
+        text: 'Listening answer feedback shows English explanation too.',
+      },
+    ],
+  },
+  {
     version: '0.19.0',
     date: '2026-07-13',
     entries: [
