@@ -860,6 +860,12 @@ function AnsweringCard({
                     <Text size="2" as="p">
                       {q.explanationDe}
                     </Text>
+                    <Text size="2" weight="medium" color="gray" as="div" mt="2" mb="1">
+                      {t('listening.results.explanationEn')}
+                    </Text>
+                    <Text size="2" as="p">
+                      {q.explanationEn}
+                    </Text>
                   </Box>
                 </>
               ) : (

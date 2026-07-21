@@ -7,17 +7,46 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { MuteToggle } from '@/components/MuteToggle'
 import { ProgressBar } from '@/components/ProgressBar'
 import { TopBar } from '@/components/TopBar'
+import { VOCAB_PACKS } from '@/data/vocab'
 import { RECALL_CHALLENGE_ID, useChallengeBySlug } from '@/hooks/useChallenges'
 import { useMatchSession } from '@/hooks/useMatchSession'
 import { useBumpWordStat, useSavedWords } from '@/hooks/useSavedWords'
 import { useTodaySecondsForChallenge } from '@/hooks/useStats'
 import { useUser } from '@/hooks/useUsers'
-import { drawRecallBatch, isAnswerCorrect } from '@/lib/recall'
+import { drawRecallBatch, findExampleMatch, isAnswerCorrect } from '@/lib/recall'
 import { playGoalReached, playMatch, playWrong, speakGerman } from '@/lib/sounds'
 import { paths } from '@/routes/paths'
 import type { SavedWordRow, UserId } from '@/types/db'
 
 const CORRECT_ADVANCE_MS = 900
+const CORRECT_ADVANCE_EXAMPLE_MS = 2200
+
+const EXAMPLE_BY_DE: ReadonlyMap<string, string> = (() => {
+  const map = new Map<string, string>()
+  for (const pack of VOCAB_PACKS) {
+    for (const w of pack.words) {
+      if (w.example && !map.has(w.de)) map.set(w.de, w.example)
+    }
+  }
+  return map
+})()
+
+function ExampleSentence({ de, example }: { de: string; example: string }) {
+  const match = findExampleMatch(de, example)
+  return (
+    <Text size="2" color="gray" as="div">
+      {match === null ? (
+        example
+      ) : (
+        <>
+          {example.slice(0, match.start)}
+          <u>{example.slice(match.start, match.start + match.length)}</u>
+          {example.slice(match.start + match.length)}
+        </>
+      )}
+    </Text>
+  )
+}
 
 export function RecallPage() {
   const { t } = useTranslation()
@@ -86,6 +115,7 @@ function Quiz({ userId, goal, baselineToday }: QuizProps) {
   const todayTotal = baselineToday + roundsInSession
   const complete = todayTotal >= goal
   const current: SavedWordRow | undefined = queue[0]
+  const exampleSentence = feedback ? (EXAMPLE_BY_DE.get(feedback.word.de) ?? null) : null
 
   useEffect(() => {
     if (queue.length > 0 || feedback !== null || pool.length === 0) return
@@ -104,7 +134,10 @@ function Quiz({ userId, goal, baselineToday }: QuizProps) {
 
   useEffect(() => {
     if (!feedback?.correct) return
-    const timer = window.setTimeout(advance, CORRECT_ADVANCE_MS)
+    const delay = EXAMPLE_BY_DE.has(feedback.word.de)
+      ? CORRECT_ADVANCE_EXAMPLE_MS
+      : CORRECT_ADVANCE_MS
+    const timer = window.setTimeout(advance, delay)
     return () => window.clearTimeout(timer)
   }, [feedback, advance])
 
@@ -227,13 +260,18 @@ function Quiz({ userId, goal, baselineToday }: QuizProps) {
 
             {feedback ? (
               feedback.correct ? (
-                <Flex align="center" gap="2">
-                  <Text size="3" color="green" weight="bold">
-                    ✓ {t('recall.correct')}
-                  </Text>
-                  <Text size="3" weight="medium">
-                    {feedback.word.de}
-                  </Text>
+                <Flex direction="column" gap="2" align="start">
+                  <Flex align="center" gap="2">
+                    <Text size="3" color="green" weight="bold">
+                      ✓ {t('recall.correct')}
+                    </Text>
+                    <Text size="3" weight="medium">
+                      {feedback.word.de}
+                    </Text>
+                  </Flex>
+                  {exampleSentence ? (
+                    <ExampleSentence de={feedback.word.de} example={exampleSentence} />
+                  ) : null}
                 </Flex>
               ) : (
                 <Flex direction="column" gap="2" align="start">
@@ -256,6 +294,9 @@ function Quiz({ userId, goal, baselineToday }: QuizProps) {
                   <Text size="5" weight="bold">
                     {feedback.word.de}
                   </Text>
+                  {exampleSentence ? (
+                    <ExampleSentence de={feedback.word.de} example={exampleSentence} />
+                  ) : null}
                   <Button onClick={advance} mt="1">
                     {t('recall.continue')}
                   </Button>
