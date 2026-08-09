@@ -14,6 +14,19 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  // Must live here, not in the dashboard: `wrangler deploy` treats this file as
+  // the source of truth for plaintext vars and DELETES any it doesn't find here.
+  // Dashboard-set Text vars survive exactly until the next deploy. Secrets
+  // (TELEGRAM_BOT_TOKEN, GEMINI_API_KEY) are separate and do persist.
+  //
+  // None of these are credentials: the Supabase pair is already public in the
+  // client bundle as VITE_* (anon-all RLS is the design), and the chat id can't
+  // be posted to without the bot token.
+  "vars": {
+    "SUPABASE_URL": "https://fzvzmuhagvcbftmgpmff.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_vIncR8_-FGKX6dv6vhyF4w_TmxEes5I",
+    "TELEGRAM_CHAT_ID": "-5149117879"
+  },
   // Cloudflare crons are UTC-only. 21:00 Berlin is 19:00 UTC in summer and
   // 20:00 UTC in winter, so fire at both and let the Worker check the real
   // Berlin hour — nothing to change twice a year.

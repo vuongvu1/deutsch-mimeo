@@ -165,7 +165,11 @@ Deployed via **Cloudflare Workers + Static Assets** (the path that replaces clas
 
 Build command: `pnpm build` (output: `dist/client` for the SPA + `dist/deutsch_mimeo/` for the Worker bundle, both produced by `@cloudflare/vite-plugin`). Env vars to set in the Cloudflare dashboard for both Production and Preview: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_YOUTUBE_API_KEY`, plus `NODE_VERSION=22` (Vite 8 needs Node ≥20.19). The Gemini key is **not** a `VITE_*` var — it goes to the Worker as a secret via `wrangler secret put GEMINI_API_KEY` (and a `.dev.vars` file at the repo root for local dev: `GEMINI_API_KEY="…"`).
 
-Worker-side vars for notifications (same rule — **not** `VITE_*`, so they never reach the client bundle): `TELEGRAM_BOT_TOKEN` (secret), `TELEGRAM_CHAT_ID`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`. The last two are the same values as the `VITE_*` pair; the Worker needs its own copy because `import.meta.env` doesn't exist at Worker runtime. No service-role key anywhere — `anon all` RLS means the publishable key suffices. Cron triggers come from `wrangler.jsonc` on deploy; don't add them by hand in the dashboard.
+Worker-side config for notifications. `TELEGRAM_BOT_TOKEN` is a **secret** (`wrangler secret put TELEGRAM_BOT_TOKEN`, or the dashboard — secrets persist across deploys). The other three — `TELEGRAM_CHAT_ID`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` — live in `wrangler.jsonc` under `vars`.
+
+**Do not set plaintext vars in the Cloudflare dashboard.** `wrangler deploy` treats `wrangler.jsonc` as the source of truth and *deletes* every var it doesn't find there, so dashboard-set Text vars survive only until the next push. This already caused one silent outage: the notifier returned 204 and claimed nothing because `isConfigured()` saw empty strings. Secrets are stored separately and are not affected.
+
+The Supabase pair duplicates the `VITE_*` values because `import.meta.env` doesn't exist at Worker runtime. Committing them is safe — the same URL and publishable key already ship inside the client bundle, and `anon all` RLS is the design. No service-role key anywhere. Cron triggers likewise come from `wrangler.jsonc` on deploy; don't add them by hand.
 
 Pushes to `main` auto-redeploy via the Cloudflare ↔ GitHub integration; PRs get preview URLs at `*.pages.dev`. Add the production URL (and any custom domain) to Supabase → Authentication → URL Configuration if you ever turn on auth.
 
