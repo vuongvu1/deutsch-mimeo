@@ -69,7 +69,6 @@ export const de = {
       recall: 'Übt Abfrage',
     },
     progress: '{{done}} / {{total}} Challenges',
-    allDone: 'Heute alles geschafft!',
   },
   activityLog: {
     verb: 'hörte',

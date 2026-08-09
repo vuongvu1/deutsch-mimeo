@@ -1,5 +1,5 @@
 import { CheckIcon } from '@radix-ui/react-icons'
-import { Badge, Box, Button, Card, Container, Flex, Heading, Separator, Text } from '@radix-ui/themes'
+import { Badge, Box, Button, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useParams } from 'react-router-dom'
 
@@ -55,33 +55,18 @@ export function ChallengeListPage() {
             size="2"
             radius="full"
             variant="soft"
-            color={status.allComplete ? 'amber' : 'gray'}
+            color={status.dayComplete ? 'amber' : 'gray'}
           >
-            {status.allComplete ? <CheckIcon /> : null}
+            {status.dayComplete ? <CheckIcon /> : null}
             {status.completedCount} / {status.totalActive}
           </Badge>
         ) : null}
       </Flex>
 
       <Flex direction="column" gap="3">
-        {challenges
-          .filter((c) => !c.optional)
-          .map((c) => (
-            <ChallengeCard key={c.id} challenge={c} user={user} />
-          ))}
-        {challenges.some((c) => c.optional) ? (
-          <Flex align="center" gap="3" mt="5" mb="2">
-            <Text size="3" weight="medium" color="gray">
-              Optional
-            </Text>
-            <Separator size="4" />
-          </Flex>
-        ) : null}
-        {challenges
-          .filter((c) => c.optional)
-          .map((c) => (
-            <ChallengeCard key={c.id} challenge={c} user={user} />
-          ))}
+        {challenges.map((c) => (
+          <ChallengeCard key={c.id} challenge={c} user={user} />
+        ))}
       </Flex>
     </Container>
   )

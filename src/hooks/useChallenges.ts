@@ -13,7 +13,6 @@ const CHALLENGES: readonly ChallengeRow[] = [
     description: 'Watch German YouTube videos for at least 30 minutes total each day.',
     daily_goal_seconds: 1800,
     active: true,
-    optional: true,
     sort_order: 0,
     created_at: '1970-01-01T00:00:00.000Z',
   },
@@ -24,7 +23,6 @@ const CHALLENGES: readonly ChallengeRow[] = [
     description: 'Spiele das Match-Pairs-Spiel und schließe jeden Tag 10 volle Runden ab.',
     daily_goal_seconds: 10,
     active: true,
-    optional: false,
     sort_order: 10,
     created_at: '1970-01-01T00:00:00.000Z',
   },
@@ -36,7 +34,6 @@ const CHALLENGES: readonly ChallengeRow[] = [
       'Höre einen KI-generierten Text und beantworte die Fragen mit mehr als 50% richtig.',
     daily_goal_seconds: 1,
     active: true,
-    optional: false,
     sort_order: 20,
     created_at: '1970-01-01T00:00:00.000Z',
   },
@@ -47,11 +44,10 @@ const CHALLENGES: readonly ChallengeRow[] = [
     description: 'Tippe die deutsche Übersetzung deiner gemerkten Wörter — 10 richtige pro Tag.',
     daily_goal_seconds: 10,
     active: true,
-    optional: true,
     sort_order: 30,
     created_at: '1970-01-01T00:00:00.000Z',
   },
-].sort((a, b) => Number(a.optional) - Number(b.optional) || a.sort_order - b.sort_order)
+].sort((a, b) => a.sort_order - b.sort_order)
 
 const CHALLENGES_BY_SLUG: Record<string, ChallengeRow | undefined> = Object.fromEntries(
   CHALLENGES.map((c) => [c.slug, c]),

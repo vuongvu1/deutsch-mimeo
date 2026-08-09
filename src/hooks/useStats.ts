@@ -229,7 +229,7 @@ export function useRecentSessions(limit = 10) {
 export interface UserTodayStatus {
   completedCount: number
   totalActive: number
-  allComplete: boolean
+  dayComplete: boolean
   activeChallengeSlug: string | null
 }
 
@@ -279,7 +279,7 @@ function computeTodayStatus(
   for (const r of userRows) {
     totals.set(r.challenge_id, (totals.get(r.challenge_id) ?? 0) + r.seconds)
   }
-  const activeChallenges = challenges.filter((c) => c.active && !c.optional)
+  const activeChallenges = challenges.filter((c) => c.active)
   const totalActive = activeChallenges.length
   let completedCount = 0
   for (const c of activeChallenges) {
@@ -297,7 +297,7 @@ function computeTodayStatus(
   return {
     completedCount,
     totalActive,
-    allComplete: totalActive > 0 && completedCount === totalActive,
+    dayComplete: completedCount > 0,
     activeChallengeSlug,
   }
 }

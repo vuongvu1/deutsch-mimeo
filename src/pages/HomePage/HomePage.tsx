@@ -108,16 +108,14 @@ function UserCard({
               align="center"
               gap="2"
               className={styles.progressBadge}
-              data-complete={status.allComplete || undefined}
+              data-complete={status.dayComplete || undefined}
             >
-              {status.allComplete ? <CheckIcon className={styles.checkIcon} aria-hidden /> : null}
-              <Text size="2" weight={status.allComplete ? 'bold' : 'medium'}>
-                {status.allComplete
-                  ? t('userCard.allDone')
-                  : t('userCard.progress', {
-                      done: status.completedCount,
-                      total: status.totalActive,
-                    })}
+              {status.dayComplete ? <CheckIcon className={styles.checkIcon} aria-hidden /> : null}
+              <Text size="2" weight={status.dayComplete ? 'bold' : 'medium'}>
+                {t('userCard.progress', {
+                  done: status.completedCount,
+                  total: status.totalActive,
+                })}
               </Text>
             </Flex>
           ) : null}

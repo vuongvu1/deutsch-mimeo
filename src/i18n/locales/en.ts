@@ -69,7 +69,6 @@ export const en = {
       recall: 'Practicing recall',
     },
     progress: '{{done}} / {{total}} challenges',
-    allDone: 'All done today!',
   },
   activityLog: {
     verb: 'listened to',
