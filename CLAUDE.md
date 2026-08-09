@@ -27,7 +27,7 @@ Personal German-learning challenge tracker for **two users** (Mi 🐷 and Meo �
 - **React Router v7** with createBrowserRouter
 - **Plain CSS modules** + CSS variables (tokens in `src/index.css`)
 - **YouTube IFrame Player API** for play-state events; **YouTube oEmbed** for single-video title fetch (no key); **YouTube Data API v3** (`VITE_YOUTUBE_API_KEY`) for playlist bulk-import
-- **Cloudflare Worker** entry at `worker/index.ts` (wired via `@cloudflare/vite-plugin` in `vite.config.ts`) — single route `POST /api/listening/generate` that calls **Gemini 2.5 Flash** (`generativelanguage.googleapis.com`) using `responseSchema` for structured JSON. Key lives as a Worker secret `GEMINI_API_KEY` (set via `wrangler secret put GEMINI_API_KEY`); locally via `.dev.vars` at the repo root. Anything else falls through to the static-assets binding (`env.ASSETS.fetch`).
+- **Cloudflare Worker** entry at `worker/index.ts` (wired via `@cloudflare/vite-plugin` in `vite.config.ts`) — two routes plus a cron. `POST /api/listening/generate` calls **Gemini 2.5 Flash** (`generativelanguage.googleapis.com`) using `responseSchema` for structured JSON; key lives as a Worker secret `GEMINI_API_KEY` (set via `wrangler secret put GEMINI_API_KEY`), locally via `.dev.vars` at the repo root. `POST /api/notify` is the **Telegram notifier** (see below). Anything else falls through to the static-assets binding (`env.ASSETS.fetch`).
 - `@/*` path alias → `src/*` (configured in `tsconfig.app.json` and `vite.config.ts` using `fileURLToPath(new URL('./src', import.meta.url))` — ESM idiom, no `__dirname`)
 - pnpm pinned via `package.json#packageManager` (currently `10.33.2`)
 
@@ -42,6 +42,7 @@ Schema in `supabase/migrations/0001_init.sql`. Run it in Supabase Studio → SQL
 | `videos` | per-user library (`user_id` FK), `youtube_id`, `title`, optional `note` |
 | `sessions` | one row per playback session — `seconds`, `local_date`, refs `user_id`/`challenge_id`/`video_id`. Reused as generic integer counter (rounds for vocab; passed-round flag = `seconds=1` for listening) |
 | `listening_rounds` | history of every *submitted* AI-listening exercise — transcript, questions/options (jsonb), user answers, score, `passed` flag. Only **passed** rounds also insert a `sessions` row (with `seconds=1`) so the day's checkmark ticks via the same `daily_completion` view |
+| `notifications` | dedup ledger for Telegram sends (`0013_notifications.sql`). No surrogate key — the unique index `(user_id, kind, local_date, challenge_id) nulls not distinct` *is* the identity, which is what makes `kind='day'`/`'nag'` (null `challenge_id`) collide with themselves. `kind` ∈ `challenge` \| `day` \| `nag` |
 
 Views:
 - `daily_challenge_totals` — sum of seconds per (user, challenge, date)
@@ -68,7 +69,8 @@ src/
 │   ├── supabase           untyped createClient (kept loose on purpose)
 │   ├── youtube            IFrame API loader, URL → ID parser, oEmbed title,
 │   │                      playlist URL parser + Data API playlistItems fetcher
-│   └── dates              local-date helpers, formatSeconds, formatMinutes
+│   ├── dates              local-date helpers, formatSeconds, formatMinutes
+│   └── notify             pingProgress() — fire-and-forget doorbell to /api/notify
 ├── pages/              one folder per page, with .module.css colocated
 │   ├── HomePage           user picker + ComparisonPanel (live status) + ActivityLog (recent activity)
 │   ├── ChallengeListPage  today's challenges with progress bars
@@ -77,7 +79,10 @@ src/
 │   ├── VocabGamePage      match-pairs minigame, packs, saved-words bookmark
 │   ├── ListeningPage      AI-generated paragraph + MCQ; setup → listening → answering → results
 │   └── StatsPage          per-user stats + 13-week heatmap
-worker/                 Cloudflare Worker entry (Gemini proxy for /api/listening/generate)
+worker/
+├── index.ts            Worker entry — route dispatch + scheduled() cron handler
+└── notify.ts           Telegram notifier: claim/send, 21:00 nag, Berlin-hour guard
+    notify.test.ts      node --test (no test runner dep; `node --test worker/notify.test.ts`)
 ├── routes/
 │   ├── paths.ts           path builders + routePatterns
 │   └── router.tsx         createBrowserRouter
@@ -97,6 +102,35 @@ supabase/migrations/0001_init.sql
 5. Worst case data loss = ~10s if user closes the tab mid-play
 
 PlayerPage shows two stats: "this session" (= `sessionSeconds`) and "today total" (= `baseline + sessionSeconds`, where `baseline` is the persisted today total snapshotted on first load — avoids double-counting flushes).
+
+## Telegram notifications — why it works
+
+Design spec: `docs/superpowers/specs/2026-08-09-telegram-notifications-design.md`.
+
+Three topics, all posted to **one shared group chat**: a challenge was finished, the day became complete, and a 21:00 nag when a user has done nothing.
+
+The client is a **doorbell, not a brain**. `pingProgress(userId, challengeId)` (`src/lib/notify.ts`) posts only those two ids after a session write; the Worker reads `challenges` + `daily_challenge_totals` and decides everything. So no React component tracks before/after state, and no goal math is duplicated client-side.
+
+Ping call sites — all four are inside an existing `flush()`/insert, one line each:
+
+| Hook | Challenge |
+|---|---|
+| `useSessionTracker` | `listen` |
+| `useMatchSession` | `vocab` |
+| `usePartnerSession` | `recall` (and watch-together) |
+| `useListening` (after the `seconds: 1` insert) | `listening` |
+
+**Do not** ping from `ListeningPage.tsx`'s liveness effect — that write is `seconds: 0` presence only, so it represents no progress.
+
+Every send is preceded by an **atomic claim**: insert into `notifications` with `Prefer: resolution=ignore-duplicates,return=representation`. Non-empty response = this request owns the send; empty = already sent, skip Telegram. That makes the endpoint idempotent — repeated pings, two devices, a redeploy mid-flight and a double-firing cron all converge on one message. If Telegram then fails, the claim is **released** (deleted) so the next ping retries instead of the day's message vanishing into a transient 429.
+
+Because any one challenge completes the day, the first completion claims both `challenge` and `day` and the two lines merge into a **single** message.
+
+The 21:00 nag rides `scheduled()` with `crons: ["0 19,20 * * *"]`. Cloudflare crons are UTC-only, so it fires at both 19:00 and 20:00 UTC and `berlinHour()` keeps whichever is really 21:00 in `Europe/Berlin`. That is the whole DST story — nothing to edit twice a year. "Incomplete" is derived from `daily_challenge_totals`, not from a missing `day` notification, so a lost doorbell ping doesn't suppress the nag.
+
+`/api/notify` is public and unauthenticated, like `/api/listening/generate`. Accepted deliberately: the body selects a template and cannot inject text, and the dedup index caps output at 6 messages/user/day, so abuse wastes requests rather than sending spam.
+
+Telegram copy is server-side German only — **no i18n files involved**.
 
 ## Key conventions
 
@@ -131,6 +165,8 @@ Deployed via **Cloudflare Workers + Static Assets** (the path that replaces clas
 
 Build command: `pnpm build` (output: `dist/client` for the SPA + `dist/deutsch_mimeo/` for the Worker bundle, both produced by `@cloudflare/vite-plugin`). Env vars to set in the Cloudflare dashboard for both Production and Preview: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_YOUTUBE_API_KEY`, plus `NODE_VERSION=22` (Vite 8 needs Node ≥20.19). The Gemini key is **not** a `VITE_*` var — it goes to the Worker as a secret via `wrangler secret put GEMINI_API_KEY` (and a `.dev.vars` file at the repo root for local dev: `GEMINI_API_KEY="…"`).
 
+Worker-side vars for notifications (same rule — **not** `VITE_*`, so they never reach the client bundle): `TELEGRAM_BOT_TOKEN` (secret), `TELEGRAM_CHAT_ID`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`. The last two are the same values as the `VITE_*` pair; the Worker needs its own copy because `import.meta.env` doesn't exist at Worker runtime. No service-role key anywhere — `anon all` RLS means the publishable key suffices. Cron triggers come from `wrangler.jsonc` on deploy; don't add them by hand in the dashboard.
+
 Pushes to `main` auto-redeploy via the Cloudflare ↔ GitHub integration; PRs get preview URLs at `*.pages.dev`. Add the production URL (and any custom domain) to Supabase → Authentication → URL Configuration if you ever turn on auth.
 
 ## What's done (commit log)
@@ -143,6 +179,7 @@ Pushes to `main` auto-redeploy via the Cloudflare ↔ GitHub integration; PRs ge
 - `0332923` Add path aliasing for source directory in Vite config (ESM `fileURLToPath` style)
 - `088945f` Add CLAUDE.md with session context for future Claude sessions
 - (uncommitted) Add "Hörverstehen" listening-comprehension challenge: AI-generated paragraph + MCQ + bilingual explanations, backed by a Cloudflare Worker proxy to Gemini 2.5 Flash (`worker/index.ts`), `listening_rounds` history table (`supabase/migrations/0009_listening.sql`), and a new `ListeningPage` state machine
+- (uncommitted) Add Telegram notifications (v0.21.0): client doorbell → `POST /api/notify`, plus a `scheduled()` 21:00 nag on cron `0 19,20 * * *`. New `worker/notify.ts` + `notify.test.ts`, `src/lib/notify.ts`, `supabase/migrations/0013_notifications.sql`
 - (uncommitted) Add "Abfrage" typed vocab-recall challenge: saved words resurface as typed active-recall quiz (10 correct/day, optional), weighted by miss ratio, backed by times_correct/times_wrong columns (supabase/migrations/0011_recall.sql), new RecallPage + HomePage wiring
 
 ## Open ideas (not started — pick what's next)
@@ -162,7 +199,7 @@ Pushes to `main` auto-redeploy via the Cloudflare ↔ GitHub integration; PRs ge
 
 ## Setup recap (for fresh clone)
 
-1. Run every file in `supabase/migrations/` in Supabase Studio → SQL Editor (in filename order). `0001_init.sql` is the base; each later migration is idempotent. The latest is `0012_any_challenge_completes_day.sql` (drops `challenges.optional`; a day is complete once any one challenge hits its goal).
+1. Run every file in `supabase/migrations/` in Supabase Studio → SQL Editor (in filename order). `0001_init.sql` is the base; each later migration is idempotent. The latest is `0013_notifications.sql` (Telegram dedup ledger; needs Postgres 15+ for `NULLS NOT DISTINCT`).
 2. `pnpm install && pnpm dev`
 3. Create `.dev.vars` at the repo root with `GEMINI_API_KEY="…"` to enable the listening challenge locally (the Cloudflare Vite plugin picks it up automatically). For production: `wrangler secret put GEMINI_API_KEY`.
 4. Visit http://localhost:5173

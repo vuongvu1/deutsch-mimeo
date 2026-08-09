@@ -1,4 +1,6 @@
-interface Env {
+import { handleNotify, handleScheduled, type NotifyEnv } from './notify'
+
+interface Env extends NotifyEnv {
   GEMINI_API_KEY: string
   ASSETS: Fetcher
 }
@@ -412,6 +414,13 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
 
+    if (url.pathname === '/api/notify') {
+      if (request.method !== 'POST') {
+        return jsonResponse({ error: 'Method not allowed' }, 405)
+      }
+      return handleNotify(request, env)
+    }
+
     if (url.pathname === '/api/listening/generate') {
       if (request.method !== 'POST') {
         return jsonResponse({ error: 'Method not allowed' }, 405)
@@ -451,5 +460,11 @@ export default {
     }
 
     return env.ASSETS.fetch(request)
+  },
+
+  // Fires at 19:00 and 20:00 UTC; handleScheduled keeps whichever one is
+  // actually 21:00 in Berlin and drops the other.
+  async scheduled(event: ScheduledController, env: Env): Promise<void> {
+    await handleScheduled(env, new Date(event.scheduledTime))
   },
 }

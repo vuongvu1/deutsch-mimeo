@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { todayLocalDate } from '@/lib/dates'
+import { pingProgress } from '@/lib/notify'
 import { supabase } from '@/lib/supabase'
 import type { UserId } from '@/types/db'
 
@@ -80,6 +81,7 @@ export function useMatchSession({ userId, challengeId, enabled }: Args) {
       }
       lastFlushedRef.current = value
       incrementsSinceFlushRef.current = 0
+      pingProgress(userId, challengeId)
       qc.invalidateQueries({ queryKey: ['today-seconds', userId, challengeId] })
       qc.invalidateQueries({ queryKey: ['stats', userId] })
       qc.invalidateQueries({ queryKey: ['comparison-stats'] })

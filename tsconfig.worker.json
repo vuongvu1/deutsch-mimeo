@@ -17,5 +17,8 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["worker"]
+  "include": ["worker"],
+  // Tests run under `node --test` (native TS stripping), which needs explicit
+  // .ts import specifiers and node types — neither fits the Worker program.
+  "exclude": ["worker/**/*.test.ts"]
 }

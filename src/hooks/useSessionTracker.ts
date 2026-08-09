@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { todayLocalDate } from '@/lib/dates'
+import { pingProgress } from '@/lib/notify'
 import { supabase } from '@/lib/supabase'
 import type { UserId } from '@/types/db'
 
@@ -86,6 +87,9 @@ export function useSessionTracker({
         .update({ seconds, updated_at: new Date().toISOString() })
         .eq('id', id)
       if (error) console.error('Failed to flush session', error)
+      // ponytail: rings on every flush (~10s while playing); the worker dedups.
+      // Gate on baseline+session >= goal only if request volume ever matters.
+      else pingProgress(userId, challengeId)
 
       const t = getCurrentVideoTimeRef.current?.()
       if (typeof t === 'number' && Number.isFinite(t) && t >= 0) {

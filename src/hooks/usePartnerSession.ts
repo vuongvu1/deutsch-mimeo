@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { todayLocalDate } from '@/lib/dates'
+import { pingProgress } from '@/lib/notify'
 import { supabase } from '@/lib/supabase'
 import type { UserId } from '@/types/db'
 
@@ -81,6 +82,7 @@ export function usePartnerSession({
         .update({ seconds, updated_at: new Date().toISOString() })
         .eq('id', id)
       if (error) console.error('Failed to flush partner session', error)
+      else pingProgress(userId, challengeId)
       qc.invalidateQueries({ queryKey: ['today-seconds', userId, challengeId] })
       qc.invalidateQueries({ queryKey: ['stats', userId] })
       qc.invalidateQueries({ queryKey: ['comparison-stats'] })

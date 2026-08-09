@@ -13,6 +13,20 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.21.0',
+    date: '2026-08-09',
+    entries: [
+      {
+        type: 'feature',
+        text: 'Telegram bot posts finished challenges and complete days.',
+      },
+      {
+        type: 'feature',
+        text: 'Reminder at 21:00 when nothing is done yet today.',
+      },
+    ],
+  },
+  {
     version: '0.20.0',
     date: '2026-08-09',
     entries: [

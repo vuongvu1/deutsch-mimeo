@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { LISTENING_CHALLENGE_ID } from '@/hooks/useChallenges'
 import { todayLocalDate } from '@/lib/dates'
+import { pingProgress } from '@/lib/notify'
 import { supabase } from '@/lib/supabase'
 import type { ListeningExercise, ListeningLevel, ListeningRoundInsert, UserId } from '@/types/db'
 
@@ -81,6 +82,7 @@ export function useSubmitListeningRound() {
         local_date,
       })
       if (sessErr) throw sessErr
+      pingProgress(input.userId, LISTENING_CHALLENGE_ID)
       qc.invalidateQueries({ queryKey: ['today-seconds', input.userId, LISTENING_CHALLENGE_ID] })
       qc.invalidateQueries({ queryKey: ['stats', input.userId] })
       qc.invalidateQueries({ queryKey: ['comparison-stats'] })

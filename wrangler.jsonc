@@ -13,5 +13,13 @@
   },
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  // Cloudflare crons are UTC-only. 21:00 Berlin is 19:00 UTC in summer and
+  // 20:00 UTC in winter, so fire at both and let the Worker check the real
+  // Berlin hour — nothing to change twice a year.
+  "triggers": {
+    "crons": [
+      "0 19,20 * * *"
+    ]
+  }
 }
