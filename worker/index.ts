@@ -462,8 +462,7 @@ export default {
     return env.ASSETS.fetch(request)
   },
 
-  // Fires at 19:00 and 20:00 UTC; handleScheduled keeps whichever one is
-  // actually 21:00 in Berlin and drops the other.
+  // Fires hourly; handleScheduled keeps only the Berlin-local nag slots.
   async scheduled(event: ScheduledController, env: Env): Promise<void> {
     await handleScheduled(env, new Date(event.scheduledTime))
   },

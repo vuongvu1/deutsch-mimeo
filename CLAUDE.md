@@ -42,7 +42,7 @@ Schema in `supabase/migrations/0001_init.sql`. Run it in Supabase Studio → SQL
 | `videos` | per-user library (`user_id` FK), `youtube_id`, `title`, optional `note` |
 | `sessions` | one row per playback session — `seconds`, `local_date`, refs `user_id`/`challenge_id`/`video_id`. Reused as generic integer counter (rounds for vocab; passed-round flag = `seconds=1` for listening) |
 | `listening_rounds` | history of every *submitted* AI-listening exercise — transcript, questions/options (jsonb), user answers, score, `passed` flag. Only **passed** rounds also insert a `sessions` row (with `seconds=1`) so the day's checkmark ticks via the same `daily_completion` view |
-| `notifications` | dedup ledger for Telegram sends (`0013_notifications.sql`). No surrogate key — the unique index `(user_id, kind, local_date, challenge_id) nulls not distinct` *is* the identity, which is what makes `kind='day'`/`'nag'` (null `challenge_id`) collide with themselves. `kind` ∈ `challenge` \| `day` \| `nag` |
+| `notifications` | dedup ledger for Telegram sends (`0013_notifications.sql`). No surrogate key — the unique index `(user_id, kind, local_date, challenge_id) nulls not distinct` *is* the identity, which is what makes `kind='day'`/`'nag'` (null `challenge_id`) collide with themselves. `kind` ∈ `challenge` \| `day` \| `overtake` \| `nag<hour>` (e.g. `nag14`) — free text, so new topics need no migration |
 
 Views:
 - `daily_challenge_totals` — sum of seconds per (user, challenge, date)
@@ -107,7 +107,9 @@ PlayerPage shows two stats: "this session" (= `sessionSeconds`) and "today total
 
 Design spec: `docs/superpowers/specs/2026-08-09-telegram-notifications-design.md`.
 
-Three topics, all posted to **one shared group chat**: a challenge was finished, the day became complete, and a 21:00 nag when a user has done nothing.
+Four topics, all posted to **one shared group chat**: a challenge was finished, the day became complete, a rival overtook you on a challenge, and an every-2-hours status check-in.
+
+Copy is **English**, Duolingo-flavoured (funny, passive-aggressive, guilt-tripping), and lives in randomised pools in `worker/notify.ts` (`challengeLine`, `dayLine`, `overtakeLine`, `statusLine`, `taunt`). Add variants by appending to a pool — nothing else to touch. Because `pick()` uses `Math.random()`, tests assert substitution and absence of `undefined` across many samples rather than exact strings.
 
 The client is a **doorbell, not a brain**. `pingProgress(userId, challengeId)` (`src/lib/notify.ts`) posts only those two ids after a session write; the Worker reads `challenges` + `daily_challenge_totals` and decides everything. So no React component tracks before/after state, and no goal math is duplicated client-side.
 
@@ -124,13 +126,15 @@ Ping call sites — all four are inside an existing `flush()`/insert, one line e
 
 Every send is preceded by an **atomic claim**: insert into `notifications` with `Prefer: resolution=ignore-duplicates,return=representation`. Non-empty response = this request owns the send; empty = already sent, skip Telegram. That makes the endpoint idempotent — repeated pings, two devices, a redeploy mid-flight and a double-firing cron all converge on one message. If Telegram then fails, the claim is **released** (deleted) so the next ping retries instead of the day's message vanishing into a transient 429.
 
-Because any one challenge completes the day, the first completion claims both `challenge` and `day` and the two lines merge into a **single** message.
+Because any one challenge completes the day, the first completion claims both `challenge` and `day`, and an overtake in the same request adds a third line — all merged into a **single** message.
 
-The 21:00 nag rides `scheduled()` with `crons: ["0 19,20 * * *"]`. Cloudflare crons are UTC-only, so it fires at both 19:00 and 20:00 UTC and `berlinHour()` keeps whichever is really 21:00 in `Europe/Berlin`. That is the whole DST story — nothing to edit twice a year. "Incomplete" is derived from `daily_challenge_totals`, not from a missing `day` notification, so a lost doorbell ping doesn't suppress the nag.
+The overtake check (`hasOvertaken`) is a *level* comparison, not a real edge trigger: the Worker only ever sees current totals, so "just passed" is approximated by "is ahead now", and the once-per-day-per-challenge claim is what stops it repeating. It also requires the rival's total to be nonzero, so a 1–0 lead at breakfast isn't announced.
 
-`/api/notify` is public and unauthenticated, like `/api/listening/generate`. Accepted deliberately: the body selects a template and cannot inject text, and the dedup index caps output at 6 messages/user/day, so abuse wastes requests rather than sending spam.
+The status nag rides `scheduled()` with `crons: ["0 * * * *"]` — hourly, because Cloudflare crons are UTC-only while the slots are Berlin-local. `isNagHour()` keeps every 2nd hour from 10:00 to 22:00 (`NAG_HOURS`) and drops the rest, so DST needs no config change twice a year. Each slot claims `kind='nag<hour>'` per *incomplete* user — a plain `'nag'` would have allowed only one per day. The message reports **both** users' progress, but sends only when at least one is incomplete; if everyone is done there is nothing to claim and the group stays quiet. "Incomplete" is derived from `daily_challenge_totals`, not from a missing `day` notification, so a lost doorbell ping doesn't suppress the nag.
 
-Telegram copy is server-side German only — **no i18n files involved**.
+`/api/notify` is public and unauthenticated, like `/api/listening/generate`. Accepted deliberately: the body selects a template and cannot inject text, and the dedup index caps output per user per day (one per challenge, one `day`, one `overtake` per challenge, one per nag slot), so abuse wastes requests rather than sending spam.
+
+Telegram copy is server-side English only — **no i18n files involved**.
 
 ## Key conventions
 

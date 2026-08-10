@@ -13,6 +13,24 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.22.0',
+    date: '2026-08-11',
+    entries: [
+      {
+        type: 'feature',
+        text: 'Bot checks in every 2 hours with both your statuses.',
+      },
+      {
+        type: 'feature',
+        text: 'Get called out when the other one overtakes you.',
+      },
+      {
+        type: 'improvement',
+        text: 'Notification copy is English now, and far more annoying.',
+      },
+    ],
+  },
+  {
     version: '0.21.1',
     date: '2026-08-10',
     entries: [

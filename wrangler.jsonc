@@ -27,12 +27,12 @@
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_vIncR8_-FGKX6dv6vhyF4w_TmxEes5I",
     "TELEGRAM_CHAT_ID": "-5149117879"
   },
-  // Cloudflare crons are UTC-only. 21:00 Berlin is 19:00 UTC in summer and
-  // 20:00 UTC in winter, so fire at both and let the Worker check the real
-  // Berlin hour — nothing to change twice a year.
+  // Hourly, because Cloudflare crons are UTC-only and the nag slots are Berlin
+  // local (every 2h, 10:00–22:00). isNagHour() picks the right ones, so DST needs
+  // no config change twice a year. 24 invocations/day, well inside the free tier.
   "triggers": {
     "crons": [
-      "0 19,20 * * *"
+      "0 * * * *"
     ]
   }
 }
