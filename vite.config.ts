@@ -58,7 +58,9 @@ export default defineConfig({
     cloudflare(),
     dropOnnxRuntimeWasm(),
     VitePWA({
-      registerType: 'prompt',
+      // autoUpdate, not 'prompt': a user who never taps the banner keeps running
+      // an old bundle, which silently disabled their Telegram pings for a day.
+      registerType: 'autoUpdate',
       injectRegister: false,
       devOptions: { enabled: false },
       manifest: {
@@ -75,6 +77,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Without this the new SW activates but doesn't take over already-open
+        // tabs, so no controllerchange fires and autoUpdate wouldn't reload them.
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],

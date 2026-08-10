@@ -13,6 +13,20 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.21.1',
+    date: '2026-08-10',
+    entries: [
+      {
+        type: 'improvement',
+        text: 'Updates install automatically — no more refresh prompt.',
+      },
+      {
+        type: 'fix',
+        text: 'Telegram notifications now send reliably.',
+      },
+    ],
+  },
+  {
     version: '0.21.0',
     date: '2026-08-09',
     entries: [
