@@ -13,6 +13,40 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.24.0',
+    date: '2026-08-11',
+    entries: [
+      {
+        type: 'feature',
+        text: 'New alerts: almost done, perfect day, rival finished.',
+      },
+      {
+        type: 'feature',
+        text: 'End-of-day recap at 22:00 names the daily winner.',
+      },
+    ],
+  },
+  {
+    version: '0.23.0',
+    date: '2026-08-11',
+    entries: [
+      {
+        type: 'feature',
+        text: 'Notifications are bilingual — German, then English.',
+      },
+    ],
+  },
+  {
+    version: '0.22.1',
+    date: '2026-08-11',
+    entries: [
+      {
+        type: 'fix',
+        text: 'Notifications no longer mix English and German.',
+      },
+    ],
+  },
+  {
     version: '0.22.0',
     date: '2026-08-11',
     entries: [

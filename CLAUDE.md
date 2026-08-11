@@ -42,7 +42,7 @@ Schema in `supabase/migrations/0001_init.sql`. Run it in Supabase Studio → SQL
 | `videos` | per-user library (`user_id` FK), `youtube_id`, `title`, optional `note` |
 | `sessions` | one row per playback session — `seconds`, `local_date`, refs `user_id`/`challenge_id`/`video_id`. Reused as generic integer counter (rounds for vocab; passed-round flag = `seconds=1` for listening) |
 | `listening_rounds` | history of every *submitted* AI-listening exercise — transcript, questions/options (jsonb), user answers, score, `passed` flag. Only **passed** rounds also insert a `sessions` row (with `seconds=1`) so the day's checkmark ticks via the same `daily_completion` view |
-| `notifications` | dedup ledger for Telegram sends (`0013_notifications.sql`). No surrogate key — the unique index `(user_id, kind, local_date, challenge_id) nulls not distinct` *is* the identity, which is what makes `kind='day'`/`'nag'` (null `challenge_id`) collide with themselves. `kind` ∈ `challenge` \| `day` \| `overtake` \| `nag<hour>` (e.g. `nag14`) — free text, so new topics need no migration |
+| `notifications` | dedup ledger for Telegram sends (`0013_notifications.sql`). No surrogate key — the unique index `(user_id, kind, local_date, challenge_id) nulls not distinct` *is* the identity, which is what makes `kind='day'`/`'nag'` (null `challenge_id`) collide with themselves. `kind` ∈ `challenge` \| `day` \| `perfect` \| `almost` \| `overtake` \| `rivalDone` \| `nag<hour>` (e.g. `nag14`) \| `recap` — free text, so new topics need no migration |
 
 Views:
 - `daily_challenge_totals` — sum of seconds per (user, challenge, date)
@@ -107,9 +107,30 @@ PlayerPage shows two stats: "this session" (= `sessionSeconds`) and "today total
 
 Design spec: `docs/superpowers/specs/2026-08-09-telegram-notifications-design.md`.
 
-Four topics, all posted to **one shared group chat**: a challenge was finished, the day became complete, a rival overtook you on a challenge, and an every-2-hours status check-in.
+Seven topics, all posted to **one shared group chat**:
 
-Copy is **English**, Duolingo-flavoured (funny, passive-aggressive, guilt-tripping), and lives in randomised pools in `worker/notify.ts` (`challengeLine`, `dayLine`, `overtakeLine`, `statusLine`, `taunt`). Add variants by appending to a pool — nothing else to touch. Because `pick()` uses `Math.random()`, tests assert substitution and absence of `undefined` across many samples rather than exact strings.
+| Topic | `kind` | Trigger | Fires at most |
+|---|---|---|---|
+| Challenge finished | `challenge` | doorbell | once per challenge/day |
+| Day complete | `day` | doorbell | once/day |
+| **All** challenges done | `perfect` | doorbell | once/day |
+| Almost there (≥70%, <100%) | `almost` | doorbell | once per challenge/day |
+| Rival overtook you | `overtake` | doorbell | once per challenge/day |
+| Rival finished, you didn't | `rivalDone` | doorbell, claimed **against the laggard** | once/day |
+| Status check-in | `nag<hour>` | cron, 10/12/14/16/18/20 | once per slot |
+| End-of-day recap | `recap` | cron, 22:00 | once/day |
+
+`almost` and `challenge` are mutually exclusive (`else if`), so a goal never produces both. `rivalDone` claims under the *other* user's id — that's what makes it fire once for whoever is behind, instead of once per completion by whoever is ahead. The `recap` sends **even when both users are done**, unlike the nag, because it's a wrap-up rather than a reminder; `dayWinner()` returns null on a draw (including 0–0) so nobody gets crowned by accident.
+
+Copy is **bilingual** — German block, `SEPARATOR`, then the same message in English — and Duolingo-flavoured (funny, passive-aggressive, guilt-tripping).
+
+Pools live in `worker/notify.ts` as arrays of aligned `{de, en}` pairs (`CHALLENGE_VARIANTS`, `DAY_VARIANTS`, `OVERTAKE_VARIANTS`, `STATUS_DONE_VARIANTS`, `STATUS_TODO_VARIANTS`, `TAUNT_VARIANTS`). `pick()` selects a **pair**, so both halves always tell the same joke; two independent pools would drift apart. Add variants by appending a `{de, en}` object — nothing else to touch.
+
+Templates use `{who}`, `{them}`, `{title}`, `{days}`, `{done}`, `{total}`, `{clock}`, substituted by `fill()`, which leaves an unknown placeholder **visible** rather than blanking it, so a typo is obvious. `bilingualMessage()` does the final assembly.
+
+`challenges.title` is German (the UI renders it), so `titleFor()` returns `{de: <db title>, en: ENGLISH_TITLES[slug]}` — each language block gets its own name. An unknown slug falls back to the German title in both.
+
+Because `pick()` uses `Math.random()`, the tests assert **structure** over many samples rather than exact strings: exactly one separator, equal line counts on both sides, no unsubstituted `{…}`, no `undefined`, and each block carrying its own title.
 
 The client is a **doorbell, not a brain**. `pingProgress(userId, challengeId)` (`src/lib/notify.ts`) posts only those two ids after a session write; the Worker reads `challenges` + `daily_challenge_totals` and decides everything. So no React component tracks before/after state, and no goal math is duplicated client-side.
 
@@ -130,7 +151,7 @@ Because any one challenge completes the day, the first completion claims both `c
 
 The overtake check (`hasOvertaken`) is a *level* comparison, not a real edge trigger: the Worker only ever sees current totals, so "just passed" is approximated by "is ahead now", and the once-per-day-per-challenge claim is what stops it repeating. It also requires the rival's total to be nonzero, so a 1–0 lead at breakfast isn't announced.
 
-The status nag rides `scheduled()` with `crons: ["0 * * * *"]` — hourly, because Cloudflare crons are UTC-only while the slots are Berlin-local. `isNagHour()` keeps every 2nd hour from 10:00 to 22:00 (`NAG_HOURS`) and drops the rest, so DST needs no config change twice a year. Each slot claims `kind='nag<hour>'` per *incomplete* user — a plain `'nag'` would have allowed only one per day. The message reports **both** users' progress, but sends only when at least one is incomplete; if everyone is done there is nothing to claim and the group stays quiet. "Incomplete" is derived from `daily_challenge_totals`, not from a missing `day` notification, so a lost doorbell ping doesn't suppress the nag.
+The cron slots ride `scheduled()` with `crons: ["0 * * * *"]` — hourly, because Cloudflare crons are UTC-only while the slots are Berlin-local. `isNagHour()` keeps every 2nd hour from 10:00 to 20:00 (`NAG_HOURS`) and `isRecapHour()` claims 22:00; everything else is dropped, so DST needs no config change twice a year. Each slot claims `kind='nag<hour>'` per *incomplete* user — a plain `'nag'` would have allowed only one per day. The message reports **both** users' progress, but sends only when at least one is incomplete; if everyone is done there is nothing to claim and the group stays quiet. "Incomplete" is derived from `daily_challenge_totals`, not from a missing `day` notification, so a lost doorbell ping doesn't suppress the nag.
 
 `/api/notify` is public and unauthenticated, like `/api/listening/generate`. Accepted deliberately: the body selects a template and cannot inject text, and the dedup index caps output per user per day (one per challenge, one `day`, one `overtake` per challenge, one per nag slot), so abuse wastes requests rather than sending spam.
 
@@ -157,6 +178,7 @@ Telegram copy is server-side English only — **no i18n files involved**.
 4. To wire a clickable destination, add an entry to `SLUG_TO_PATH` in `ChallengeListPage.tsx` and build the page(s)
 5. Add a branch in `formatChallengeValue` (`src/lib/format.ts`) if "1 second = 1 unit" isn't the right display for the new counter
 6. Drop `listening.*` / `vocab.*`-style copy into both `src/i18n/locales/de.ts` and `en.ts`
+6b. **Add the slug to `ENGLISH_TITLES` in `worker/notify.ts`.** Telegram copy is bilingual; without this the English block reuses the German `challenges.title`. Nothing fails — the fallback is deliberate — so this is easy to forget and only visible in the group chat.
 7. **HomePage — live status:** extend `src/pages/HomePage/ComparisonPanel.tsx` to surface the new challenge in the Mi-vs-Meo table. Accept it via props (alongside `listenChallenge` / `vocabChallenge`), feed it through `useComparisonStats`, and push a new entry into the `categories` array (label + icon + Mi/Meo today values + formatter). HomePage (`src/pages/HomePage/HomePage.tsx`) is where the props get wired — pass the new challenge through there too. Without this step the side-by-side panel silently omits the challenge even though `daily_completion` already gates on it.
 8. **HomePage — recent activity:** add a branch in `src/pages/HomePage/ActivityLog.tsx` for the new `challenge_id` (mirror the existing `isVocab` / `isListening` switches): pick the right `verb`, `title`, and `value`, add i18n keys under `activityLog.*` in both `de.ts` and `en.ts`, and decide whether the row should link somewhere (video rows link to the player; vocab/listening rows are non-clickable). The feed already pulls from the generic `useRecentSessions` hook, so the work is purely presentational.
 

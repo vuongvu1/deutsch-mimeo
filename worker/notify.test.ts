@@ -1,26 +1,38 @@
 // Run: node --test worker/notify.test.ts
 //
 // Covers the decisions that fail *silently* — a DST regression would otherwise
-// surface only on the day the clocks change, and a bad completion or overtake
-// check would just quietly stop notifying.
+// surface only on the day the clocks change, a bad completion or overtake check
+// would quietly stop notifying, and a mistyped placeholder would ship raw
+// "{who}" text to the group.
 //
-// The copy builders pick at random, so they're checked for substitution and
-// non-empty pools, not for exact text.
+// Copy is picked at random, so the assertions are structural (both language
+// blocks present, aligned, fully substituted) rather than exact strings.
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  SEPARATOR,
+  almostLine,
   berlinHour,
   berlinLocalDate,
+  bilingualMessage,
   challengeLine,
   completedChallengeIds,
   dayLine,
+  dayWinner,
   hasOvertaken,
+  isAlmostThere,
   isNagHour,
+  isRecapHour,
   nagMessage,
   otherUserId,
   overtakeLine,
+  perfectLine,
+  progressRatio,
+  recapMessage,
+  rivalDoneLine,
+  titleFor,
   userStatuses,
   type Goal,
   type TotalRow,
@@ -29,7 +41,7 @@ import {
 test('berlinHour tracks DST', () => {
   // CEST (UTC+2)
   assert.equal(berlinHour(new Date('2026-08-09T18:00:00Z')), 20)
-  // CET (UTC+1): same wall-clock UTC is an hour earlier in Berlin
+  // CET (UTC+1): same UTC instant is an hour earlier in Berlin
   assert.equal(berlinHour(new Date('2026-12-09T18:00:00Z')), 19)
 })
 
@@ -38,25 +50,57 @@ test('berlinLocalDate rolls over on Berlin midnight, not UTC midnight', () => {
   assert.equal(berlinLocalDate(new Date('2026-08-09T23:30:00Z')), '2026-08-10')
 })
 
-test('isNagHour fires every 2h from 10:00 to 22:00 Berlin', () => {
-  // 08:00 UTC = 10:00 CEST -> nag slot
-  assert.equal(isNagHour(new Date('2026-08-09T08:00:00Z')), true)
-  // 09:00 UTC = 11:00 CEST -> odd hour, silent
-  assert.equal(isNagHour(new Date('2026-08-09T09:00:00Z')), false)
-  // 20:00 UTC = 22:00 CEST -> last slot
-  assert.equal(isNagHour(new Date('2026-08-09T20:00:00Z')), true)
-  // 22:00 UTC = 00:00 CEST -> past the last slot
-  assert.equal(isNagHour(new Date('2026-08-09T22:00:00Z')), false)
-  // 06:00 UTC = 08:00 CEST -> too early
-  assert.equal(isNagHour(new Date('2026-08-09T06:00:00Z')), false)
-  // Winter: 09:00 UTC = 10:00 CET -> still the first slot, no hardcoded offset
-  assert.equal(isNagHour(new Date('2026-12-09T09:00:00Z')), true)
+test('isNagHour fires every 2h from 10:00 to 20:00 Berlin', () => {
+  assert.equal(isNagHour(new Date('2026-08-09T08:00:00Z')), true) // 10:00 CEST
+  assert.equal(isNagHour(new Date('2026-08-09T09:00:00Z')), false) // 11:00 CEST, odd
+  assert.equal(isNagHour(new Date('2026-08-09T18:00:00Z')), true) // 20:00 CEST, last nag
+  assert.equal(isNagHour(new Date('2026-08-09T22:00:00Z')), false) // 00:00 CEST
+  assert.equal(isNagHour(new Date('2026-08-09T06:00:00Z')), false) // 08:00 CEST, early
+  assert.equal(isNagHour(new Date('2026-12-09T09:00:00Z')), true) // 10:00 CET, no offset hardcoded
+})
+
+test('22:00 Berlin is the recap slot, not a nag slot', () => {
+  const tenPmSummer = new Date('2026-08-09T20:00:00Z')
+  assert.equal(isRecapHour(tenPmSummer), true)
+  assert.equal(isNagHour(tenPmSummer), false)
+  // Winter: 21:00 UTC is 22:00 CET
+  assert.equal(isRecapHour(new Date('2026-12-09T21:00:00Z')), true)
+  assert.equal(isRecapHour(new Date('2026-12-09T20:00:00Z')), false)
+})
+
+test('progressRatio and isAlmostThere gate on 70%', () => {
+  const rows: TotalRow[] = [{ user_id: 'mi', challenge_id: 'vocab', total_seconds: 7 }]
+  assert.equal(progressRatio(GOALS, rows, 'vocab', 'mi'), 0.7)
+  assert.equal(isAlmostThere(GOALS, rows, 'vocab', 'mi'), true)
+
+  const under: TotalRow[] = [{ user_id: 'mi', challenge_id: 'vocab', total_seconds: 6 }]
+  assert.equal(isAlmostThere(GOALS, under, 'vocab', 'mi'), false)
+
+  // Complete is not "almost" — that's the challenge event's job.
+  const doneRows: TotalRow[] = [{ user_id: 'mi', challenge_id: 'vocab', total_seconds: 10 }]
+  assert.equal(isAlmostThere(GOALS, doneRows, 'vocab', 'mi'), false)
+
+  // Unknown challenge must not divide by zero or throw.
+  assert.equal(progressRatio(GOALS, rows, 'nope', 'mi'), 0)
+  assert.equal(isAlmostThere(GOALS, [], 'vocab', 'mi'), false)
+})
+
+test('dayWinner compares cleared counts and reports draws', () => {
+  const mk = (miDone: number, meoDone: number) => [
+    { userId: 'mi', done: miDone, total: 3, complete: miDone > 0 },
+    { userId: 'meo', done: meoDone, total: 3, complete: meoDone > 0 },
+  ]
+  assert.equal(dayWinner(mk(2, 1)), 'mi')
+  assert.equal(dayWinner(mk(1, 2)), 'meo')
+  assert.equal(dayWinner(mk(2, 2)), null)
+  // 0-0 is a draw, not a win for whoever is listed first.
+  assert.equal(dayWinner(mk(0, 0)), null)
 })
 
 const GOALS: Goal[] = [
-  { id: 'listen', title: 'Listen 30 min/day', daily_goal_seconds: 1800 },
-  { id: 'vocab', title: 'Vokabeln 10 Runden/Tag', daily_goal_seconds: 10 },
-  { id: 'listening', title: 'Hörverstehen 1×/Tag', daily_goal_seconds: 1 },
+  { id: 'listen', slug: 'listen', title: 'Listen 30 min/day', daily_goal_seconds: 1800 },
+  { id: 'vocab', slug: 'vocab', title: 'Vokabeln 10 Runden/Tag', daily_goal_seconds: 10 },
+  { id: 'listening', slug: 'listening', title: 'Hörverstehen 1×/Tag', daily_goal_seconds: 1 },
 ]
 
 test('completedChallengeIds compares totals against goals per user', () => {
@@ -109,7 +153,6 @@ test('hasOvertaken needs a rival with a nonzero total', () => {
   assert.equal(hasOvertaken(ahead, 'vocab', 'mi'), true)
   assert.equal(hasOvertaken(ahead, 'vocab', 'meo'), false)
 
-  // A tie is not ahead.
   const tied: TotalRow[] = [
     { user_id: 'mi', challenge_id: 'vocab', total_seconds: 4 },
     { user_id: 'meo', challenge_id: 'vocab', total_seconds: 4 },
@@ -124,30 +167,116 @@ test('hasOvertaken needs a rival with a nonzero total', () => {
   assert.equal(hasOvertaken(otherChallenge, 'vocab', 'mi'), false)
 })
 
-test('copy builders substitute their arguments and never return empty', () => {
-  // Every pool entry must be reachable and well-formed, so sample repeatedly.
-  for (let i = 0; i < 200; i++) {
-    const c = challengeLine('mi', 'Vokabeln 10 Runden/Tag')
-    assert.ok(c.includes('Mi') && c.includes('Vokabeln 10 Runden/Tag'), c)
+test('titleFor keeps the German title and adds an English one', () => {
+  assert.deepEqual(titleFor(GOALS[1]), {
+    de: 'Vokabeln 10 Runden/Tag',
+    en: 'Vocab 10 rounds',
+  })
+  assert.deepEqual(titleFor(undefined), { de: 'eine Challenge', en: 'a challenge' })
+  // An unknown slug falls back to the German title rather than going blank.
+  const future: Goal = {
+    id: 'x',
+    slug: 'schreiben',
+    title: 'Schreiben 5 Sätze',
+    daily_goal_seconds: 5,
+  }
+  assert.deepEqual(titleFor(future), { de: 'Schreiben 5 Sätze', en: 'Schreiben 5 Sätze' })
+})
 
-    const d = dayLine('meo', 42)
-    assert.ok(d.includes('Meo') && d.includes('42'), d)
+test('bilingualMessage puts German first, then the separator, then English', () => {
+  const out = bilingualMessage([
+    { de: 'eins', en: 'one' },
+    { de: 'zwei', en: 'two' },
+  ])
+  assert.equal(out, `eins\nzwei\n${SEPARATOR}\none\ntwo`)
+})
 
-    const o = overtakeLine('mi', 'Abfrage')
-    assert.ok(o.includes('Mi') && o.includes('Meo') && o.includes('Abfrage'), o)
-    assert.ok(!o.includes('undefined'), o)
+/** Splits a rendered message into its two language blocks. */
+function blocks(message: string): { de: string[]; en: string[] } {
+  const parts = message.split(`\n${SEPARATOR}\n`)
+  assert.equal(parts.length, 2, `expected exactly one separator in:\n${message}`)
+  return { de: parts[0].split('\n'), en: parts[1].split('\n') }
+}
+
+test('every message is bilingual, aligned, and fully substituted', () => {
+  const statuses = userStatuses(GOALS, [
+    { user_id: 'meo', challenge_id: 'listening', total_seconds: 1 },
+  ])
+  const vocab = titleFor(GOALS[1])
+
+  const drawStatuses = userStatuses(GOALS, [])
+
+  for (let i = 0; i < 300; i++) {
+    const messages = [
+      bilingualMessage([challengeLine('mi', vocab), dayLine('mi', 7)]),
+      bilingualMessage([overtakeLine('meo', vocab)]),
+      bilingualMessage([almostLine('mi', vocab, 0.8)]),
+      bilingualMessage([perfectLine('meo')]),
+      bilingualMessage([rivalDoneLine('mi')]),
+      nagMessage(18, statuses),
+      recapMessage(statuses),
+      recapMessage(drawStatuses),
+    ]
+    for (const msg of messages) {
+      const { de, en } = blocks(msg)
+      // Same number of lines on both sides — a drifting pool would break this.
+      assert.equal(de.length, en.length, msg)
+      assert.ok(!msg.includes('{'), `unsubstituted placeholder in:\n${msg}`)
+      assert.ok(!msg.includes('undefined'), msg)
+      for (const line of [...de, ...en]) assert.ok(line.trim().length > 0, msg)
+    }
   }
 })
 
-test('nagMessage shows the clock and both users', () => {
+test('each language block uses its own challenge title', () => {
+  const vocab = titleFor(GOALS[1])
+  for (let i = 0; i < 200; i++) {
+    const { de, en } = blocks(bilingualMessage([challengeLine('mi', vocab)]))
+    assert.ok(de.join('\n').includes('Vokabeln 10 Runden/Tag'), de.join('\n'))
+    assert.ok(en.join('\n').includes('Vocab 10 rounds'), en.join('\n'))
+    assert.ok(!en.join('\n').includes('Vokabeln 10 Runden/Tag'), en.join('\n'))
+  }
+})
+
+test('almostLine reports a whole-number percentage', () => {
+  const vocab = titleFor(GOALS[1])
+  for (let i = 0; i < 100; i++) {
+    const { de, en } = blocks(bilingualMessage([almostLine('mi', vocab, 0.7)]))
+    assert.ok(de.join('\n').includes('70'), de.join('\n'))
+    assert.ok(en.join('\n').includes('70'), en.join('\n'))
+    // No 69.99999% artefacts — digits must never be followed by a decimal point.
+    assert.ok(!/\d\.\d/.test(en.join('\n')), en.join('\n'))
+  }
+  const odd = bilingualMessage([almostLine('mi', vocab, 0.8333)])
+  assert.ok(odd.includes('83'), odd)
+})
+
+test('recapMessage names a winner or calls a draw', () => {
+  const miAhead = [
+    { userId: 'mi', done: 2, total: 3, complete: true },
+    { userId: 'meo', done: 1, total: 3, complete: true },
+  ]
+  for (let i = 0; i < 100; i++) {
+    const won = recapMessage(miAhead)
+    assert.ok(won.includes('Mi'), won)
+    const drawn = recapMessage(userStatuses(GOALS, []))
+    // A draw must not accidentally crown anyone via a leftover {who}.
+    assert.ok(!drawn.includes('{'), drawn)
+  }
+})
+
+test('nagMessage shows the clock and both users in both languages', () => {
   const statuses = userStatuses(GOALS, [
     { user_id: 'meo', challenge_id: 'listening', total_seconds: 1 },
   ])
   for (let i = 0; i < 100; i++) {
-    const msg = nagMessage(14, statuses)
-    assert.ok(msg.startsWith('⏰ 14:00'), msg)
-    assert.ok(msg.includes('Mi') && msg.includes('Meo'), msg)
-    assert.ok(!msg.includes('undefined'), msg)
+    const { de, en } = blocks(nagMessage(14, statuses))
+    assert.ok(de[0].startsWith('⏰ 14:00'), de[0])
+    assert.ok(en[0].startsWith('⏰ 14:00'), en[0])
+    for (const block of [de, en]) {
+      const text = block.join('\n')
+      assert.ok(text.includes('Mi') && text.includes('Meo'), text)
+    }
   }
   // Single-digit hours stay zero-padded.
   assert.ok(nagMessage(8, statuses).startsWith('⏰ 08:00'))
