@@ -118,7 +118,7 @@ export function StatsPage() {
           </Heading>
           <Grid columns={{ initial: '2', sm: '3' }} gap="3" mb="6">
             <Stat
-              label={t('stats.daysComplete')}
+              label={t('stats.daysDone')}
               value={`${listenStats.daysCompleteAllChallenges}`}
               accent={listenStats.daysCompleteAllChallenges > 0}
             />

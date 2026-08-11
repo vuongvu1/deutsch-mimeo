@@ -162,7 +162,7 @@ Telegram copy is server-side English only — **no i18n files involved**.
 - **Named exports** for components and hooks, **default exports** are not used
 - **Imports**: external first, then `@/...`, alphabetical within groups, blank line between groups
 - **CSS modules** colocated as `Foo.module.css` next to `Foo.tsx`; design tokens only (no fallback values)
-- **German UI copy** is intentional (Lade…, Heute, Tage komplett, etc.)
+- **German UI copy** is intentional (Lade…, Heute, Tage geschafft, etc.)
 - **No comments** unless explaining a non-obvious *why*
 - **No `TodoWrite` from Claude** in user-facing work — this file is the source of truth for follow-ups
 - **Update `src/lib/changelog.ts`** whenever a feature, bug fix, or notable improvement ships — add an entry with the matching `type` (`feature` / `fix` / `improvement` / `chore`) and concise English `text` (1 sentence max, ~60 chars). Bump the version (semver-ish) and set `date` to today; group same-day changes under one version block. This file powers the in-app Changelog dialog.

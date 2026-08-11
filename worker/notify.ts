@@ -266,34 +266,37 @@ const CHALLENGE_VARIANTS: readonly Bilingual[] = [
   },
 ]
 
+// "Tag geschafft" / "day done", never "komplett" / "complete" — one challenge out
+// of four clears the bar, so claiming the day is complete over-promises. Matches
+// the `daysDone` label in the UI.
 const DAY_VARIANTS: readonly Bilingual[] = [
   {
-    de: `🔥 {who} hat den Tag komplett. {days} Tage insgesamt. Unerträglich.`,
-    en: `🔥 {who} completed the day. {days} days total. Insufferable.`,
+    de: `🔥 {who} hat heute was geschafft. {days} Tage geschafft insgesamt. Unerträglich.`,
+    en: `🔥 {who} got something done today. {days} days done in total. Insufferable.`,
   },
   {
-    de: `🔥 Tag komplett für {who} — {days} auf dem Konto. Selbstgefälligkeit: AN.`,
-    en: `🔥 Day complete for {who} — {days} in the bank. Smug mode: ON.`,
+    de: `🔥 Tag gesichert für {who} — {days} Tage geschafft. Selbstgefälligkeit: AN.`,
+    en: `🔥 Day banked for {who} — {days} days done. Smug mode: ON.`,
   },
   {
-    de: `🔥 {who} ist für heute fertig. {days} Tage. Kein Kommentar.`,
-    en: `🔥 {who} is done for the day. {days} days total. No notes.`,
+    de: `🔥 {who} ist für heute durch. {days} Tage geschafft. Kein Kommentar.`,
+    en: `🔥 {who} is done for today. {days} days done. No notes.`,
   },
   {
-    de: `🔥 Tag {days} gesichert von {who}. {them}, die Uhr ist ein echtes Ding.`,
-    en: `🔥 Day {days} secured by {who}. {them}, the clock is a real thing.`,
+    de: `🔥 Tag {days} geschafft von {who}. {them}, die Uhr ist ein echtes Ding.`,
+    en: `🔥 Day {days} done by {who}. {them}, the clock is a real thing.`,
   },
   {
-    de: `🏅 Tag komplett: {who}. Gesamtbilanz {days}. Denkmal folgt.`,
-    en: `🏅 Day complete: {who}. Career total {days}. Statue pending.`,
+    de: `🏅 Tag geschafft: {who}. Gesamtbilanz {days}. Denkmal folgt.`,
+    en: `🏅 Day done: {who}. Career total {days}. Statue pending.`,
   },
   {
-    de: `🎊 {who} ist durch. {days} Tage. Bitte applaudieren.`,
-    en: `🎊 {who} is done. {days} days. Please clap.`,
+    de: `🎊 {who} ist durch. {days} Tage geschafft. Bitte applaudieren.`,
+    en: `🎊 {who} is done. {days} days done. Please clap.`,
   },
   {
-    de: `😤 {who} hat den Tag WIEDER geschafft. {days} insgesamt. Das ist ein Muster.`,
-    en: `😤 {who} finished the day AGAIN. {days} total. This is a pattern.`,
+    de: `😤 {who} hat es WIEDER geschafft. {days} Tage insgesamt. Das ist ein Muster.`,
+    en: `😤 {who} did it AGAIN. {days} days done. This is a pattern.`,
   },
 ]
 
@@ -457,8 +460,8 @@ const RIVAL_DONE_VARIANTS: readonly Bilingual[] = [
     en: `👀 {them} is done for today. {who} is not. Just saying.`,
   },
   {
-    de: `🙃 {them} hat den Tag komplett. {who}, wie läuft's so?`,
-    en: `🙃 {them} completed the day. {who}, how's it going over there?`,
+    de: `🙃 {them} hat den Tag geschafft. {who}, wie läuft's so?`,
+    en: `🙃 {them} got the day done. {who}, how's it going over there?`,
   },
   {
     de: `📉 {them}: fertig. {who}: nicht fertig. Die Tabelle lügt nicht.`,

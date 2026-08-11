@@ -3,9 +3,7 @@ import { Box, Button, Card, Flex, Table, Text } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
-import { useComparisonStats, useListeningCorrectTodayComparison } from '@/hooks/useStats'
-import { formatMinutes } from '@/lib/dates'
-import { formatChallengeValue } from '@/lib/format'
+import { useComparisonStats } from '@/hooks/useStats'
 import { paths } from '@/routes/paths'
 import type { ChallengeRow } from '@/types/db'
 
@@ -13,8 +11,6 @@ import styles from './ComparisonPanel.module.css'
 
 interface Props {
   listenChallenge: ChallengeRow | undefined
-  vocabChallenge: ChallengeRow | undefined
-  recallChallenge: ChallengeRow | undefined
 }
 
 interface Category {
@@ -26,26 +22,11 @@ interface Category {
   format: (n: number) => string
 }
 
-export function ComparisonPanel({ listenChallenge, vocabChallenge, recallChallenge }: Props) {
+export function ComparisonPanel({ listenChallenge }: Props) {
   const { t } = useTranslation()
   const listen = useComparisonStats(listenChallenge)
-  const vocab = useComparisonStats(vocabChallenge)
-  const recall = useComparisonStats(recallChallenge)
-  const listeningCorrect = useListeningCorrectTodayComparison()
 
-  if (
-    !listenChallenge ||
-    !vocabChallenge ||
-    !recallChallenge ||
-    listen.isLoading ||
-    vocab.isLoading ||
-    recall.isLoading ||
-    listeningCorrect.isLoading ||
-    !listen.data ||
-    !vocab.data ||
-    !recall.data ||
-    !listeningCorrect.data
-  ) {
+  if (!listenChallenge || listen.isLoading || !listen.data) {
     return (
       <Card>
         <Text color="gray">{t('common.loadingStats')}</Text>
@@ -54,48 +35,11 @@ export function ComparisonPanel({ listenChallenge, vocabChallenge, recallChallen
   }
 
   const ld = listen.data
-  const vd = vocab.data
-  const rd = recall.data
-  const lc = listeningCorrect.data
-  const vocabFmt = (n: number) => formatChallengeValue('vocab', n, t)
-  const recallFmt = (n: number) => formatChallengeValue('recall', n, t)
 
   const categories: Category[] = [
     {
-      id: 'today-listen',
-      label: t('comparison.todayListened'),
-      icon: '💪',
-      miValue: ld.mi.todaySeconds,
-      meoValue: ld.meo.todaySeconds,
-      format: formatMinutes,
-    },
-    {
-      id: 'today-vocab',
-      label: t('comparison.todayVocab'),
-      icon: '🧠',
-      miValue: vd.mi.todaySeconds,
-      meoValue: vd.meo.todaySeconds,
-      format: vocabFmt,
-    },
-    {
-      id: 'today-listening-correct',
-      label: t('comparison.todayListeningCorrect'),
-      icon: '📻',
-      miValue: lc.mi,
-      meoValue: lc.meo,
-      format: (n) => `${n}`,
-    },
-    {
-      id: 'today-recall',
-      label: t('comparison.todayRecall'),
-      icon: '✍️',
-      miValue: rd.mi.todaySeconds,
-      meoValue: rd.meo.todaySeconds,
-      format: recallFmt,
-    },
-    {
       id: 'days-complete',
-      label: t('comparison.daysComplete'),
+      label: t('comparison.daysDone'),
       icon: '💯',
       miValue: ld.mi.daysCompleteAllChallenges,
       meoValue: ld.meo.daysCompleteAllChallenges,
