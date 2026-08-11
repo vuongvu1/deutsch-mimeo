@@ -266,21 +266,21 @@ const CHALLENGE_VARIANTS: readonly Bilingual[] = [
   },
 ]
 
-// "Tag geschafft" / "day done", never "komplett" / "complete" — one challenge out
-// of four clears the bar, so claiming the day is complete over-promises. Matches
-// the `daysDone` label in the UI.
+// The running total is "aktive Tage" / "active days" — matching the activeDays
+// label in the UI. Never "komplett" / "complete": one challenge out of four
+// clears the bar, so calling the day complete over-promises.
 const DAY_VARIANTS: readonly Bilingual[] = [
   {
-    de: `🔥 {who} hat heute was geschafft. {days} Tage geschafft insgesamt. Unerträglich.`,
-    en: `🔥 {who} got something done today. {days} days done in total. Insufferable.`,
+    de: `🔥 {who} hat heute was geschafft. {days} aktive Tage insgesamt. Unerträglich.`,
+    en: `🔥 {who} got something done today. {days} active days in total. Insufferable.`,
   },
   {
-    de: `🔥 Tag gesichert für {who} — {days} Tage geschafft. Selbstgefälligkeit: AN.`,
-    en: `🔥 Day banked for {who} — {days} days done. Smug mode: ON.`,
+    de: `🔥 Tag gesichert für {who} — {days} aktive Tage. Selbstgefälligkeit: AN.`,
+    en: `🔥 Day banked for {who} — {days} active days. Smug mode: ON.`,
   },
   {
-    de: `🔥 {who} ist für heute durch. {days} Tage geschafft. Kein Kommentar.`,
-    en: `🔥 {who} is done for today. {days} days done. No notes.`,
+    de: `🔥 {who} ist für heute durch. {days} aktive Tage. Kein Kommentar.`,
+    en: `🔥 {who} is done for today. {days} active days. No notes.`,
   },
   {
     de: `🔥 Tag {days} geschafft von {who}. {them}, die Uhr ist ein echtes Ding.`,
@@ -291,12 +291,12 @@ const DAY_VARIANTS: readonly Bilingual[] = [
     en: `🏅 Day done: {who}. Career total {days}. Statue pending.`,
   },
   {
-    de: `🎊 {who} ist durch. {days} Tage geschafft. Bitte applaudieren.`,
-    en: `🎊 {who} is done. {days} days done. Please clap.`,
+    de: `🎊 {who} ist durch. {days} aktive Tage. Bitte applaudieren.`,
+    en: `🎊 {who} is done. {days} active days. Please clap.`,
   },
   {
-    de: `😤 {who} hat es WIEDER geschafft. {days} Tage insgesamt. Das ist ein Muster.`,
-    en: `😤 {who} did it AGAIN. {days} days done. This is a pattern.`,
+    de: `😤 {who} hat es WIEDER geschafft. {days} aktive Tage. Das ist ein Muster.`,
+    en: `😤 {who} did it AGAIN. {days} active days. This is a pattern.`,
   },
 ]
 

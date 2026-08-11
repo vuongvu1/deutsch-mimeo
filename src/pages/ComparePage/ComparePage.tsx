@@ -209,15 +209,15 @@ function vocabCategories(data: ComparisonStats, t: TFunction): Category[] {
 function daysCategories(data: ComparisonStats, t: TFunction): Category[] {
   return [
     {
-      id: 'daysDone',
-      label: t('stats.daysDone'),
+      id: 'activeDays',
+      label: t('stats.activeDays'),
       miValue: data.mi.daysCompleteAllChallenges,
       meoValue: data.meo.daysCompleteAllChallenges,
       format: (n) => `${n}`,
     },
     {
-      id: 'activeDays',
-      label: t('stats.activeDays'),
+      id: 'daysWithActivity',
+      label: t('stats.daysWithActivity'),
       miValue: data.mi.totalDistinctActiveDays,
       meoValue: data.meo.totalDistinctActiveDays,
       format: (n) => `${n}`,

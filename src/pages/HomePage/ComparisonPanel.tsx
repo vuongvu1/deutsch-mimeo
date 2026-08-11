@@ -38,8 +38,8 @@ export function ComparisonPanel({ listenChallenge }: Props) {
 
   const categories: Category[] = [
     {
-      id: 'days-complete',
-      label: t('comparison.daysDone'),
+      id: 'active-days',
+      label: t('comparison.activeDays'),
       icon: '💯',
       miValue: ld.mi.daysCompleteAllChallenges,
       meoValue: ld.meo.daysCompleteAllChallenges,

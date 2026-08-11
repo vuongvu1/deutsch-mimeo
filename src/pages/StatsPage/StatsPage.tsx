@@ -118,11 +118,11 @@ export function StatsPage() {
           </Heading>
           <Grid columns={{ initial: '2', sm: '3' }} gap="3" mb="6">
             <Stat
-              label={t('stats.daysDone')}
+              label={t('stats.activeDays')}
               value={`${listenStats.daysCompleteAllChallenges}`}
               accent={listenStats.daysCompleteAllChallenges > 0}
             />
-            <Stat label={t('stats.activeDays')} value={`${listenStats.totalDistinctActiveDays}`} />
+            <Stat label={t('stats.daysWithActivity')} value={`${listenStats.totalDistinctActiveDays}`} />
           </Grid>
 
           <Heading size="5" weight="bold" mb="3">

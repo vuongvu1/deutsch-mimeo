@@ -82,7 +82,7 @@ export const en = {
     deletedVideo: '(deleted video)',
   },
   comparison: {
-    daysDone: 'Days done',
+    activeDays: 'Active days',
     totalCompleted: 'Challenges complete',
     fullStatsCta: 'Show full stats',
   },
@@ -168,8 +168,8 @@ export const en = {
     activeVideos: 'Active videos',
     watchedVideos: 'Watched',
     daysHeading: '📅 Days',
-    daysDone: 'Days done',
     activeDays: 'Active days',
+    daysWithActivity: 'Days with activity',
     activity: '🔥 Activity (13 weeks)',
     vocabActivity: '🔥 Vocab activity (13 weeks)',
   },

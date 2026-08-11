@@ -82,7 +82,7 @@ export const de = {
     deletedVideo: '(gelöschtes Video)',
   },
   comparison: {
-    daysDone: 'Tage geschafft',
+    activeDays: 'Aktive Tage',
     totalCompleted: 'Challenges komplett',
     fullStatsCta: 'Alle Stats anzeigen',
   },
@@ -169,8 +169,8 @@ export const de = {
     activeVideos: 'Aktive Videos',
     watchedVideos: 'Gesehen',
     daysHeading: '📅 Tage',
-    daysDone: 'Tage geschafft',
     activeDays: 'Aktive Tage',
+    daysWithActivity: 'Tage mit Aktivität',
     activity: '🔥 Aktivität (13 Wochen)',
     vocabActivity: '🔥 Vokabel-Aktivität (13 Wochen)',
   },

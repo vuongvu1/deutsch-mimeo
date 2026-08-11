@@ -13,6 +13,16 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.24.2',
+    date: '2026-08-11',
+    entries: [
+      {
+        type: 'improvement',
+        text: 'Home shows "Active days" — days with at least one task done.',
+      },
+    ],
+  },
+  {
     version: '0.24.1',
     date: '2026-08-11',
     entries: [
