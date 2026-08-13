@@ -67,8 +67,11 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 export const SEPARATOR = '➖➖➖➖➖➖➖'
 
-/** Every 2 hours, 10:00–20:00 Berlin. The cron runs hourly and this filters. */
-const NAG_HOURS: ReadonlySet<number> = new Set([10, 12, 14, 16, 18, 20])
+/**
+ * 12:00 and 18:00 Berlin — one midday poke, one after work. The cron runs hourly
+ * and this filters, so message volume lives here, never in the cron expression.
+ */
+const NAG_HOURS: ReadonlySet<number> = new Set([12, 18])
 
 /** 22:00 gets the end-of-day recap instead of another nag. */
 const RECAP_HOUR = 22

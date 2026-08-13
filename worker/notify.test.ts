@@ -50,13 +50,16 @@ test('berlinLocalDate rolls over on Berlin midnight, not UTC midnight', () => {
   assert.equal(berlinLocalDate(new Date('2026-08-09T23:30:00Z')), '2026-08-10')
 })
 
-test('isNagHour fires every 2h from 10:00 to 20:00 Berlin', () => {
-  assert.equal(isNagHour(new Date('2026-08-09T08:00:00Z')), true) // 10:00 CEST
-  assert.equal(isNagHour(new Date('2026-08-09T09:00:00Z')), false) // 11:00 CEST, odd
-  assert.equal(isNagHour(new Date('2026-08-09T18:00:00Z')), true) // 20:00 CEST, last nag
+test('isNagHour fires only at 12:00 and 18:00 Berlin', () => {
+  assert.equal(isNagHour(new Date('2026-08-09T10:00:00Z')), true) // 12:00 CEST
+  assert.equal(isNagHour(new Date('2026-08-09T16:00:00Z')), true) // 18:00 CEST
+  assert.equal(isNagHour(new Date('2026-08-09T08:00:00Z')), false) // 10:00 CEST, dropped slot
+  assert.equal(isNagHour(new Date('2026-08-09T18:00:00Z')), false) // 20:00 CEST, dropped slot
   assert.equal(isNagHour(new Date('2026-08-09T22:00:00Z')), false) // 00:00 CEST
-  assert.equal(isNagHour(new Date('2026-08-09T06:00:00Z')), false) // 08:00 CEST, early
-  assert.equal(isNagHour(new Date('2026-12-09T09:00:00Z')), true) // 10:00 CET, no offset hardcoded
+  // Winter: same wall-clock hours, one UTC hour later. No offset is hardcoded.
+  assert.equal(isNagHour(new Date('2026-12-09T11:00:00Z')), true) // 12:00 CET
+  assert.equal(isNagHour(new Date('2026-12-09T17:00:00Z')), true) // 18:00 CET
+  assert.equal(isNagHour(new Date('2026-12-09T10:00:00Z')), false) // 11:00 CET
 })
 
 test('22:00 Berlin is the recap slot, not a nag slot', () => {

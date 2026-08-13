@@ -117,7 +117,7 @@ Seven topics, all posted to **one shared group chat**:
 | Almost there (≥70%, <100%) | `almost` | doorbell | once per challenge/day |
 | Rival overtook you | `overtake` | doorbell | once per challenge/day |
 | Rival finished, you didn't | `rivalDone` | doorbell, claimed **against the laggard** | once/day |
-| Status check-in | `nag<hour>` | cron, 10/12/14/16/18/20 | once per slot |
+| Status check-in | `nag<hour>` | cron, 12:00 and 18:00 | once per slot |
 | End-of-day recap | `recap` | cron, 22:00 | once/day |
 
 `almost` and `challenge` are mutually exclusive (`else if`), so a goal never produces both. `rivalDone` claims under the *other* user's id — that's what makes it fire once for whoever is behind, instead of once per completion by whoever is ahead. The `recap` sends **even when both users are done**, unlike the nag, because it's a wrap-up rather than a reminder; `dayWinner()` returns null on a draw (including 0–0) so nobody gets crowned by accident.
@@ -151,7 +151,7 @@ Because any one challenge completes the day, the first completion claims both `c
 
 The overtake check (`hasOvertaken`) is a *level* comparison, not a real edge trigger: the Worker only ever sees current totals, so "just passed" is approximated by "is ahead now", and the once-per-day-per-challenge claim is what stops it repeating. It also requires the rival's total to be nonzero, so a 1–0 lead at breakfast isn't announced.
 
-The cron slots ride `scheduled()` with `crons: ["0 * * * *"]` — hourly, because Cloudflare crons are UTC-only while the slots are Berlin-local. `isNagHour()` keeps every 2nd hour from 10:00 to 20:00 (`NAG_HOURS`) and `isRecapHour()` claims 22:00; everything else is dropped, so DST needs no config change twice a year. Each slot claims `kind='nag<hour>'` per *incomplete* user — a plain `'nag'` would have allowed only one per day. The message reports **both** users' progress, but sends only when at least one is incomplete; if everyone is done there is nothing to claim and the group stays quiet. "Incomplete" is derived from `daily_challenge_totals`, not from a missing `day` notification, so a lost doorbell ping doesn't suppress the nag.
+The cron slots ride `scheduled()` with `crons: ["0 * * * *"]` — hourly, because Cloudflare crons are UTC-only while the slots are Berlin-local. `isNagHour()` keeps 12:00 and 18:00 (`NAG_HOURS`) and `isRecapHour()` claims 22:00; everything else is dropped, so DST needs no config change twice a year. **Message volume is tuned only via `NAG_HOURS`** — never by narrowing the cron expression, which would fire at the wrong Berlin hour for half the year. Each slot claims `kind='nag<hour>'` per *incomplete* user — a plain `'nag'` would have allowed only one per day. The message reports **both** users' progress, but sends only when at least one is incomplete; if everyone is done there is nothing to claim and the group stays quiet. "Incomplete" is derived from `daily_challenge_totals`, not from a missing `day` notification, so a lost doorbell ping doesn't suppress the nag.
 
 `/api/notify` is public and unauthenticated, like `/api/listening/generate`. Accepted deliberately: the body selects a template and cannot inject text, and the dedup index caps output per user per day (one per challenge, one `day`, one `overtake` per challenge, one per nag slot), so abuse wastes requests rather than sending spam.
 
