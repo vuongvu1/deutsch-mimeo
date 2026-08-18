@@ -1,9 +1,8 @@
 /**
- * Telegram notifications, Duolingo-flavoured and bilingual.
+ * Telegram notifications, Duolingo-flavoured. Sent in English.
  *
- * Every message is German first, a separator, then the same message in English.
- * Copy pools are stored as aligned {de, en} pairs and picked as a unit, so both
- * halves always tell the same joke — two independent pools would drift.
+ * Copy pools are stored as aligned {de, en} pairs and picked as a unit; only the
+ * `en` half is sent (see `message()`), the German half stays for a future toggle.
  * Placeholders are `{who}`, `{them}`, `{title}`, `{days}`, `{done}`, `{total}`,
  * `{clock}`; `fill()` leaves an unknown one visible so typos surface loudly.
  *
@@ -64,8 +63,6 @@ const TZ = 'Europe/Berlin'
 const USER_IDS = ['mi', 'meo'] as const
 const USER_LABELS: Record<string, string> = { mi: '🐷 Mi', meo: '🐱 Meo' }
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-export const SEPARATOR = '➖➖➖➖➖➖➖'
 
 /**
  * 12:00 and 18:00 Berlin — one midday poke, one after work. The cron runs hourly
@@ -520,11 +517,13 @@ function statusLine(s: UserStatus): Bilingual {
   return render(pick(pool), vars, vars)
 }
 
-/** German block, separator, English block. */
-export function bilingualMessage(lines: Bilingual[]): string {
-  const de = lines.map((l) => l.de).join('\n')
-  const en = lines.map((l) => l.en).join('\n')
-  return `${de}\n${SEPARATOR}\n${en}`
+/**
+ * English only. The pools still carry a `de` half — kept so bilingual sends can
+ * come back by flipping this one function, not by rewriting every variant.
+ * ponytail: delete the `de` halves if English-only becomes permanent.
+ */
+export function message(lines: Bilingual[]): string {
+  return lines.map((l) => l.en).join('\n')
 }
 
 export function almostLine(userId: string, title: Bilingual, ratio: number): Bilingual {
@@ -545,7 +544,7 @@ export function rivalDoneLine(laggardId: string): Bilingual {
 
 export function nagMessage(hour: number, statuses: UserStatus[]): string {
   const clock = { clock: `${String(hour).padStart(2, '0')}:00` }
-  return bilingualMessage([
+  return message([
     render(NAG_HEADER, clock, clock),
     ...statuses.map(statusLine),
     pick(TAUNT_VARIANTS),
@@ -557,7 +556,7 @@ export function recapMessage(statuses: UserStatus[]): string {
   const closing = winner
     ? render(pick(RECAP_WINNER_VARIANTS), whoVars(winner), whoVars(winner))
     : pick(RECAP_DRAW_VARIANTS)
-  return bilingualMessage([RECAP_HEADER, ...statuses.map(statusLine), closing])
+  return message([RECAP_HEADER, ...statuses.map(statusLine), closing])
 }
 
 // ── Supabase REST ─────────────────────────────────────────────────────────────
@@ -731,7 +730,7 @@ export async function handleNotify(request: Request, env: NotifyEnv): Promise<Re
       await tryClaim('overtake', challengeId, async () => overtakeLine(userId, title))
     }
 
-    if (lines.length > 0) await send(env, bilingualMessage(lines), claims)
+    if (lines.length > 0) await send(env, message(lines), claims)
     return noContent()
   } catch (err) {
     console.error('[notify] handleNotify failed', err)

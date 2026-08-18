@@ -5,18 +5,17 @@
 // would quietly stop notifying, and a mistyped placeholder would ship raw
 // "{who}" text to the group.
 //
-// Copy is picked at random, so the assertions are structural (both language
-// blocks present, aligned, fully substituted) rather than exact strings.
+// Copy is picked at random, so the assertions are structural (English only,
+// fully substituted) rather than exact strings.
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
-  SEPARATOR,
   almostLine,
   berlinHour,
   berlinLocalDate,
-  bilingualMessage,
+  message,
   challengeLine,
   completedChallengeIds,
   dayLine,
@@ -186,22 +185,20 @@ test('titleFor keeps the German title and adds an English one', () => {
   assert.deepEqual(titleFor(future), { de: 'Schreiben 5 Sätze', en: 'Schreiben 5 Sätze' })
 })
 
-test('bilingualMessage puts German first, then the separator, then English', () => {
-  const out = bilingualMessage([
+test('message sends the English half only', () => {
+  const out = message([
     { de: 'eins', en: 'one' },
     { de: 'zwei', en: 'two' },
   ])
-  assert.equal(out, `eins\nzwei\n${SEPARATOR}\none\ntwo`)
+  assert.equal(out, 'one\ntwo')
 })
 
-/** Splits a rendered message into its two language blocks. */
-function blocks(message: string): { de: string[]; en: string[] } {
-  const parts = message.split(`\n${SEPARATOR}\n`)
-  assert.equal(parts.length, 2, `expected exactly one separator in:\n${message}`)
-  return { de: parts[0].split('\n'), en: parts[1].split('\n') }
+/** Every line of a rendered message. */
+function lines(rendered: string): string[] {
+  return rendered.split('\n')
 }
 
-test('every message is bilingual, aligned, and fully substituted', () => {
+test('every message is English, fully substituted, and free of German', () => {
   const statuses = userStatuses(GOALS, [
     { user_id: 'meo', challenge_id: 'listening', total_seconds: 1 },
   ])
@@ -211,46 +208,43 @@ test('every message is bilingual, aligned, and fully substituted', () => {
 
   for (let i = 0; i < 300; i++) {
     const messages = [
-      bilingualMessage([challengeLine('mi', vocab), dayLine('mi', 7)]),
-      bilingualMessage([overtakeLine('meo', vocab)]),
-      bilingualMessage([almostLine('mi', vocab, 0.8)]),
-      bilingualMessage([perfectLine('meo')]),
-      bilingualMessage([rivalDoneLine('mi')]),
+      message([challengeLine('mi', vocab), dayLine('mi', 7)]),
+      message([overtakeLine('meo', vocab)]),
+      message([almostLine('mi', vocab, 0.8)]),
+      message([perfectLine('meo')]),
+      message([rivalDoneLine('mi')]),
       nagMessage(18, statuses),
       recapMessage(statuses),
       recapMessage(drawStatuses),
     ]
     for (const msg of messages) {
-      const { de, en } = blocks(msg)
-      // Same number of lines on both sides — a drifting pool would break this.
-      assert.equal(de.length, en.length, msg)
       assert.ok(!msg.includes('{'), `unsubstituted placeholder in:\n${msg}`)
       assert.ok(!msg.includes('undefined'), msg)
-      for (const line of [...de, ...en]) assert.ok(line.trim().length > 0, msg)
+      // A German title leaking through means titleFor lost its translation.
+      assert.ok(!msg.includes('Vokabeln'), msg)
+      for (const line of lines(msg)) assert.ok(line.trim().length > 0, msg)
     }
   }
 })
 
-test('each language block uses its own challenge title', () => {
+test('the challenge title is the English one', () => {
   const vocab = titleFor(GOALS[1])
   for (let i = 0; i < 200; i++) {
-    const { de, en } = blocks(bilingualMessage([challengeLine('mi', vocab)]))
-    assert.ok(de.join('\n').includes('Vokabeln 10 Runden/Tag'), de.join('\n'))
-    assert.ok(en.join('\n').includes('Vocab 10 rounds'), en.join('\n'))
-    assert.ok(!en.join('\n').includes('Vokabeln 10 Runden/Tag'), en.join('\n'))
+    const msg = message([challengeLine('mi', vocab)])
+    assert.ok(msg.includes('Vocab 10 rounds'), msg)
+    assert.ok(!msg.includes('Vokabeln 10 Runden/Tag'), msg)
   }
 })
 
 test('almostLine reports a whole-number percentage', () => {
   const vocab = titleFor(GOALS[1])
   for (let i = 0; i < 100; i++) {
-    const { de, en } = blocks(bilingualMessage([almostLine('mi', vocab, 0.7)]))
-    assert.ok(de.join('\n').includes('70'), de.join('\n'))
-    assert.ok(en.join('\n').includes('70'), en.join('\n'))
+    const msg = message([almostLine('mi', vocab, 0.7)])
+    assert.ok(msg.includes('70'), msg)
     // No 69.99999% artefacts — digits must never be followed by a decimal point.
-    assert.ok(!/\d\.\d/.test(en.join('\n')), en.join('\n'))
+    assert.ok(!/\d\.\d/.test(msg), msg)
   }
-  const odd = bilingualMessage([almostLine('mi', vocab, 0.8333)])
+  const odd = message([almostLine('mi', vocab, 0.8333)])
   assert.ok(odd.includes('83'), odd)
 })
 
@@ -268,18 +262,14 @@ test('recapMessage names a winner or calls a draw', () => {
   }
 })
 
-test('nagMessage shows the clock and both users in both languages', () => {
+test('nagMessage shows the clock and both users', () => {
   const statuses = userStatuses(GOALS, [
     { user_id: 'meo', challenge_id: 'listening', total_seconds: 1 },
   ])
   for (let i = 0; i < 100; i++) {
-    const { de, en } = blocks(nagMessage(14, statuses))
-    assert.ok(de[0].startsWith('⏰ 14:00'), de[0])
-    assert.ok(en[0].startsWith('⏰ 14:00'), en[0])
-    for (const block of [de, en]) {
-      const text = block.join('\n')
-      assert.ok(text.includes('Mi') && text.includes('Meo'), text)
-    }
+    const msg = nagMessage(14, statuses)
+    assert.ok(lines(msg)[0].startsWith('⏰ 14:00'), msg)
+    assert.ok(msg.includes('Mi') && msg.includes('Meo'), msg)
   }
   // Single-digit hours stay zero-padded.
   assert.ok(nagMessage(8, statuses).startsWith('⏰ 08:00'))

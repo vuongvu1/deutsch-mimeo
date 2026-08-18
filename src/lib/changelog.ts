@@ -13,6 +13,16 @@ export interface ChangelogVersion {
 
 export const changelog: ChangelogVersion[] = [
   {
+    version: '0.24.4',
+    date: '2026-08-18',
+    entries: [
+      {
+        type: 'improvement',
+        text: 'Telegram notifications are now English only.',
+      },
+    ],
+  },
+  {
     version: '0.24.3',
     date: '2026-08-12',
     entries: [

@@ -122,15 +122,15 @@ Seven topics, all posted to **one shared group chat**:
 
 `almost` and `challenge` are mutually exclusive (`else if`), so a goal never produces both. `rivalDone` claims under the *other* user's id — that's what makes it fire once for whoever is behind, instead of once per completion by whoever is ahead. The `recap` sends **even when both users are done**, unlike the nag, because it's a wrap-up rather than a reminder; `dayWinner()` returns null on a draw (including 0–0) so nobody gets crowned by accident.
 
-Copy is **bilingual** — German block, `SEPARATOR`, then the same message in English — and Duolingo-flavoured (funny, passive-aggressive, guilt-tripping).
+Copy is **English only** and Duolingo-flavoured (funny, passive-aggressive, guilt-tripping). `message()` is the single place that decides this — it joins the `en` half of each line. Bilingual sends were dropped in 0.24.4; flipping that one function brings them back.
 
-Pools live in `worker/notify.ts` as arrays of aligned `{de, en}` pairs (`CHALLENGE_VARIANTS`, `DAY_VARIANTS`, `OVERTAKE_VARIANTS`, `STATUS_DONE_VARIANTS`, `STATUS_TODO_VARIANTS`, `TAUNT_VARIANTS`). `pick()` selects a **pair**, so both halves always tell the same joke; two independent pools would drift apart. Add variants by appending a `{de, en}` object — nothing else to touch.
+Pools live in `worker/notify.ts` as arrays of aligned `{de, en}` pairs (`CHALLENGE_VARIANTS`, `DAY_VARIANTS`, `OVERTAKE_VARIANTS`, `STATUS_DONE_VARIANTS`, `STATUS_TODO_VARIANTS`, `TAUNT_VARIANTS`). Only `en` is sent; the German halves are kept deliberately so the toggle stays cheap. Add variants by appending a `{de, en}` object (the `de` half can be a rough copy — it is never sent).
 
-Templates use `{who}`, `{them}`, `{title}`, `{days}`, `{done}`, `{total}`, `{clock}`, substituted by `fill()`, which leaves an unknown placeholder **visible** rather than blanking it, so a typo is obvious. `bilingualMessage()` does the final assembly.
+Templates use `{who}`, `{them}`, `{title}`, `{days}`, `{done}`, `{total}`, `{clock}`, substituted by `fill()`, which leaves an unknown placeholder **visible** rather than blanking it, so a typo is obvious. `message()` does the final assembly.
 
-`challenges.title` is German (the UI renders it), so `titleFor()` returns `{de: <db title>, en: ENGLISH_TITLES[slug]}` — each language block gets its own name. An unknown slug falls back to the German title in both.
+`challenges.title` is German (the UI renders it), so `titleFor()` returns `{de: <db title>, en: ENGLISH_TITLES[slug]}` and the message uses the English name. An unknown slug falls back to the German title — visible in the group chat as a stray German word.
 
-Because `pick()` uses `Math.random()`, the tests assert **structure** over many samples rather than exact strings: exactly one separator, equal line counts on both sides, no unsubstituted `{…}`, no `undefined`, and each block carrying its own title.
+Because `pick()` uses `Math.random()`, the tests assert **structure** over many samples rather than exact strings: no unsubstituted `{…}`, no `undefined`, no blank lines, no German title leaking through, and the English title present.
 
 The client is a **doorbell, not a brain**. `pingProgress(userId, challengeId)` (`src/lib/notify.ts`) posts only those two ids after a session write; the Worker reads `challenges` + `daily_challenge_totals` and decides everything. So no React component tracks before/after state, and no goal math is duplicated client-side.
 
@@ -178,7 +178,7 @@ Telegram copy is server-side English only — **no i18n files involved**.
 4. To wire a clickable destination, add an entry to `SLUG_TO_PATH` in `ChallengeListPage.tsx` and build the page(s)
 5. Add a branch in `formatChallengeValue` (`src/lib/format.ts`) if "1 second = 1 unit" isn't the right display for the new counter
 6. Drop `listening.*` / `vocab.*`-style copy into both `src/i18n/locales/de.ts` and `en.ts`
-6b. **Add the slug to `ENGLISH_TITLES` in `worker/notify.ts`.** Telegram copy is bilingual; without this the English block reuses the German `challenges.title`. Nothing fails — the fallback is deliberate — so this is easy to forget and only visible in the group chat.
+6b. **Add the slug to `ENGLISH_TITLES` in `worker/notify.ts`.** Telegram copy is English; without this the message falls back to the German `challenges.title`. Nothing fails — the fallback is deliberate — so this is easy to forget and only visible in the group chat.
 7. **HomePage — live status:** extend `src/pages/HomePage/ComparisonPanel.tsx` to surface the new challenge in the Mi-vs-Meo table. Accept it via props (alongside `listenChallenge` / `vocabChallenge`), feed it through `useComparisonStats`, and push a new entry into the `categories` array (label + icon + Mi/Meo today values + formatter). HomePage (`src/pages/HomePage/HomePage.tsx`) is where the props get wired — pass the new challenge through there too. Without this step the side-by-side panel silently omits the challenge even though `daily_completion` already gates on it.
 8. **HomePage — recent activity:** add a branch in `src/pages/HomePage/ActivityLog.tsx` for the new `challenge_id` (mirror the existing `isVocab` / `isListening` switches): pick the right `verb`, `title`, and `value`, add i18n keys under `activityLog.*` in both `de.ts` and `en.ts`, and decide whether the row should link somewhere (video rows link to the player; vocab/listening rows are non-clickable). The feed already pulls from the generic `useRecentSessions` hook, so the work is purely presentational.
 
