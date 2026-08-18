@@ -11,8 +11,8 @@ import { SavedWordsDialog } from '@/components/SavedWordsDialog'
 import { TopBar } from '@/components/TopBar'
 import type { PartOfSpeech, VocabPack, VocabWord } from '@/data/vocab'
 import {
-  DEFAULT_PACK_ID,
   LEVEL_TARGETS,
+  randomPackId,
   resolvePos,
   SAVED_PACK_ID,
   VOCAB_PACKS,
@@ -84,10 +84,6 @@ function buildTiles(words: readonly VocabWord[], seed: number): Tile[] {
   return shuffle(tiles)
 }
 
-function packStorageKey(userId: UserId): string {
-  return `mimeo:vocab:pack:${userId}`
-}
-
 export function VocabGamePage() {
   const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
@@ -103,12 +99,7 @@ export function VocabGamePage() {
     }
   }, [todayQuery.data])
 
-  const [packId, setPackId] = useState<string>(() => {
-    if (userId !== 'mi' && userId !== 'meo') return DEFAULT_PACK_ID
-    const stored = localStorage.getItem(packStorageKey(userId))
-    if (stored && VOCAB_PACKS_BY_ID[stored]) return stored
-    return DEFAULT_PACK_ID
-  })
+  const [packId, setPackId] = useState<string>(randomPackId)
 
   if (userId !== 'mi' && userId !== 'meo') return <Navigate to="/" replace />
   const user = userQuery.data
@@ -134,10 +125,7 @@ export function VocabGamePage() {
         goal={challenge.daily_goal_seconds}
         baselineToday={baselineRef.current ?? 0}
         packId={packId}
-        onPackChange={(id) => {
-          setPackId(id)
-          localStorage.setItem(packStorageKey(user.id), id)
-        }}
+        onPackChange={setPackId}
       />
     </Container>
   )

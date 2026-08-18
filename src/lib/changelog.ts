@@ -20,6 +20,10 @@ export const changelog: ChangelogVersion[] = [
         type: 'improvement',
         text: 'Telegram notifications are now English only.',
       },
+      {
+        type: 'improvement',
+        text: 'Word match now starts on a random pack each time.',
+      },
     ],
   },
   {

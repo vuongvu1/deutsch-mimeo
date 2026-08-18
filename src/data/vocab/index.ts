@@ -100,4 +100,7 @@ export const VOCAB_PACKS_BY_ID: Record<string, VocabPack | undefined> = Object.f
   VOCAB_PACKS.map((p) => [p.id, p]),
 )
 
-export const DEFAULT_PACK_ID = 'all'
+// A fresh theme every time the game opens — beats always landing on the same pack.
+export function randomPackId(): string {
+  return THEMED_PACKS[Math.floor(Math.random() * THEMED_PACKS.length)].id
+}
